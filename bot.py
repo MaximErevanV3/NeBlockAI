@@ -29,38 +29,9 @@ SHOP_ITEMS = {
     "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "emoji": "🔥"},
 }
 
-FAQ_TEXT = """
-📚 ЧАСТЫЕ ВОПРОСЫ
-
-❓ Что такое NeBlock AI?
-ИИ-бот в Telegram. Отвечает на вопросы, пишет код, объясняет темы.
-
-❓ Почему лимит 5 запросов в день?
-Чтобы не перегружать нейросеть. Так ответы остаются быстрыми для всех.
-
-❓ Что такое NeBlock Tokens?
-Внутренняя валюта бота. Нужна для покупок в Магазине. Не продаётся за деньги — только заработок.
-
-❓ Как заработать токены?
-• Ежедневный бонус: 5-15 токенов
-• Рефералы: +25 тебе, +10 другу
-• Стартовый бонус: 50 токенов
-
-❓ Когда сбрасывается лимит?
-Каждый день в 00:00 по Москве.
-
-❓ Бот помнит контекст?
-Да, можно вести диалог и задавать уточняющие вопросы.
-
-❓ Какие языки понимает?
-Автоматически определяет язык и отвечает на нём же.
-"""
-
-# Логирование
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 logger = logging.getLogger("NeBlockAI")
 
-# Клиент Yandex Cloud
 client = openai.OpenAI(
     api_key=YANDEX_API_KEY,
     base_url="https://ai.api.cloud.yandex.net/v1",
@@ -101,9 +72,7 @@ def get_user(user_id):
             "earned_tokens": 0,
         }
         save_users(users)
-        logger.info(f"Новый пользователь: {user_id}")
     
-    # Сброс при новом дне
     today = datetime.now().strftime("%Y-%m-%d")
     if users[uid]["reset_date"] != today:
         users[uid]["requests_today"] = 0
@@ -112,9 +81,6 @@ def get_user(user_id):
         save_users(users)
     
     return users[uid]
-
-def generate_ref_code():
-    return "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8))
 
 def add_request(user_id):
     users = load_users()
@@ -163,56 +129,33 @@ def get_tokens(user_id):
 
 def main_menu():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Задать вопрос", callback_data="ask"),
-         InlineKeyboardButton("ℹ️ О боте", callback_data="about")],
-        [InlineKeyboardButton("👤 Личный кабинет", callback_data="profile"),
-         InlineKeyboardButton("🛒 Магазин", callback_data="shop")],
-        [InlineKeyboardButton("💰 Заработать", callback_data="earn"),
-         InlineKeyboardButton("📚 FAQ", callback_data="faq")],
+        [InlineKeyboardButton("Задать вопрос", callback_data="ask"),
+         InlineKeyboardButton("О боте", callback_data="about")],
+        [InlineKeyboardButton("Личный кабинет", callback_data="profile"),
+         InlineKeyboardButton("Магазин", callback_data="shop")],
+        [InlineKeyboardButton("Заработать", callback_data="earn"),
+         InlineKeyboardButton("FAQ", callback_data="faq")],
     ])
 
 def back_button():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="menu")]])
 
 def shop_keyboard():
     keyboard = []
     for item_id, item in SHOP_ITEMS.items():
         keyboard.append([InlineKeyboardButton(
-            f"{item['emoji']} {item['name']} — {item['price']} токенов",
+            f"{item['emoji']} {item['name']} - {item['price']} токенов",
             callback_data=f"buy_{item_id}"
         )])
-    keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
+    keyboard.append([InlineKeyboardButton("Назад", callback_data="menu")])
     return InlineKeyboardMarkup(keyboard)
 
 def earn_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🎁 Ежедневный бонус", callback_data="daily_bonus")],
-        [InlineKeyboardButton("👥 Реферальная ссылка", callback_data="ref_link")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="menu")],
+        [InlineKeyboardButton("Ежедневный бонус", callback_data="daily_bonus")],
+        [InlineKeyboardButton("Реферальная ссылка", callback_data="ref_link")],
+        [InlineKeyboardButton("Назад", callback_data="menu")],
     ])
-
-# ==================== АНИМАЦИЯ ====================
-
-async def show_typing_with_animation(update, context, user_id):
-    """Показывает анимацию генерации"""
-    load_msg = await update.message.reply_text("⚡ Генерирую ответ...")
-    
-    # Запускаем анимацию в фоне
-    async def animate():
-        dots = ["", ".", "..", "..."]
-        i = 0
-        for _ in range(20):  # Максимум 20 циклов
-            try:
-                await load_msg.edit_text(f"⚡ Генерирую ответ{dots[i % 4]}")
-                await asyncio.sleep(0.5)
-                i += 1
-            except:
-                break
-    
-    animation_task = asyncio.create_task(animate())
-    await update.message.chat.send_action("typing")
-    
-    return load_msg, animation_task
 
 # ==================== КОМАНДЫ ====================
 
@@ -220,7 +163,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user = get_user(user_id)
     
-    # Обработка реферала
     if context.args and len(context.args) > 0 and context.args[0].startswith("ref_"):
         ref_code = context.args[0].replace("ref_", "")
         users = load_users()
@@ -234,152 +176,108 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     add_tokens(user_id, INVITED_BONUS)
                     users[u_id]["referrals"] = users[u_id].get("referrals", 0) + 1
                     save_users(users)
-                    
                     try:
-                        await context.bot.send_message(
-                            int(u_id),
-                            f"🎉 Новый пользователь по твоей ссылке!\n💰 +{REFERRAL_BONUS} NeBlock Tokens"
-                        )
+                        await context.bot.send_message(int(u_id), f"Новый реферал! +{REFERRAL_BONUS} токенов")
                     except:
                         pass
                 break
     
-    text = (
-        "🧠 **NeBlock AI V1**\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "⚡ Быстрые и точные ответы\n"
-        "💻 Помощь с программированием\n"
-        "📚 Объяснение сложных тем\n"
-        "🌐 Поддержка всех языков\n\n"
-        f"📊 Лимит: {DAILY_LIMIT} запросов/день\n"
-        f"💰 Баланс: {user['tokens']} NeBlock Tokens\n\n"
-        "👇 Выбери действие или просто напиши вопрос:"
-    )
+    text = f"NeBlock AI V1\n━━━━━━━━\nЛимит: {DAILY_LIMIT} запросов/день\nБаланс: {user['tokens']} токенов\n\nВыбери действие или напиши вопрос:"
     
     if update.message:
-        await update.message.reply_text(text, reply_markup=main_menu(), parse_mode="Markdown")
+        await update.message.reply_text(text, reply_markup=main_menu())
     else:
-        await update.callback_query.edit_message_text(text, reply_markup=main_menu(), parse_mode="Markdown")
+        await update.callback_query.edit_message_text(text, reply_markup=main_menu())
 
 async def profile_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user = get_user(user_id)
     
-    joined = datetime.fromisoformat(user["joined"]).strftime("%d.%m.%Y в %H:%M")
-    last = "Никогда"
-    if user["last_request"]:
-        last = datetime.fromisoformat(user["last_request"]).strftime("%H:%M %d.%m.%Y")
-    
+    joined = datetime.fromisoformat(user["joined"]).strftime("%d.%m.%Y")
+    last = "Никогда" if not user["last_request"] else datetime.fromisoformat(user["last_request"]).strftime("%H:%M %d.%m.%Y")
     unlimited = "Не активен"
-    if user["unlimited_until"]:
-        until = datetime.fromisoformat(user["unlimited_until"])
-        if datetime.now() < until:
-            remaining_time = until - datetime.now()
-            hours = remaining_time.seconds // 3600
-            minutes = (remaining_time.seconds % 3600) // 60
-            unlimited = f"Активен (осталось {hours}ч {minutes}м)"
-    
-    total_limit = DAILY_LIMIT + user["extra_requests"]
+    if user["unlimited_until"] and datetime.now() < datetime.fromisoformat(user["unlimited_until"]):
+        unlimited = "Активен"
     
     text = (
-        "👤 **Личный кабинет**\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"🆔 ID: `{user_id}`\n"
-        f"📅 Регистрация: {joined}\n"
-        f"💰 Баланс: {user['tokens']} токенов\n"
-        f"💎 Заработано: {user.get('earned_tokens', 0)}\n"
-        f"📊 Запросов сегодня: {user['requests_today']}/{total_limit}\n"
-        f"📈 Всего запросов: {user['total_requests']}\n"
-        f"⚡ Безлимит: {unlimited}\n"
-        f"👥 Рефералов: {user.get('referrals', 0)}\n"
-        f"🕐 Активность: {last}"
+        f"Личный кабинет\n━━━━━━━━\n"
+        f"ID: {user_id}\n"
+        f"Регистрация: {joined}\n"
+        f"Баланс: {user['tokens']} токенов\n"
+        f"Запросов сегодня: {user['requests_today']}/{DAILY_LIMIT + user['extra_requests']}\n"
+        f"Всего запросов: {user['total_requests']}\n"
+        f"Безлимит: {unlimited}\n"
+        f"Рефералов: {user.get('referrals', 0)}\n"
+        f"Активность: {last}"
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text)
 
 async def shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    tokens = get_tokens(user_id)
     await update.message.reply_text(
-        f"🛒 **Магазин NeBlock**\n━━━━━━━━━━━━━━━━\n💰 Баланс: {tokens} токенов\n\nВыбери товар:",
-        reply_markup=shop_keyboard(),
-        parse_mode="Markdown"
+        f"Магазин\n━━━━━━━━\nБаланс: {get_tokens(update.effective_user.id)} токенов\n\nВыбери товар:",
+        reply_markup=shop_keyboard()
     )
 
 async def faq_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(FAQ_TEXT)
+    text = (
+        "FAQ\n━━━━━━━━\n\n"
+        "Что такое NeBlock AI?\nИИ-бот в Telegram.\n\n"
+        "Почему лимит 5 запросов?\nЧтобы не перегружать нейросеть.\n\n"
+        "Что такое NeBlock Tokens?\nВнутренняя валюта для покупок.\n\n"
+        "Как заработать токены?\nЕжедневный бонус, рефералы.\n\n"
+        "Когда сброс лимита?\nВ 00:00 МСК каждый день.\n\n"
+        "Бот помнит контекст?\nДа."
+    )
+    await update.message.reply_text(text)
 
 async def give_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    
-    if user_id not in ADMIN_IDS:
+    if update.effective_user.id not in ADMIN_IDS:
         return
     
     args = context.args
     if len(args) < 2:
-        await update.message.reply_text("Использование: /give ID КОЛИЧЕСТВО")
+        await update.message.reply_text("/give ID КОЛИЧЕСТВО")
         return
     
     try:
         target_id = int(args[0])
         amount = int(args[1])
         add_tokens(target_id, amount)
-        
-        await update.message.reply_text(f"✅ Начислено {amount} токенов пользователю {target_id}")
-        try:
-            await context.bot.send_message(target_id, f"💰 Администратор начислил тебе {amount} NeBlock Tokens!")
-        except:
-            pass
+        await update.message.reply_text(f"Начислено {amount} токенов пользователю {target_id}")
     except:
-        await update.message.reply_text("Ошибка. Используй: /give ID КОЛИЧЕСТВО")
+        await update.message.reply_text("Ошибка")
 
 async def broadcast_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    
-    if user_id not in ADMIN_IDS:
+    if update.effective_user.id not in ADMIN_IDS:
         return
     
     text = " ".join(context.args)
     if not text:
-        await update.message.reply_text("Использование: /broadcast ТЕКСТ")
+        await update.message.reply_text("/broadcast ТЕКСТ")
         return
     
     users = load_users()
     sent = 0
-    failed = 0
-    
-    await update.message.reply_text(f"📢 Начинаю рассылку...")
-    
     for uid in users:
         try:
-            await context.bot.send_message(int(uid), f"📢 **NeBlock AI**\n\n{text}", parse_mode="Markdown")
+            await context.bot.send_message(int(uid), f"NeBlock AI:\n\n{text}")
             sent += 1
-            await asyncio.sleep(0.05)  # Защита от спама
         except:
-            failed += 1
+            pass
     
-    await update.message.reply_text(f"✅ Рассылка завершена!\n📤 Отправлено: {sent}\n❌ Ошибок: {failed}")
+    await update.message.reply_text(f"Отправлено {sent} пользователям")
 
 async def stats_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    
-    if user_id not in ADMIN_IDS:
+    if update.effective_user.id not in ADMIN_IDS:
         return
     
     users = load_users()
-    total_users = len(users)
-    total_requests = sum(u.get("total_requests", 0) for u in users.values())
-    total_tokens = sum(u.get("tokens", 0) for u in users.values())
-    active_today = sum(1 for u in users.values() if u.get("requests_today", 0) > 0)
-    
-    text = (
-        "📊 **Статистика NeBlock AI**\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"👥 Пользователей: {total_users}\n"
-        f"📝 Всего запросов: {total_requests}\n"
-        f"💰 Токенов в обороте: {total_tokens}\n"
-        f"📈 Активных сегодня: {active_today}"
+    await update.message.reply_text(
+        f"Статистика\n━━━━━━━━\n"
+        f"Пользователей: {len(users)}\n"
+        f"Запросов: {sum(u.get('total_requests', 0) for u in users.values())}\n"
+        f"Токенов: {sum(u.get('tokens', 0) for u in users.values())}"
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
 
 # ==================== КНОПКИ ====================
 
@@ -389,17 +287,29 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = query.from_user.id
     data = query.data
     
+    logger.info(f"Кнопка: {data} от {user_id}")
+    
     # Назад в меню
     if data == "menu":
         user = get_user(user_id)
-        text = (
-            "🧠 **NeBlock AI V1**\n"
-            "━━━━━━━━━━━━━━━━\n"
-            f"📊 Лимит: {DAILY_LIMIT} запросов/день\n"
-            f"💰 Баланс: {user['tokens']} токенов\n\n"
-            "👇 Выбери действие:"
+        text = f"NeBlock AI V1\n━━━━━━━━\nЛимит: {DAILY_LIMIT} запросов/день\nБаланс: {user['tokens']} токенов\n\nВыбери действие или напиши вопрос:"
+        await query.edit_message_text(text, reply_markup=main_menu())
+        return
+    
+    # Задать вопрос
+    if data == "ask":
+        await query.edit_message_text(
+            f"Напиши свой вопрос в чат.\n\nОсталось запросов: {remaining(user_id)}",
+            reply_markup=back_button()
         )
-        await query.edit_message_text(text, reply_markup=main_menu(), parse_mode="Markdown")
+        return
+    
+    # О боте
+    if data == "about":
+        await query.edit_message_text(
+            "NeBlock AI V1\n━━━━━━━━\nМодель: NeBlock AI V1\nБыстрые ответы\nПонимание контекста\nВсе языки",
+            reply_markup=back_button()
+        )
         return
     
     # Профиль
@@ -409,52 +319,52 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         last = "Никогда" if not user["last_request"] else datetime.fromisoformat(user["last_request"]).strftime("%H:%M %d.%m.%Y")
         unlimited = "Не активен"
         if user["unlimited_until"] and datetime.now() < datetime.fromisoformat(user["unlimited_until"]):
-            until = datetime.fromisoformat(user["unlimited_until"])
-            remaining_time = until - datetime.now()
-            hours = remaining_time.seconds // 3600
-            minutes = (remaining_time.seconds % 3600) // 60
-            unlimited = f"Активен ({hours}ч {minutes}м)"
+            unlimited = "Активен"
         
         text = (
-            "👤 **Личный кабинет**\n"
-            "━━━━━━━━━━━━━━━━\n"
-            f"🆔 ID: `{user_id}`\n"
-            f"📅 Регистрация: {joined}\n"
-            f"💰 Баланс: {user['tokens']} токенов\n"
-            f"💎 Заработано: {user.get('earned_tokens', 0)}\n"
-            f"📊 Запросов сегодня: {user['requests_today']}/{DAILY_LIMIT + user['extra_requests']}\n"
-            f"📈 Всего запросов: {user['total_requests']}\n"
-            f"⚡ Безлимит: {unlimited}\n"
-            f"👥 Рефералов: {user.get('referrals', 0)}\n"
-            f"🕐 Активность: {last}"
+            f"Личный кабинет\n━━━━━━━━\n"
+            f"ID: {user_id}\n"
+            f"Регистрация: {joined}\n"
+            f"Баланс: {user['tokens']} токенов\n"
+            f"Запросов сегодня: {user['requests_today']}/{DAILY_LIMIT + user['extra_requests']}\n"
+            f"Всего запросов: {user['total_requests']}\n"
+            f"Безлимит: {unlimited}\n"
+            f"Рефералов: {user.get('referrals', 0)}\n"
+            f"Активность: {last}"
         )
-        await query.edit_message_text(text, reply_markup=back_button(), parse_mode="Markdown")
+        await query.edit_message_text(text, reply_markup=back_button())
         return
     
     # Магазин
     if data == "shop":
         await query.edit_message_text(
-            f"🛒 **Магазин NeBlock**\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\nВыбери товар:",
-            reply_markup=shop_keyboard(),
-            parse_mode="Markdown"
+            f"Магазин\n━━━━━━━━\nБаланс: {get_tokens(user_id)} токенов\n\nВыбери товар:",
+            reply_markup=shop_keyboard()
         )
         return
     
     # Заработок
     if data == "earn":
         await query.edit_message_text(
-            f"💰 **Заработок токенов**\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
-            f"🎁 Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов\n"
-            f"👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу\n"
-            f"🎯 Стартовый бонус: {START_BONUS} токенов",
-            reply_markup=earn_keyboard(),
-            parse_mode="Markdown"
+            f"Заработок токенов\n━━━━━━━━\nБаланс: {get_tokens(user_id)}\n\n"
+            f"Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов\n"
+            f"Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу",
+            reply_markup=earn_keyboard()
         )
         return
     
     # FAQ
     if data == "faq":
-        await query.edit_message_text(FAQ_TEXT, reply_markup=back_button())
+        text = (
+            "FAQ\n━━━━━━━━\n\n"
+            "Что такое NeBlock AI?\nИИ-бот в Telegram.\n\n"
+            "Почему лимит 5 запросов?\nЧтобы не перегружать нейросеть.\n\n"
+            "Что такое NeBlock Tokens?\nВнутренняя валюта для покупок.\n\n"
+            "Как заработать токены?\nЕжедневный бонус, рефералы.\n\n"
+            "Когда сброс лимита?\nВ 00:00 МСК.\n\n"
+            "Бот помнит контекст?\nДа."
+        )
+        await query.edit_message_text(text, reply_markup=back_button())
         return
     
     # Ежедневный бонус
@@ -463,7 +373,7 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         today = datetime.now().strftime("%Y-%m-%d")
         
         if user.get("daily_bonus_claimed") == today:
-            await query.answer("Ты уже получил бонус сегодня! Возвращайся завтра.", show_alert=True)
+            await query.answer("Уже получил сегодня! Приходи завтра.", show_alert=True)
             return
         
         bonus = random.randint(DAILY_BONUS_MIN, DAILY_BONUS_MAX)
@@ -472,14 +382,10 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_users(users)
         add_tokens(user_id, bonus)
         
-        await query.answer(f"🎉 +{bonus} NeBlock Tokens!", show_alert=True)
+        await query.answer(f"+{bonus} токенов!", show_alert=True)
         await query.edit_message_text(
-            f"🎁 **Ежедневный бонус**\n━━━━━━━━━━━━━━━━\n"
-            f"✅ Получено: +{bonus} токенов\n"
-            f"💰 Баланс: {get_tokens(user_id)} токенов\n\n"
-            f"🔄 Приходи завтра за новым бонусом!",
-            reply_markup=back_button(),
-            parse_mode="Markdown"
+            f"Ежедневный бонус\n━━━━━━━━\nПолучено: +{bonus} токенов\nБаланс: {get_tokens(user_id)}\n\nПриходи завтра!",
+            reply_markup=back_button()
         )
         return
     
@@ -490,13 +396,8 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ref_link = f"https://t.me/{bot_username}?start=ref_{user['referral_code']}"
         
         await query.edit_message_text(
-            f"👥 **Реферальная программа**\n━━━━━━━━━━━━━━━━\n"
-            f"🔗 Твоя ссылка:\n`{ref_link}`\n\n"
-            f"💰 Ты получаешь: +{REFERRAL_BONUS} токенов\n"
-            f"🎁 Друг получает: +{INVITED_BONUS} токенов\n"
-            f"👥 Приглашено: {user.get('referrals', 0)}",
-            reply_markup=back_button(),
-            parse_mode="Markdown"
+            f"Реферальная программа\n━━━━━━━━\n\nСсылка:\n{ref_link}\n\nТы получишь: +{REFERRAL_BONUS} токенов\nДруг получит: +{INVITED_BONUS} токенов\nПриглашено: {user.get('referrals', 0)}",
+            reply_markup=back_button()
         )
         return
     
@@ -511,7 +412,7 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tokens = get_tokens(user_id)
         
         if tokens < item["price"]:
-            await query.answer(f"Недостаточно токенов! Нужно {item['price']}, у тебя {tokens}", show_alert=True)
+            await query.answer(f"Недостаточно! Нужно {item['price']}, у тебя {tokens}", show_alert=True)
             return
         
         remove_tokens(user_id, item["price"])
@@ -531,25 +432,12 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         save_users(users)
         
-        await query.answer(f"✅ {item['name']} активирован!", show_alert=True)
+        await query.answer(f"Куплено: {item['name']}!", show_alert=True)
         await query.edit_message_text(
-            f"✅ **Покупка успешна!**\n━━━━━━━━━━━━━━━━\n"
-            f"🛒 Товар: {item['name']}\n"
-            f"💰 Потрачено: {item['price']} токенов\n"
-            f"💎 Остаток: {get_tokens(user_id)} токенов",
-            reply_markup=back_button(),
-            parse_mode="Markdown"
+            f"Покупка успешна!\n━━━━━━━━\nТовар: {item['name']}\nПотрачено: {item['price']} токенов\nОстаток: {get_tokens(user_id)}",
+            reply_markup=back_button()
         )
         return
-    
-    # Остальные кнопки
-    pages = {
-        "ask": f"📝 **Задай вопрос**\n━━━━━━━━━━━━━━━━\nПросто напиши в чат что угодно.\nЯ отвечу быстро и по делу.\n\n📊 Осталось запросов: {remaining(user_id)}",
-        "about": "ℹ️ **NeBlock AI V1**\n━━━━━━━━━━━━━━━━\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые ответы\n💬 Понимание контекста\n🌐 Все языки\n💰 Внутренняя экономика",
-    }
-    
-    if data in pages:
-        await query.edit_message_text(pages[data], reply_markup=back_button(), parse_mode="Markdown")
 
 # ==================== СООБЩЕНИЯ ====================
 
@@ -557,45 +445,19 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     user_id = update.effective_user.id
     
+    logger.info(f"Сообщение от {user_id}: {text[:50]}")
+    
     if not text:
         return
     
-    if len(text) > 2000:
-        await update.message.reply_text("⚠️ Сообщение слишком длинное. Максимум 2000 символов.")
-        return
-    
-    # Проверка лимита
     if not can_request(user_id):
         user = get_user(user_id)
         await update.message.reply_text(
-            f"🚫 **Лимит исчерпан!**\n━━━━━━━━━━━━━━━━\n"
-            f"📊 Использовано: {user['requests_today']}/{DAILY_LIMIT + user['extra_requests']}\n"
-            f"💰 Баланс: {user['tokens']} токенов\n\n"
-            f"🛒 Купи доп запросы: /shop\n"
-            f"🔄 Сброс в 00:00 МСК",
-            parse_mode="Markdown"
+            f"Лимит исчерпан!\n━━━━━━━━\nИспользовано: {user['requests_today']}/{DAILY_LIMIT + user['extra_requests']}\nБаланс: {user['tokens']} токенов\n\nКупи запросы: /shop\nСброс в 00:00"
         )
         return
     
-    user_name = update.effective_user.first_name or update.effective_user.username or "Пользователь"
-    logger.info(f"Запрос от {user_name} ({user_id}): {text[:60]}")
-    
-    # Анимация
-    load_msg = await update.message.reply_text("⚡ Генерирую ответ...")
-    
-    async def animate():
-        dots = ["", ".", "..", "..."]
-        i = 0
-        for _ in range(30):
-            try:
-                await load_msg.edit_text(f"⚡ Генерирую ответ{dots[i % 4]}")
-                await asyncio.sleep(0.5)
-                i += 1
-            except:
-                break
-    
-    anim_task = asyncio.create_task(animate())
-    await update.message.chat.send_action("typing")
+    load_msg = await update.message.reply_text("Генерирую ответ...")
     
     try:
         response = client.responses.create(
@@ -604,21 +466,14 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         answer = response.output_text
         
-        # Учитываем запрос
         add_request(user_id)
         
-        # Останавливаем анимацию
-        anim_task.cancel()
-        try:
-            await load_msg.delete()
-        except:
-            pass
+        await load_msg.delete()
         
         if answer:
             rem = remaining(user_id)
-            footer = f"\n\n━━━━━━━━━━━━━━━━\n📊 Осталось: {rem}"
+            footer = f"\n\n━━━━━━━━\nОсталось: {rem}"
             
-            # Отправка с разбивкой
             for i in range(0, len(answer), 4000):
                 chunk = answer[i:i+4000]
                 if i == 0:
@@ -626,35 +481,26 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 else:
                     await update.message.reply_text(chunk)
         else:
-            await update.message.reply_text("🤷 Не удалось сгенерировать ответ. Попробуй переформулировать вопрос.")
+            await update.message.reply_text("Не удалось сгенерировать ответ")
             
     except Exception as e:
-        anim_task.cancel()
         try:
             await load_msg.delete()
         except:
             pass
         
         error = str(e)
-        logger.error(f"Ошибка API: {error[:150]}")
-        
-        if "timeout" in error.lower():
-            await update.message.reply_text("⏰ Нейросеть не успела ответить. Попробуй ещё раз.")
-        elif "rate" in error.lower():
-            await update.message.reply_text("🚫 Слишком много запросов. Подожди немного.")
-        else:
-            await update.message.reply_text("❌ Произошла ошибка. Попробуй позже.")
+        logger.error(f"Ошибка: {error[:100]}")
+        await update.message.reply_text("Ошибка. Попробуй позже.")
 
 # ==================== ЗАПУСК ====================
 
 def main():
-    logger.info("=" * 40)
-    logger.info("🧠 NeBlock AI V1")
-    logger.info("=" * 40)
+    logger.info("NeBlock AI V1 запуск...")
     
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    # Команды
+    # Команды (проверяются первыми)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("profile", profile_cmd))
     app.add_handler(CommandHandler("shop", shop_cmd))
@@ -663,11 +509,13 @@ def main():
     app.add_handler(CommandHandler("broadcast", broadcast_cmd))
     app.add_handler(CommandHandler("stats", stats_cmd))
     
-    # Кнопки и сообщения
+    # Кнопки (второй приоритет)
     app.add_handler(CallbackQueryHandler(buttons))
+    
+    # Текст (последний приоритет)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
     
-    logger.info("✅ Бот запущен!")
+    logger.info("Бот готов!")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
