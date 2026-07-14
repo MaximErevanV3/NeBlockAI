@@ -1,4 +1,3 @@
-
 import openai
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
@@ -28,79 +27,53 @@ INVITED_BONUS = 10
 
 # Магазин
 SHOP_ITEMS = {
-    "extra5": {"name": "+5 запросов", "price": 10, "desc": "Дополнительные запросы на сегодня"},
-    "extra10": {"name": "+10 запросов", "price": 18, "desc": "Дополнительные запросы на сегодня"},
-    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "desc": "Неограниченные запросы на 1 час"},
-    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "desc": "Неограниченные запросы на 24 часа"},
-    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "desc": "Неограниченные запросы на неделю"},
+    "extra5": {"name": "+5 запросов", "price": 10},
+    "extra10": {"name": "+10 запросов", "price": 18},
+    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30},
+    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100},
+    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500},
 }
 
-# FAQ текст
 FAQ_TEXT = """
-ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ
+📚 ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ
 
-Что такое NeBlock AI?
-NeBlock AI — это Telegram бот с искусственным интеллектом. Он отвечает на вопросы, помогает с кодом, объясняет сложные темы и ведёт диалог.
+❓ Что такое NeBlock AI?
+NeBlock AI — это Telegram бот с искусственным интеллектом. Отвечает на вопросы, помогает с кодом, объясняет сложные темы.
 
-Как пользоваться ботом?
-Просто напиши свой вопрос в чат. Бот ответит автоматически. Никаких сложных команд не нужно.
+❓ Как пользоваться ботом?
+Просто напиши свой вопрос в чат. Бот ответит автоматически.
 
-Почему лимит 5 запросов в день?
+❓ Почему лимит 5 запросов в день?
 Лимит установлен чтобы не перегружать нейросеть объёмными вопросами и обеспечить стабильную работу для всех пользователей. Каждый запрос обрабатывается на сервере, и слишком большая нагрузка может замедлить ответы.
 
-Как увеличить лимит?
-Купи дополнительные запросы или безлимитный режим в Магазине за токены. Токены можно заработать: ежедневный бонус, реферальная программа, админские награды.
+❓ Что такое NeBlock Tokens?
+NeBlock Tokens — это внутренняя валюта бота. Токены нужны для покупки дополнительных запросов, безлимитных режимов и других возможностей в Магазине. Токены нельзя купить за реальные деньги — их можно только заработать.
 
-Как получить токены?
-- Ежедневный бонус: 5-15 токенов каждый день
-- Реферальная программа: +25 токенов за приглашённого друга
-- Стартовый бонус: 50 токенов при регистрации
-- Админ может начислить токены за активность
+❓ Как получить токены?
+• Ежедневный бонус: 5-15 токенов каждый день
+• Реферальная программа: +25 токенов за друга
+• Стартовый бонус: 50 токенов при регистрации
 
-Что такое реферальная программа?
-Ты получаешь уникальную ссылку. Отправь её другу. Когда друг запустит бота по твоей ссылке, ты получишь +25 токенов, а друг +10 токенов.
+❓ Как увеличить лимит?
+Купи дополнительные запросы или безлимитный режим в Магазине за токены.
 
-Когда сбрасывается лимит?
+❓ Что такое реферальная программа?
+Отправь другу свою реферальную ссылку. Когда он запустит бота — ты получишь +25 токенов, а друг +10 токенов.
+
+❓ Когда сбрасывается лимит?
 Каждый день в 00:00 по московскому времени. Дополнительные запросы тоже сбрасываются.
 
-Бот помнит историю диалога?
-Да, бот учитывает контекст разговора. Можешь задавать уточняющие вопросы.
+❓ Бот помнит историю диалога?
+Да, бот учитывает контекст разговора.
 
-Какие темы можно обсуждать?
-Любые: программирование, математика, физика, языки, история, креатив, бизнес. Бот не обсуждает политику и не даёт вредных советов.
+❓ Что делать если бот не отвечает?
+Проверь интернет, попробуй /start, подожди пару минут.
 
-Что делать если бот не отвечает?
-1. Проверь интернет
-2. Попробуй /start
-3. Подожди пару минут
-4. Напиши администратору
-
-Как связаться с разработчиком?
-Через GitHub: https://github.com/MaximErevanV3/NeBlockAI
-
-Можно ли использовать бота бесплатно?
-Да, 5 запросов в день бесплатно. Для большего количества нужны токены.
-
-Бот работает круглосуточно?
+❓ Бот работает круглосуточно?
 Да, бот работает на сервере и доступен в любое время.
 
-Мои данные в безопасности?
-Бот хранит только статистику запросов и баланс токенов. Личные переписки не сохраняются.
-
-Как удалить историю?
-Используй кнопку "Очистить историю" в главном меню или напиши /start для сброса.
-
-Бот понимает другие языки?
+❓ Бот понимает другие языки?
 Да, бот автоматически определяет язык и отвечает на нём же.
-
-Можно ли переводить токены другим пользователям?
-Пока такой функции нет. Токены можно только заработать или получить от админа.
-
-Что будет если закончатся токены?
-Ты всё равно сможешь использовать 5 бесплатных запросов в день. Токены нужны только для дополнительных возможностей.
-
-Как часто обновляется бот?
-Разработчик регулярно добавляет новые функции. Следи за обновлениями в GitHub.
 """
 
 # Логирование
@@ -211,46 +184,46 @@ def get_tokens(user_id):
 
 def main_menu():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("Задать вопрос", callback_data="ask"),
-         InlineKeyboardButton("О боте", callback_data="about")],
-        [InlineKeyboardButton("Личный кабинет", callback_data="profile"),
-         InlineKeyboardButton("Магазин", callback_data="shop")],
-        [InlineKeyboardButton("Заработать токены", callback_data="earn"),
-         InlineKeyboardButton("FAQ", callback_data="faq")],
-        [InlineKeyboardButton("Помощь", callback_data="help")],
+        [InlineKeyboardButton("📝 Задать вопрос", callback_data="ask"),
+         InlineKeyboardButton("ℹ️ О боте", callback_data="about")],
+        [InlineKeyboardButton("👤 Личный кабинет", callback_data="profile"),
+         InlineKeyboardButton("🛒 Магазин", callback_data="shop")],
+        [InlineKeyboardButton("💰 Заработать токены", callback_data="earn"),
+         InlineKeyboardButton("📚 FAQ", callback_data="faq")],
+        [InlineKeyboardButton("❓ Помощь", callback_data="help")],
     ])
 
 def back_button():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="menu")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
 
 def shop_keyboard():
     keyboard = [
-        [InlineKeyboardButton("+5 запросов - 10 токенов", callback_data="buy_extra5")],
-        [InlineKeyboardButton("+10 запросов - 18 токенов", callback_data="buy_extra10")],
-        [InlineKeyboardButton("Безлимит 1ч - 30 токенов", callback_data="buy_unlimited_1h")],
-        [InlineKeyboardButton("Безлимит 24ч - 100 токенов", callback_data="buy_unlimited_24h")],
-        [InlineKeyboardButton("Безлимит 7д - 500 токенов", callback_data="buy_unlimited_7d")],
-        [InlineKeyboardButton("Назад", callback_data="menu")],
+        [InlineKeyboardButton("📦 +5 запросов — 10 токенов", callback_data="buy_extra5")],
+        [InlineKeyboardButton("📦 +10 запросов — 18 токенов", callback_data="buy_extra10")],
+        [InlineKeyboardButton("⚡ Безлимит 1ч — 30 токенов", callback_data="buy_unlimited_1h")],
+        [InlineKeyboardButton("⚡ Безлимит 24ч — 100 токенов", callback_data="buy_unlimited_24h")],
+        [InlineKeyboardButton("🔥 Безлимит 7д — 500 токенов", callback_data="buy_unlimited_7d")],
+        [InlineKeyboardButton("🔙 Назад", callback_data="menu")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
-def earn_keyboard(user_id):
+def earn_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("Забрать ежедневный бонус", callback_data="daily_bonus")],
-        [InlineKeyboardButton("Моя реферальная ссылка", callback_data="ref_link")],
-        [InlineKeyboardButton("Назад", callback_data="menu")],
+        [InlineKeyboardButton("🎁 Забрать ежедневный бонус", callback_data="daily_bonus")],
+        [InlineKeyboardButton("👥 Реферальная ссылка", callback_data="ref_link")],
+        [InlineKeyboardButton("🔙 Назад", callback_data="menu")],
     ])
 
 # ==================== АНИМАЦИЯ ====================
 
 async def loading_animation(msg, stop):
     frames = [
-        "Генерация... [----------]",
-        "Генерация... [##--------]",
-        "Генерация... [####------]",
-        "Генерация... [######----]",
-        "Генерация... [########--]",
-        "Готово! [##########]",
+        "⚡ Генерация... [----------]",
+        "⚡ Генерация... [##--------]",
+        "⚡ Генерация... [####------]",
+        "⚡ Генерация... [######----]",
+        "⚡ Генерация... [########--]",
+        "✅ Готово! [##########]",
     ]
     i = 0
     while not stop.is_set():
@@ -284,20 +257,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     try:
                         await context.bot.send_message(
                             int(u_id),
-                            f"По твоей реферальной ссылке зарегистрировался новый пользователь!\n"
-                            f"Начислено: +{REFERRAL_BONUS} токенов"
+                            f"🎉 По твоей реферальной ссылке зарегистрировался новый пользователь!\n"
+                            f"💰 Начислено: +{REFERRAL_BONUS} токенов"
                         )
                     except:
                         pass
                 break
     
     text = (
-        "NeBlock AI V1\n"
+        "🧠 NeBlock AI V1\n"
         "----------------\n"
-        "Быстрые ответы на вопросы\n"
-        "Помощь с кодом и учёбой\n"
-        f"Дневной лимит: {DAILY_LIMIT} запросов\n"
-        f"Твой баланс: {tokens} токенов\n"
+        "⚡ Быстрые ответы на вопросы\n"
+        "💻 Помощь с кодом и учёбой\n"
+        f"📊 Дневной лимит: {DAILY_LIMIT} запросов\n"
+        f"💰 Твой баланс: {tokens} токенов\n"
     )
     if update.message:
         await update.message.reply_text(text, reply_markup=main_menu())
@@ -324,23 +297,23 @@ def get_profile_text(user_id, user):
     total_limit = DAILY_LIMIT + user["extra_requests"]
     
     return (
-        "Личный кабинет\n"
+        "👤 Личный кабинет\n"
         "----------------\n"
-        f"ID: {user_id}\n"
-        f"Присоединился: {joined}\n"
-        f"Баланс: {user['tokens']} токенов\n"
-        f"Заработано всего: {user.get('earned_tokens', 0)} токенов\n"
-        f"Запросов сегодня: {user['requests_today']}/{total_limit}\n"
-        f"Всего запросов: {user['total_requests']}\n"
-        f"Безлимит: {unlimited}\n"
-        f"Рефералов: {user.get('referrals', 0)}\n"
-        f"Последний запрос: {last}\n"
+        f"🆔 ID: {user_id}\n"
+        f"📅 Присоединился: {joined}\n"
+        f"💰 Баланс: {user['tokens']} NeBlock Tokens\n"
+        f"💎 Заработано всего: {user.get('earned_tokens', 0)} токенов\n"
+        f"📊 Запросов сегодня: {user['requests_today']}/{total_limit}\n"
+        f"📈 Всего запросов: {user['total_requests']}\n"
+        f"⚡ Безлимит: {unlimited}\n"
+        f"👥 Рефералов: {user.get('referrals', 0)}\n"
+        f"🕐 Последний запрос: {last}\n"
     )
 
 async def shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     tokens = get_tokens(user_id)
-    text = f"Магазин NeBlock\n----------------\nТвой баланс: {tokens} токенов\n"
+    text = f"🛒 Магазин NeBlock\n----------------\n💰 Твой баланс: {tokens} NeBlock Tokens\n"
     await update.message.reply_text(text, reply_markup=shop_keyboard())
 
 async def faq_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -350,7 +323,6 @@ async def give_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     if user_id not in ADMIN_IDS:
-        await update.message.reply_text("Нет доступа.")
         return
     
     args = context.args
@@ -362,9 +334,9 @@ async def give_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     amount = int(args[1])
     add_tokens(target_id, amount)
     
-    await update.message.reply_text(f"Начислено {amount} токенов пользователю {target_id}")
+    await update.message.reply_text(f"✅ Начислено {amount} токенов пользователю {target_id}")
     try:
-        await context.bot.send_message(target_id, f"Админ начислил тебе {amount} токенов!")
+        await context.bot.send_message(target_id, f"💰 Админ начислил тебе {amount} NeBlock Tokens!")
     except:
         pass
 
@@ -372,7 +344,6 @@ async def broadcast_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     if user_id not in ADMIN_IDS:
-        await update.message.reply_text("Нет доступа.")
         return
     
     text = " ".join(context.args)
@@ -384,18 +355,17 @@ async def broadcast_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     sent = 0
     for uid in users:
         try:
-            await context.bot.send_message(int(uid), f"Рассылка от NeBlock AI:\n\n{text}")
+            await context.bot.send_message(int(uid), f"📢 Рассылка NeBlock AI:\n\n{text}")
             sent += 1
         except:
             pass
     
-    await update.message.reply_text(f"Рассылка отправлена {sent} пользователям")
+    await update.message.reply_text(f"✅ Рассылка отправлена {sent} пользователям")
 
 async def stats_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     if user_id not in ADMIN_IDS:
-        await update.message.reply_text("Нет доступа.")
         return
     
     users = load_users()
@@ -404,11 +374,11 @@ async def stats_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total_tokens = sum(u.get("tokens", 0) for u in users.values())
     
     await update.message.reply_text(
-        f"Статистика бота\n"
+        f"📊 Статистика бота\n"
         f"----------------\n"
-        f"Пользователей: {total_users}\n"
-        f"Всего запросов: {total_requests}\n"
-        f"Токенов в обороте: {total_tokens}\n"
+        f"👥 Пользователей: {total_users}\n"
+        f"📝 Всего запросов: {total_requests}\n"
+        f"💰 NeBlock Tokens в обороте: {total_tokens}\n"
     )
 
 # ==================== КНОПКИ ====================
@@ -418,6 +388,10 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     user_id = query.from_user.id
     
+    if query.data == "menu":
+        await start(update, context)
+        return
+    
     if query.data == "profile":
         user = get_user(user_id)
         await query.edit_message_text(get_profile_text(user_id, user), reply_markup=back_button())
@@ -425,23 +399,22 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if query.data == "shop":
         tokens = get_tokens(user_id)
-        text = f"Магазин NeBlock\n----------------\nТвой баланс: {tokens} токенов\n"
+        text = f"🛒 Магазин NeBlock\n----------------\n💰 Твой баланс: {tokens} NeBlock Tokens\n"
         await query.edit_message_text(text, reply_markup=shop_keyboard())
         return
     
     if query.data == "earn":
         tokens = get_tokens(user_id)
         text = (
-            "Способы заработка токенов\n"
+            "💰 Способы заработка NeBlock Tokens\n"
             "----------------\n"
-            f"Баланс: {tokens} токенов\n\n"
-            "Ежедневный бонус: 5-15 токенов\n"
-            "Реферальная программа:\n"
-            f"- Ты получаешь +{REFERRAL_BONUS} токенов за друга\n"
-            f"- Друг получает +{INVITED_BONUS} токенов\n"
-            "Админские награды (активность, конкурсы)\n"
+            f"💎 Баланс: {tokens} токенов\n\n"
+            "🎁 Ежедневный бонус: 5-15 токенов\n"
+            "👥 Реферальная программа:\n"
+            f"  • Ты получаешь +{REFERRAL_BONUS} токенов за друга\n"
+            f"  • Друг получает +{INVITED_BONUS} токенов\n"
         )
-        await query.edit_message_text(text, reply_markup=earn_keyboard(user_id))
+        await query.edit_message_text(text, reply_markup=earn_keyboard())
         return
     
     if query.data == "faq":
@@ -462,12 +435,13 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         save_users(users)
         add_tokens(user_id, bonus)
         
-        await query.answer(f"Получено +{bonus} токенов!", show_alert=True)
+        await query.answer(f"Получено +{bonus} NeBlock Tokens!", show_alert=True)
         await query.edit_message_text(
-            f"Ежедневный бонус\n----------------\n"
-            f"Получено: +{bonus} токенов\n"
-            f"Текущий баланс: {get_tokens(user_id)} токенов\n"
-            f"Приходи завтра за новым бонусом!",
+            f"🎁 Ежедневный бонус\n"
+            f"----------------\n"
+            f"✅ Получено: +{bonus} NeBlock Tokens\n"
+            f"💰 Текущий баланс: {get_tokens(user_id)} токенов\n\n"
+            f"🔄 Приходи завтра за новым бонусом!",
             reply_markup=back_button()
         )
         return
@@ -479,11 +453,11 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ref_link = f"https://t.me/{bot_username}?start=ref_{ref_code}"
         
         await query.edit_message_text(
-            f"Твоя реферальная ссылка:\n"
+            f"👥 Реферальная программа\n"
             f"----------------\n"
-            f"{ref_link}\n\n"
-            f"Приглашай друзей и получай +{REFERRAL_BONUS} токенов за каждого!\n"
-            f"Твои рефералы: {user.get('referrals', 0)}",
+            f"🔗 Твоя ссылка:\n{ref_link}\n\n"
+            f"💰 Приглашай друзей и получай +{REFERRAL_BONUS} NeBlock Tokens за каждого!\n"
+            f"👥 Приглашено: {user.get('referrals', 0)}",
             reply_markup=back_button()
         )
         return
@@ -520,24 +494,23 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await query.answer(f"Куплено: {item['name']}!", show_alert=True)
         await query.edit_message_text(
-            f"Покупка успешна!\n----------------\n"
-            f"Товар: {item['name']}\n"
-            f"Потрачено: {item['price']} токенов\n"
-            f"Остаток: {get_tokens(user_id)} токенов",
+            f"✅ Покупка успешна!\n"
+            f"----------------\n"
+            f"🛒 Товар: {item['name']}\n"
+            f"💰 Потрачено: {item['price']} NeBlock Tokens\n"
+            f"💎 Остаток: {get_tokens(user_id)} токенов",
             reply_markup=back_button()
         )
         return
     
     pages = {
-        "ask": f"Задай вопрос в чат — я отвечу.\nОсталось запросов: {remaining(user_id)}",
-        "about": "NeBlock AI V1\n\nМодель: NeBlock AI V1\nБыстрые и точные ответы\nПонимаю контекст диалога",
-        "help": "Помощь\n\nПиши вопрос в чат\n/profile — кабинет\n/shop — магазин\n/faq — вопросы\n/start — меню",
+        "ask": f"📝 Задай вопрос в чат — я отвечу.\n📊 Осталось запросов: {remaining(user_id)}",
+        "about": "ℹ️ NeBlock AI V1\n\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые и точные ответы\n💬 Понимаю контекст диалога",
+        "help": "❓ Помощь\n\n📝 Пиши вопрос в чат\n👤 /profile — кабинет\n🛒 /shop — магазин\n📚 /faq — вопросы\n🔄 /start — меню",
     }
     
     if query.data in pages:
         await query.edit_message_text(pages[query.data], reply_markup=back_button())
-    elif query.data == "menu":
-        await start(update, context)
 
 # ==================== СООБЩЕНИЯ ====================
 
@@ -551,12 +524,12 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not can_request(user_id):
         user = get_user(user_id)
         await update.message.reply_text(
-            f"Дневной лимит исчерпан!\n"
+            f"🚫 Дневной лимит исчерпан!\n"
             f"----------------\n"
-            f"Использовано: {user['requests_today']}/{DAILY_LIMIT + user['extra_requests']}\n"
-            f"Баланс: {user['tokens']} токенов\n"
-            f"Купи доп запросы в /shop\n"
-            f"Сброс в 00:00 МСК"
+            f"📊 Использовано: {user['requests_today']}/{DAILY_LIMIT + user['extra_requests']}\n"
+            f"💰 Баланс: {user['tokens']} NeBlock Tokens\n"
+            f"🛒 Купи доп запросы в /shop\n"
+            f"🔄 Сброс в 00:00 МСК"
         )
         return
     
@@ -566,7 +539,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rem = remaining(user_id)
     rem_text = f"Осталось: {rem}" if isinstance(rem, int) else "Безлимит"
     
-    load_msg = await update.message.reply_text(f"Генерация... ({rem_text})")
+    load_msg = await update.message.reply_text(f"⚡ Генерация... ({rem_text})")
     stop = asyncio.Event()
     anim = asyncio.create_task(loading_animation(load_msg, stop))
     await update.message.chat.send_action("typing")
@@ -591,7 +564,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for i in range(0, len(answer), 4000):
                 chunk = answer[i:i+4000]
                 if i == 0:
-                    await update.message.reply_text(f"{chunk}\n\n----------------\n{rem_text}")
+                    await update.message.reply_text(f"{chunk}\n\n----------------\n📊 {rem_text}")
                 else:
                     await update.message.reply_text(chunk)
         else:
