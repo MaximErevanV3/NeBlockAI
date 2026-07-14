@@ -4,6 +4,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import asyncio
 import logging
 import os
+import json
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 # Загрузка конфига
@@ -11,6 +13,10 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co")
 YANDEX_API_KEY = os.getenv("YANDEX_API_KEY", "AQVNy7Dm-dvQRzejHvH0383oHTZhhW2fda95I558")
 PROMPT_ID = os.getenv("PROMPT_ID", "fvt621uiq1fftiu5qomu")
+
+# Лимиты
+DAILY_LIMIT = 5
+DATA_FILE = "users.json"
 
 # Логирование
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -24,12 +30,64 @@ client = openai.OpenAI(
     timeout=25.0,
 )
 
+# База пользователей
+def load_users():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_users(users):
+    with open(DATA_FILE, "w") as f:
+        json.dump(users, f, indent=2, ensure_ascii=False)
+
+def get_user(user_id):
+    users = load_users()
+    uid = str(user_id)
+    
+    if uid not in users:
+        users[uid] = {
+            "joined": datetime.now().isoformat(),
+            "requests_today": 0,
+            "last_request": None,
+            "total_requests": 0,
+            "reset_date": datetime.now().strftime("%Y-%m-%d"),
+        }
+        save_users(users)
+    
+    # Сброс счётчика если новый день
+    today = datetime.now().strftime("%Y-%m-%d")
+    if users[uid]["reset_date"] != today:
+        users[uid]["requests_today"] = 0
+        users[uid]["reset_date"] = today
+        save_users(users)
+    
+    return users[uid]
+
+def add_request(user_id):
+    users = load_users()
+    uid = str(user_id)
+    
+    if uid in users:
+        users[uid]["requests_today"] += 1
+        users[uid]["total_requests"] += 1
+        users[uid]["last_request"] = datetime.now().isoformat()
+        save_users(users)
+
+def can_request(user_id):
+    user = get_user(user_id)
+    return user["requests_today"] < DAILY_LIMIT
+
+def remaining(user_id):
+    user = get_user(user_id)
+    return max(0, DAILY_LIMIT - user["requests_today"])
+
 # Клавиатуры
 def main_menu():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📝 Задать вопрос", callback_data="ask"),
          InlineKeyboardButton("ℹ️ О боте", callback_data="about")],
-        [InlineKeyboardButton("🔄 Очистить историю", callback_data="clear"),
+        [InlineKeyboardButton("👤 Личный кабинет", callback_data="profile"),
          InlineKeyboardButton("❓ Помощь", callback_data="help")],
     ])
 
@@ -63,7 +121,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⚡ Быстрые ответы\n"
         "💬 Понимание контекста\n"
         "💻 Помощь с кодом\n"
-        "📚 Ответы на вопросы\n"
+        f"📊 Лимит: {DAILY_LIMIT} запросов/день\n"
     )
     if update.message:
         await update.message.reply_text(text, reply_markup=main_menu(), parse_mode="Markdown")
@@ -74,12 +132,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    user_id = query.from_user.id
+    
+    if query.data == "profile":
+        user = get_user(user_id)
+        joined = datetime.fromisoformat(user["joined"]).strftime("%d.%m.%Y")
+        last = "Никогда"
+        if user["last_request"]:
+            last = datetime.fromisoformat(user["last_request"]).strftime("%H:%M %d.%m.%Y")
+        
+        text = (
+            "👤 *Личный кабинет*\n"
+            "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+            f"🆔 ID: `{user_id}`\n"
+            f"📅 Присоединился: {joined}\n"
+            f"📊 Запросов сегодня: {user['requests_today']}/{DAILY_LIMIT}\n"
+            f"📈 Всего запросов: {user['total_requests']}\n"
+            f"⏰ Осталось: {remaining(user_id)}\n"
+            f"🕐 Последний запрос: {last}\n"
+        )
+        await query.edit_message_text(text, reply_markup=back_button(), parse_mode="Markdown")
+        return
     
     pages = {
-        "ask": "✍️ *Задай вопрос*\n\nПросто напиши в чат — я отвечу!",
-        "about": "ℹ️ *NeBlock AI V1*\n\n🧠 Модель: NeBlock AI V1\n☁️ Хостинг: Yandex Cloud\n⚡ Быстрые и точные ответы",
-        "clear": "✅ История диалога очищена!",
-        "help": "❓ *Помощь*\n\n📝 Пиши вопрос в чат\n🔄 /start — главное меню\n🧹 /clear — очистить историю",
+        "ask": f"✍️ *Задай вопрос*\n\nПросто напиши в чат — я отвечу!\n📊 Осталось запросов: {remaining(user_id)}",
+        "about": "ℹ️ *NeBlock AI V1*\n\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые и точные ответы\n💬 Понимаю контекст диалога",
+        "help": f"❓ *Помощь*\n\n📝 Пиши вопрос в чат\n📊 Лимит: {DAILY_LIMIT} запросов/день\n👤 /profile — личный кабинет\n🔄 /start — главное меню",
     }
     
     if query.data in pages:
@@ -90,15 +168,29 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Сообщения
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
+    user_id = update.effective_user.id
     
     if not text or len(text) > 2000:
         return
     
+    # Проверка лимита
+    if not can_request(user_id):
+        user = get_user(user_id)
+        await update.message.reply_text(
+            f"🚫 *Дневной лимит исчерпан!*\n"
+            f"⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+            f"📊 Использовано: {user['requests_today']}/{DAILY_LIMIT}\n"
+            f"⏰ Сброс в 00:00\n"
+            f"👤 /profile — статистика",
+            parse_mode="Markdown"
+        )
+        return
+    
     user = update.effective_user.first_name or "Пользователь"
-    logger.info(f"Запрос от {user}: {text[:60]}")
+    logger.info(f"Запрос от {user} ({user_id}): {text[:60]}")
     
     # Запуск анимации
-    load_msg = await update.message.reply_text("⚡ Генерация...")
+    load_msg = await update.message.reply_text(f"⚡ Генерация... (осталось: {remaining(user_id)-1})")
     stop = asyncio.Event()
     anim = asyncio.create_task(loading_animation(load_msg, stop))
     await update.message.chat.send_action("typing")
@@ -110,6 +202,9 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         answer = response.output_text
         
+        # Учитываем запрос
+        add_request(user_id)
+        
         stop.set()
         await anim
         await load_msg.delete()
@@ -117,7 +212,13 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if answer:
             # Разбивка длинных сообщений
             for i in range(0, len(answer), 4000):
-                await update.message.reply_text(answer[i:i+4000])
+                if i == 0:
+                    await update.message.reply_text(
+                        f"{answer[i:i+4000]}\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+                        f"📊 Осталось: {remaining(user_id)}/{DAILY_LIMIT}"
+                    )
+                else:
+                    await update.message.reply_text(answer[i:i+4000])
         else:
             await update.message.reply_text("🤷 Не удалось сгенерировать ответ")
             
@@ -132,12 +233,35 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await load_msg.edit_text(f"❌ Ошибка: {error[:100]}")
 
+# /profile
+async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user = get_user(user_id)
+    joined = datetime.fromisoformat(user["joined"]).strftime("%d.%m.%Y")
+    last = "Никогда"
+    if user["last_request"]:
+        last = datetime.fromisoformat(user["last_request"]).strftime("%H:%M %d.%m.%Y")
+    
+    text = (
+        "👤 *Личный кабинет*\n"
+        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
+        f"🆔 ID: `{user_id}`\n"
+        f"📅 Присоединился: {joined}\n"
+        f"📊 Запросов сегодня: {user['requests_today']}/{DAILY_LIMIT}\n"
+        f"📈 Всего запросов: {user['total_requests']}\n"
+        f"⏰ Осталось: {remaining(user_id)}\n"
+        f"🕐 Последний запрос: {last}\n"
+        f"🔄 Сброс: в 00:00 МСК\n"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
+
 # Запуск
 def main():
     logger.info("🧠 NeBlock AI V1 запускается...")
     
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("profile", profile))
     app.add_handler(CallbackQueryHandler(buttons))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
     
