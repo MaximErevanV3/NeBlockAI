@@ -1,102 +1,112 @@
 #!/bin/bash
 
-set -e
-
+# Цвета
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
 NC='\033[0m'
 
-REPO_URL="https://github.com/MaximErevanV3/NeBlockAI.git"
-INSTALL_DIR="/root/neblock-bot"
-SERVICE_NAME="neblock-bot"
-
-echo -e "${GREEN}🧠 Neblock AI Installer${NC}"
-echo ""
+# Конфиг
+REPO="https://github.com/MaximErevanV3/NeBlockAI.git"
+DIR="/root/neblock-bot"
+SERVICE="neblock-bot"
 
 # Проверка root
-if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}Запусти от root: sudo bash install.sh${NC}"
+if [ "$EUID" -ne 0 ]; then 
+    echo -e "${RED}❌ Запусти: sudo bash install.sh${NC}"
     exit 1
 fi
 
-# 1. Обновление
-echo -e "${YELLOW}[1/6] Обновление системы...${NC}"
-apt update -y && apt upgrade -y
-echo -e "${GREEN}Готово${NC}"
+clear
+echo -e "${GREEN}"
+echo "╔══════════════════════════════╗"
+echo "║   🧠 Neblock AI Installer   ║"
+echo "╚══════════════════════════════╝"
+echo -e "${NC}"
 
-# 2. Зависимости
-echo -e "${YELLOW}[2/6] Установка пакетов...${NC}"
-apt install python3 python3-pip git curl -y
-echo -e "${GREEN}Готово${NC}"
+# Шаг 1: Система
+echo -e "${YELLOW}[1/5] Система...${NC}"
+apt update -y > /dev/null 2>&1
+apt install python3 python3-pip git curl -y > /dev/null 2>&1
+echo -e "${GREEN}✓ Готово${NC}"
 
-# 3. Клонирование
-echo -e "${YELLOW}[3/6] Загрузка бота с GitHub...${NC}"
-if [ -d "$INSTALL_DIR" ]; then
-    cd "$INSTALL_DIR"
-    git pull
+# Шаг 2: Клонирование
+echo -e "${YELLOW}[2/5] Загрузка бота...${NC}"
+if [ -d "$DIR" ]; then
+    cd "$DIR"
+    git pull > /dev/null 2>&1
 else
-    git clone "$REPO_URL" "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
+    git clone "$REPO" "$DIR" > /dev/null 2>&1
 fi
-echo -e "${GREEN}Готово${NC}"
+cd "$DIR"
+echo -e "${GREEN}✓ Готово${NC}"
 
-# 4. Python пакеты
-echo -e "${YELLOW}[4/6] Установка Python пакетов...${NC}"
-pip3 install python-telegram-bot openai python-dotenv
-echo -e "${GREEN}Готово${NC}"
+# Шаг 3: Зависимости
+echo -e "${YELLOW}[3/5] Зависимости Python...${NC}"
+pip3 install --break-system-packages python-telegram-bot openai python-dotenv > /dev/null 2>&1
+echo -e "${GREEN}✓ Готово${NC}"
 
-# 5. Конфиг
-echo -e "${YELLOW}[5/6] Настройка конфига...${NC}"
-cd "$INSTALL_DIR"
-if [ -f ".env.example" ]; then
-    cp .env.example .env
-    echo -e "${GREEN}Конфиг создан${NC}"
-else
-    cat > .env << 'EOF'
+# Шаг 4: Конфиг
+echo -e "${YELLOW}[4/5] Конфигурация...${NC}"
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+    else
+        cat > .env << 'EOF'
 TELEGRAM_TOKEN=8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co
 YANDEX_API_KEY=AQVNy7Dm-dvQRzejHvH0383oHTZhhW2fda95I558
 PROMPT_ID=fvt621uiq1fftiu5qomu
 EOF
-    echo -e "${YELLOW}Создан шаблон .env${NC}"
+    fi
 fi
+echo -e "${GREEN}✓ Готово${NC}"
 
-# 6. Сервис
-echo -e "${YELLOW}[6/6] Создание сервиса...${NC}"
-cat > "/etc/systemd/system/${SERVICE_NAME}.service" << EOF
+# Шаг 5: Сервис и запуск
+echo -e "${YELLOW}[5/5] Запуск бота...${NC}"
+
+# Останавливаем старый если есть
+systemctl stop $SERVICE 2>/dev/null
+
+cat > /etc/systemd/system/${SERVICE}.service << EOF
 [Unit]
-Description=Neblock AI Bot
+Description=Neblock AI Telegram Bot
 After=network.target
-
 [Service]
 Type=simple
-User=root
-WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/python3 $INSTALL_DIR/bot.py
+WorkingDirectory=$DIR
+ExecStart=/usr/bin/python3 $DIR/bot.py
 Restart=always
-RestartSec=10
-
+RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable "$SERVICE_NAME"
-systemctl start "$SERVICE_NAME"
+systemctl enable $SERVICE > /dev/null 2>&1
+systemctl start $SERVICE
+
 sleep 2
 
-if systemctl is-active --quiet "$SERVICE_NAME"; then
-    echo -e "${GREEN}✅ Бот запущен!${NC}"
+if systemctl is-active --quiet $SERVICE; then
+    echo -e "${GREEN}✓ Бот запущен${NC}"
 else
-    echo -e "${RED}❌ Ошибка запуска${NC}"
-    journalctl -u "$SERVICE_NAME" -n 10 --no-pager
+    echo -e "${RED}✗ Ошибка запуска${NC}"
+    echo ""
+    echo -e "${YELLOW}Логи:${NC}"
+    journalctl -u $SERVICE -n 10 --no-pager
+    exit 1
 fi
 
+# Финал
 echo ""
-echo -e "${CYAN}Команды:${NC}"
-echo -e "  status: ${GREEN}systemctl status $SERVICE_NAME${NC}"
-echo -e "  logs:  ${GREEN}journalctl -u $SERVICE_NAME -f${NC}"
-echo -e "  restart: ${GREEN}systemctl restart $SERVICE_NAME${NC}"
+echo -e "${GREEN}╔══════════════════════════════╗${NC}"
+echo -e "${GREEN}║     ✅ Установка завершена   ║${NC}"
+echo -e "${GREEN}╚══════════════════════════════╝${NC}"
 echo ""
-echo -e "${GREEN}Готово! Бот работает 24/7 🚀${NC}"
+echo -e "📋 Команды:"
+echo -e "  Статус:    ${YELLOW}systemctl status $SERVICE${NC}"
+echo -e "  Логи:      ${YELLOW}journalctl -u $SERVICE -f${NC}"
+echo -e "  Перезапуск: ${YELLOW}systemctl restart $SERVICE${NC}"
+echo -e "  Конфиг:    ${YELLOW}nano $DIR/.env${NC}"
+echo ""
+echo -e "${GREEN}🚀 Бот работает 24/7!${NC}"
