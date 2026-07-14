@@ -24,11 +24,11 @@ REFERRAL_BONUS = 25
 INVITED_BONUS = 10
 
 SHOP_ITEMS = {
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦"},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦"},
-    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "⚡"},
-    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "⚡"},
-    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "🔥"},
+    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "Добавляет 5 запросов к дневному лимиту"},
+    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "Добавляет 10 запросов к дневному лимиту"},
+    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "⚡", "desc": "Безлимитные запросы на 1 час"},
+    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "⚡", "desc": "Безлимитные запросы на 24 часа"},
+    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "🔥", "desc": "Безлимитные запросы на 7 дней"},
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -171,6 +171,12 @@ def shop_keyboard():
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
     return InlineKeyboardMarkup(keyboard)
 
+def confirm_keyboard(item_id):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Подтвердить покупку", callback_data=f"confirm_{item_id}")],
+        [InlineKeyboardButton("❌ Отмена", callback_data="shop")],
+    ])
+
 def earn_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🎁 Ежедневный бонус", callback_data="daily_bonus")],
@@ -186,7 +192,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user = get_user(user_id)
     
-    # Обработка реферала
     if context.args and context.args[0].startswith("ref_"):
         ref_code = context.args[0].replace("ref_", "")
         users = load_users()
@@ -203,8 +208,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     try:
                         await context.bot.send_message(
                             int(u_id),
-                            f"🎉 Новый пользователь по твоей ссылке!\n"
-                            f"💰 +{REFERRAL_BONUS} NeBlock Tokens"
+                            f"🎉 Новый пользователь по твоей ссылке!\n💰 +{REFERRAL_BONUS} NeBlock Tokens"
                         )
                     except:
                         pass
@@ -246,9 +250,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👇 Выбери действие:"
         )
         await query.edit_message_text(text, reply_markup=main_menu())
+        return
     
     # 📝 Задать вопрос
-    elif data == "ask":
+    if data == "ask":
         text = (
             f"📝 Задай свой вопрос\n"
             f"━━━━━━━━━━━━━━━━\n"
@@ -257,9 +262,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📊 Осталось запросов: {remaining(user_id)}"
         )
         await query.edit_message_text(text, reply_markup=back_button())
+        return
     
     # ℹ️ О боте
-    elif data == "about":
+    if data == "about":
         text = (
             f"ℹ️ О NeBlock AI\n"
             f"━━━━━━━━━━━━━━━━\n"
@@ -270,9 +276,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"💰 Внутренняя экономика"
         )
         await query.edit_message_text(text, reply_markup=back_button())
+        return
     
     # 👤 Личный кабинет
-    elif data == "profile":
+    if data == "profile":
         user = get_user(user_id)
         joined = datetime.fromisoformat(user.get("joined", datetime.now().isoformat())).strftime("%d.%m.%Y")
         last = "Никогда"
@@ -305,9 +312,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🕐 Последний запрос: {last}"
         )
         await query.edit_message_text(text, reply_markup=back_button())
+        return
     
     # 🛒 Магазин
-    elif data == "shop":
+    if data == "shop":
         text = (
             f"🛒 Магазин NeBlock\n"
             f"━━━━━━━━━━━━━━━━\n"
@@ -315,9 +323,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Выбери товар:"
         )
         await query.edit_message_text(text, reply_markup=shop_keyboard())
+        return
     
     # 💰 Заработок
-    elif data == "earn":
+    if data == "earn":
         text = (
             f"💰 Заработок токенов\n"
             f"━━━━━━━━━━━━━━━━\n"
@@ -327,9 +336,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🎯 Стартовый бонус: {START_BONUS} токенов"
         )
         await query.edit_message_text(text, reply_markup=earn_keyboard())
+        return
     
     # 📚 FAQ
-    elif data == "faq":
+    if data == "faq":
         text = (
             f"📚 Частые вопросы\n"
             f"━━━━━━━━━━━━━━━━\n\n"
@@ -349,33 +359,36 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Автоматически определяет язык и отвечает на нём же."
         )
         await query.edit_message_text(text, reply_markup=back_button())
+        return
     
     # 🎁 Ежедневный бонус
-    elif data == "daily_bonus":
+    if data == "daily_bonus":
         user = get_user(user_id)
         today = datetime.now().strftime("%Y-%m-%d")
         
         if user.get("daily_bonus_claimed") == today:
-            await query.answer("Ты уже получил бонус сегодня! Приходи завтра.", show_alert=True)
-        else:
-            bonus = random.randint(DAILY_BONUS_MIN, DAILY_BONUS_MAX)
-            users = load_users()
-            users[str(user_id)]["daily_bonus_claimed"] = today
-            save_users(users)
-            add_tokens(user_id, bonus)
-            
-            await query.answer(f"🎉 +{bonus} NeBlock Tokens!", show_alert=True)
-            text = (
-                f"🎁 Ежедневный бонус\n"
-                f"━━━━━━━━━━━━━━━━\n"
-                f"✅ Получено: +{bonus} токенов\n"
-                f"💰 Текущий баланс: {get_tokens(user_id)} токенов\n\n"
-                f"🔄 Приходи завтра за новым бонусом!"
-            )
-            await query.edit_message_text(text, reply_markup=back_button())
+            await query.answer("❌ Вы уже забирали ежедневный бонус сегодня!\n🔄 Возвращайтесь завтра в 00:00 МСК.", show_alert=True)
+            return
+        
+        bonus = random.randint(DAILY_BONUS_MIN, DAILY_BONUS_MAX)
+        users = load_users()
+        users[str(user_id)]["daily_bonus_claimed"] = today
+        save_users(users)
+        add_tokens(user_id, bonus)
+        
+        await query.answer(f"🎉 Поздравляем! Вы получили +{bonus} NeBlock Tokens!", show_alert=True)
+        text = (
+            f"🎁 Ежедневный бонус\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"✅ Получено: +{bonus} токенов\n"
+            f"💰 Текущий баланс: {get_tokens(user_id)} токенов\n\n"
+            f"🔄 Приходите завтра за новым бонусом!"
+        )
+        await query.edit_message_text(text, reply_markup=back_button())
+        return
     
     # 👥 Реферальная ссылка
-    elif data == "ref_link":
+    if data == "ref_link":
         user = get_user(user_id)
         bot_username = (await context.bot.get_me()).username
         ref_link = f"https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}"
@@ -389,10 +402,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👥 Приглашено: {user.get('referrals', 0)}"
         )
         await query.edit_message_text(text, reply_markup=back_button())
+        return
     
-    # 🛍 Покупки
-    elif data.startswith("buy_"):
-        item_id = data.replace("buy_", "")
+    # 🛍 Подтверждение покупки
+    if data.startswith("confirm_"):
+        item_id = data.replace("confirm_", "")
         item = SHOP_ITEMS.get(item_id)
         
         if not item:
@@ -401,34 +415,62 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tokens = get_tokens(user_id)
         
         if tokens < item["price"]:
-            await query.answer(f"Недостаточно токенов! Нужно {item['price']}, у тебя {tokens}", show_alert=True)
-        else:
-            remove_tokens(user_id, item["price"])
-            users = load_users()
-            uid = str(user_id)
-            
-            if item_id == "extra5":
-                users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + 5
-            elif item_id == "extra10":
-                users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + 10
-            elif item_id == "unlimited_1h":
-                users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
-            elif item_id == "unlimited_24h":
-                users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=24)).isoformat()
-            elif item_id == "unlimited_7d":
-                users[uid]["unlimited_until"] = (datetime.now() + timedelta(days=7)).isoformat()
-            
-            save_users(users)
-            
-            await query.answer(f"✅ {item['name']} активирован!", show_alert=True)
-            text = (
-                f"✅ Покупка успешна!\n"
-                f"━━━━━━━━━━━━━━━━\n"
-                f"🛒 Товар: {item['name']}\n"
-                f"💰 Потрачено: {item['price']} токенов\n"
-                f"💎 Остаток: {get_tokens(user_id)} токенов"
-            )
-            await query.edit_message_text(text, reply_markup=back_button())
+            await query.answer(f"❌ Недостаточно токенов!\n💎 Нужно: {item['price']}\n💰 У вас: {tokens}", show_alert=True)
+            return
+        
+        # Списываем токены
+        remove_tokens(user_id, item["price"])
+        users = load_users()
+        uid = str(user_id)
+        
+        if item_id == "extra5":
+            users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + 5
+        elif item_id == "extra10":
+            users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + 10
+        elif item_id == "unlimited_1h":
+            users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
+        elif item_id == "unlimited_24h":
+            users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=24)).isoformat()
+        elif item_id == "unlimited_7d":
+            users[uid]["unlimited_until"] = (datetime.now() + timedelta(days=7)).isoformat()
+        
+        save_users(users)
+        
+        await query.answer(f"✅ Покупка успешна! {item['name']} активирован!", show_alert=True)
+        text = (
+            f"✅ Покупка успешна!\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"🛒 Товар: {item['name']}\n"
+            f"📝 Описание: {item['desc']}\n"
+            f"💰 Потрачено: {item['price']} токенов\n"
+            f"💎 Остаток: {get_tokens(user_id)} токенов\n\n"
+            f"🔙 Вернуться в магазин:"
+        )
+        await query.edit_message_text(text, reply_markup=back_button())
+        return
+    
+    # 🛍 Выбор товара (показ подтверждения)
+    if data.startswith("buy_"):
+        item_id = data.replace("buy_", "")
+        item = SHOP_ITEMS.get(item_id)
+        
+        if not item:
+            return
+        
+        tokens = get_tokens(user_id)
+        
+        text = (
+            f"🛒 Подтверждение покупки\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"Товар: {item['icon']} {item['name']}\n"
+            f"Описание: {item['desc']}\n"
+            f"Цена: {item['price']} токенов\n"
+            f"Ваш баланс: {tokens} токенов\n\n"
+            f"{'✅ Достаточно средств' if tokens >= item['price'] else '❌ Недостаточно средств!'}\n\n"
+            f"Подтвердите покупку:"
+        )
+        await query.edit_message_text(text, reply_markup=confirm_keyboard(item_id))
+        return
 
 # ═══════════════════════════════════════════
 # 💬 Обработчик сообщений
