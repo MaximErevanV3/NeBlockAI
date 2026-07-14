@@ -6,31 +6,26 @@ import logging
 import os
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения
+# Загрузка конфига
 load_dotenv()
-
-# Конфиг из переменных окружения (безопасно!)
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co")
 YANDEX_API_KEY = os.getenv("YANDEX_API_KEY", "AQVNy7Dm-dvQRzejHvH0383oHTZhhW2fda95I558")
 PROMPT_ID = os.getenv("PROMPT_ID", "fvt621uiq1fftiu5qomu")
 
 # Логирование
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("NeBlockAI")
 
-# Клиент Deepseek
+# Клиент
 client = openai.OpenAI(
     api_key=YANDEX_API_KEY,
     base_url="https://ai.api.cloud.yandex.net/v1",
     project="b1guk4h3j9t48lsjl6sq",
-    timeout=30.0,
+    timeout=25.0,
 )
 
 # Клавиатуры
-def get_main_keyboard():
+def main_menu():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📝 Задать вопрос", callback_data="ask"),
          InlineKeyboardButton("ℹ️ О боте", callback_data="about")],
@@ -38,77 +33,74 @@ def get_main_keyboard():
          InlineKeyboardButton("❓ Помощь", callback_data="help")],
     ])
 
-def get_back_keyboard():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Назад", callback_data="menu")]
-    ])
+def back_button():
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
 
 # Анимация загрузки
-async def show_loading_animation(message, stop_event):
+async def loading_animation(msg, stop):
     frames = [
-        "⚡ *Генерирую ответ* ░░░░░░░░░░ 0%",
-        "⚡ *Генерирую ответ* ██░░░░░░░░ 20%",
-        "⚡ *Генерирую ответ* ████░░░░░░ 40%",
-        "⚡ *Генерирую ответ* ██████░░░░ 60%",
-        "⚡ *Генерирую ответ* ████████░░ 80%",
-        "✅ *Готово!* ██████████ 100%",
+        "⚡ Генерация... ░░░░░░░░░░",
+        "⚡ Генерация... ██░░░░░░░░",
+        "⚡ Генерация... ████░░░░░░",
+        "⚡ Генерация... ██████░░░░",
+        "⚡ Генерация... ████████░░",
+        "✅ Готово! ██████████",
     ]
-    
-    frame_idx = 0
-    while not stop_event.is_set():
+    i = 0
+    while not stop.is_set():
         try:
-            await message.edit_text(frames[frame_idx % len(frames)], parse_mode="Markdown")
-            await asyncio.sleep(1.0)
-            frame_idx += 1
+            await msg.edit_text(frames[i % len(frames)])
+            await asyncio.sleep(0.8)
+            i += 1
         except:
             break
 
-# Команды
+# /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "🧠 *Neblock AI*\n"
+        "🧠 *NeBlock AI V1*\n"
         "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        "⚡ Deepseek V4 Flash\n"
-        "💬 Контекстные ответы\n"
-        "💻 Пишет код\n"
-        "📚 Помощь в учёбе\n"
-        "🖥️ Работает на VPS 24/7\n"
+        "⚡ Быстрые ответы\n"
+        "💬 Понимание контекста\n"
+        "💻 Помощь с кодом\n"
+        "📚 Ответы на вопросы\n"
     )
-    
     if update.message:
-        await update.message.reply_text(text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
+        await update.message.reply_text(text, reply_markup=main_menu(), parse_mode="Markdown")
     else:
-        await update.callback_query.edit_message_text(text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
+        await update.callback_query.edit_message_text(text, reply_markup=main_menu(), parse_mode="Markdown")
 
-async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# Кнопки
+async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
     pages = {
-        "ask": "✍️ *Задай вопрос*\n\nНапиши в чат что угодно:\n• Код\n• Объяснение\n• Задачи\n• Перевод",
-        "about": "ℹ️ *Neblock AI*\n\n🧠 Deepseek V4 Flash\n☁️ Yandex Cloud\n🖥️ VPS Server\n⚡ 24/7 Online",
-        "clear": "✅ *Готово!*\nИстория очищена.",
-        "help": "❓ *Помощь*\n\nПиши в чат - бот ответит\n/start - меню\n/clear - очистка",
+        "ask": "✍️ *Задай вопрос*\n\nПросто напиши в чат — я отвечу!",
+        "about": "ℹ️ *NeBlock AI V1*\n\n🧠 Модель: NeBlock AI V1\n☁️ Хостинг: Yandex Cloud\n⚡ Быстрые и точные ответы",
+        "clear": "✅ История диалога очищена!",
+        "help": "❓ *Помощь*\n\n📝 Пиши вопрос в чат\n🔄 /start — главное меню\n🧹 /clear — очистить историю",
     }
     
     if query.data in pages:
-        await query.edit_message_text(pages[query.data], reply_markup=get_back_keyboard(), parse_mode="Markdown")
+        await query.edit_message_text(pages[query.data], reply_markup=back_button(), parse_mode="Markdown")
     elif query.data == "menu":
         await start(update, context)
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# Сообщения
+async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     
     if not text or len(text) > 2000:
         return
     
-    user = update.effective_user.username or update.effective_user.id
-    logger.info(f"Запрос от @{user}: {text[:50]}...")
+    user = update.effective_user.first_name or "Пользователь"
+    logger.info(f"Запрос от {user}: {text[:60]}")
     
-    loading_msg = await update.message.reply_text("⚡ *Запускаю нейросеть*...", parse_mode="Markdown")
-    stop_animation = asyncio.Event()
-    animation_task = asyncio.create_task(show_loading_animation(loading_msg, stop_animation))
-    
+    # Запуск анимации
+    load_msg = await update.message.reply_text("⚡ Генерация...")
+    stop = asyncio.Event()
+    anim = asyncio.create_task(loading_animation(load_msg, stop))
     await update.message.chat.send_action("typing")
     
     try:
@@ -118,40 +110,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         answer = response.output_text
         
-        stop_animation.set()
-        await animation_task
-        await loading_msg.delete()
+        stop.set()
+        await anim
+        await load_msg.delete()
         
         if answer:
+            # Разбивка длинных сообщений
             for i in range(0, len(answer), 4000):
                 await update.message.reply_text(answer[i:i+4000])
         else:
-            await update.message.reply_text("🤷 Модель не дала ответа")
+            await update.message.reply_text("🤷 Не удалось сгенерировать ответ")
             
     except Exception as e:
-        stop_animation.set()
-        await animation_task
-        
+        stop.set()
+        await anim
         error = str(e)
         logger.error(f"Ошибка: {error[:100]}")
         
         if "timeout" in error.lower():
-            await loading_msg.edit_text("⏰ *Таймаут*", parse_mode="Markdown")
+            await load_msg.edit_text("⏰ Превышено время ожидания")
         else:
-            await loading_msg.edit_text(f"❌ *Ошибка*\n`{error[:100]}`", parse_mode="Markdown")
+            await load_msg.edit_text(f"❌ Ошибка: {error[:100]}")
 
 # Запуск
 def main():
-    logger.info("=" * 30)
-    logger.info("🧠 Neblock AI запускается на VPS")
-    logger.info("=" * 30)
+    logger.info("🧠 NeBlock AI V1 запускается...")
     
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_click))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(CallbackQueryHandler(buttons))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
     
-    logger.info("✅ Бот запущен!")
+    logger.info("✅ Бот готов к работе!")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
