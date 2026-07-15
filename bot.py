@@ -30,6 +30,8 @@ DAILY_BONUS_MAX = 15
 REFERRAL_BONUS = 25
 INVITED_BONUS = 10
 
+DISCLAIMER = "\n\n━━━━━━━━━━━━━━━━\n⚠️ ИИ может ошибаться. Только для справки."
+
 SHOP_ITEMS = {
     "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "+5 запросов к дневному лимиту", "category": "text"},
     "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "+10 запросов к дневному лимиту", "category": "text"},
@@ -51,34 +53,30 @@ FAQ_TEXT = """
 • NeBlock Images V1 — генерирует изображения
 
 ❓ Как переключаться между моделями?
-Используй кнопки «💬 Задать вопрос» (текст) или «🎨 Сгенерировать фото» (изображения). Бот сам поймёт что тебе нужно.
+Используй кнопки «💬 NeBlock AI V1» или «🎨 NeBlock Images V1».
 
 ❓ Почему лимиты 5 вопросов и 3 фото в день?
-Лимиты установлены чтобы не перегружать нейросеть и обеспечить стабильную работу для всех пользователей.
+Чтобы не перегружать нейросеть и обеспечить стабильную работу.
 
 ❓ Что такое NeBlock Tokens?
-Внутренняя валюта для покупок в Магазине. Не продаётся за реальные деньги — только заработок.
+Внутренняя валюта для покупок в Магазине. Не продаётся за деньги.
 
 ❓ Как заработать токены?
-• Ежедневный бонус: 5-15 токенов каждый день
-• Реферальная программа: +25 тебе, +10 другу
-• Стартовый бонус: 50 токенов при регистрации
+• Ежедневный бонус: 5-15 токенов
+• Рефералы: +25 тебе, +10 другу
+• Стартовый бонус: 50 токенов
 • Промокоды от администратора
 
 ❓ 🆕 Как работает NeBlock Images V1?
-Нажми кнопку «Сгенерировать фото», напиши описание, и модель создаст изображение за 10-30 секунд.
-
-❓ Какие фото можно создавать?
-Любые описания: пейзажи, персонажи, предметы, абстракции. Чем подробнее описание — тем лучше результат.
+Опиши что нарисовать — модель создаст изображение за 10-30 секунд.
 
 ❓ Когда сбрасываются лимиты?
-Каждый день в 00:00 по московскому времени. Дополнительные запросы тоже сгорают.
+Каждый день в 00:00 по Москве.
 
-❓ Бот помнит историю диалога?
-Да, можно вести диалог и задавать уточняющие вопросы (только текстовая модель).
+❓ Бот помнит историю?
+Да, текстовая модель учитывает контекст диалога.
 
-❓ Бот работает круглосуточно?
-Да, бот работает на сервере 24/7.
+⚠️ ИИ может ошибаться. Все ответы только для справки.
 """
 
 MODELS_INFO = """
@@ -86,10 +84,12 @@ MODELS_INFO = """
 ━━━━━━━━━━━━━━━━━━━━
 
 💬 NeBlock AI V1
-Текстовая модель для ответов на вопросы, помощи с кодом, объяснения тем, переводов и многого другого.
+Текстовая модель для ответов на вопросы, помощи с кодом, объяснения тем и переводов.
 
 🎨 NeBlock Images V1 🆕
-Модель для генерации изображений по текстовому описанию. Создаёт уникальные картинки за 10-30 секунд.
+Модель для генерации изображений по текстовому описанию.
+
+⚠️ ИИ может ошибаться. Только для справки.
 
 🔽 Для переключения используй кнопки внизу:
 """
@@ -275,7 +275,6 @@ def back_button():
 
 def shop_keyboard():
     keyboard = []
-    # Текстовые товары
     text_items = [item for item in SHOP_ITEMS.items() if item[1]["category"] == "text"]
     image_items = [item for item in SHOP_ITEMS.items() if item[1]["category"] == "image"]
     
@@ -303,7 +302,7 @@ def earn_keyboard():
         [InlineKeyboardButton("🔙 Назад", callback_data="menu")],
     ])
 
-def limit_reached_keyboard(category="text"):
+def limit_reached_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🛒 Купить запросы", callback_data="shop")],
         [InlineKeyboardButton("💰 Заработать", callback_data="earn")],
@@ -342,10 +341,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"   • Текст: {DAILY_LIMIT} запросов/день\n"
         f"   • Фото: {IMAGE_DAILY_LIMIT} генераций/день\n"
         f"💰 Баланс: {user.get('tokens', 0)} NeBlock Tokens\n\n"
-        f"👇 Выбери модель:",
+        f"👇 Выбери модель:\n"
+        f"{DISCLAIMER}",
         reply_markup=main_reply_keyboard()
     )
-    await update.message.reply_text(MODELS_INFO, reply_markup=main_menu())
 
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -403,7 +402,8 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(
             f"💬 NeBlock AI V1 активирована\n━━━━━━━━━━━━━━━━\n"
             f"Задай свой вопрос в чат.\n\n"
-            f"📊 Осталось запросов: {remaining(user_id)}"
+            f"📊 Осталось запросов: {remaining(user_id)}\n"
+            f"{DISCLAIMER}"
         )
         return True
     
@@ -414,9 +414,11 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         save_users(users)
         await update.message.reply_text(
             f"🎨 NeBlock Images V1 активирована\n━━━━━━━━━━━━━━━━\n"
-            f"Опиши что нарисовать.\nНапример: космический кот на луне\n\n"
+            f"Опиши что нарисовать.\n"
+            f"Например: космический кот на луне\n\n"
             f"📊 Осталось генераций: {image_remaining(user_id)}\n"
-            f"⏳ Генерация занимает 10-30 секунд"
+            f"⏳ Генерация занимает 10-30 секунд\n"
+            f"{DISCLAIMER}"
         )
         return True
     
@@ -426,8 +428,10 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if text == "🛒 Магазин":
         await update.message.reply_text(
-            f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\n"
-            f"Выбери категорию:",
+            f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n"
+            f"💰 Баланс: {get_tokens(user_id)} токенов\n\n"
+            f"Выбери категорию:\n"
+            f"{DISCLAIMER}",
             reply_markup=shop_keyboard()
         )
         return True
@@ -488,7 +492,8 @@ def get_full_profile(user_id):
         f"   • Безлимит: {format_unlimited(user.get('image_unlimited_until'))}\n\n"
         f"🔥 Серия бонусов: {user.get('daily_bonus_streak', 0)} дней\n"
         f"👥 Рефералов: {user.get('referrals', 0)}\n"
-        f"🕐 Активность: {last}"
+        f"🕐 Активность: {last}\n"
+        f"{DISCLAIMER}"
     )
 
 # ═══════════════════════════════════════════
@@ -505,13 +510,14 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         return
     
     if data == "menu":
-        await query.edit_message_text(f"🧠 NeBlock AI\n💰 {get_tokens(user_id)} токенов", reply_markup=main_menu())
+        await query.edit_message_text(f"🧠 NeBlock AI\n💰 {get_tokens(user_id)} токенов\n{DISCLAIMER}", reply_markup=main_menu())
     elif data == "about":
         await query.edit_message_text(
             "ℹ️ NeBlock AI\n━━━━━━━━━━━━━━━━\n\n"
             "💬 NeBlock AI V1 — текстовая модель\n"
             "🎨 NeBlock Images V1 — генерация фото 🆕\n\n"
-            "🌐 Все языки | 💰 Токены | 🔄 Сброс в 00:00",
+            "🌐 Все языки | 💰 Токены | 🔄 Сброс в 00:00\n"
+            f"{DISCLAIMER}",
             reply_markup=back_button()
         )
     elif data == "models":
@@ -526,9 +532,15 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             reply_markup=back_button()
         )
     elif data == "shop":
-        await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов\n\n💬 Текст | 🎨 Фото | ♾️ Безлимиты", reply_markup=shop_keyboard())
+        await query.edit_message_text(
+            f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов\n\n💬 Текст | 🎨 Фото | ♾️ Безлимиты\n{DISCLAIMER}",
+            reply_markup=shop_keyboard()
+        )
     elif data == "earn":
-        await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)}\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}", reply_markup=earn_keyboard())
+        await query.edit_message_text(
+            f"💰 Заработок\n💎 {get_tokens(user_id)}\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}",
+            reply_markup=earn_keyboard()
+        )
     elif data == "promo":
         context.user_data["waiting_promo"] = True
         await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
@@ -613,7 +625,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"🎟 +{result} токенов!\n💎 {get_tokens(user_id)}" if success else f"❌ {result}")
         return
     
-    # Если активна модель изображений
+    # Модель изображений
     if current_model == "image" or user.get("waiting_for_image"):
         users = load_users()
         users[str(user_id)]["waiting_for_image"] = False
@@ -639,7 +651,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 rem = image_remaining(user_id)
                 await update.message.reply_photo(
                     photo=image_bytes,
-                    caption=f"🎨 NeBlock Images V1\n📝 {text[:200]}\n\n📊 Осталось: {rem}"
+                    caption=f"🎨 NeBlock Images V1\n📝 {text[:200]}\n\n📊 Осталось: {rem}\n{DISCLAIMER}"
                 )
             else:
                 await msg.edit_text(f"❌ Ошибка: {error[:100] if error else 'Неизвестная'}")
@@ -672,16 +684,16 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             rem = remaining(user_id)
             used = user.get("requests_today", 0) + 1
             total = DAILY_LIMIT + user.get("extra_requests", 0)
-            footer = f"\n\n━━━━━━━━━━━━━━━━\n💬 NeBlock AI V1 | 📊 {used}/{total} | Осталось: {rem}"
+            footer = f"\n\n━━━━━━━━━━━━━━━━\n💬 NeBlock AI V1 | 📊 {used}/{total} | Осталось: {rem}\n{DISCLAIMER}"
             for i in range(0, len(answer), 4000):
                 chunk = answer[i:i+4000]
                 await update.message.reply_text(chunk + footer if i == 0 else chunk)
         else:
-            await update.message.reply_text("🤷 Пустой ответ")
+            await update.message.reply_text(f"🤷 Пустой ответ\n{DISCLAIMER}")
     except Exception as e:
         try: await msg.delete()
         except: pass
-        await update.message.reply_text("❌ Ошибка.")
+        await update.message.reply_text(f"❌ Ошибка.\n{DISCLAIMER}")
 
 # ═══════════════════════════════════════════
 # 🚀 Запуск
