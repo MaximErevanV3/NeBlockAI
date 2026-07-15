@@ -9,7 +9,7 @@ import asyncio
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V1 - Конфигурация
+# 🧠 NeBlock AI V1
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -26,22 +26,12 @@ REFERRAL_BONUS = 25
 INVITED_BONUS = 10
 
 SHOP_ITEMS = {
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "+5 запросов на сегодня"},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "+10 запросов на сегодня"},
-    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "⚡", "desc": "Безлимит на 1 час"},
-    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "⚡", "desc": "Безлимит на 24 часа"},
-    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "🔥", "desc": "Безлимит на 7 дней"},
+    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦"},
+    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦"},
+    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "⚡"},
+    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "⚡"},
+    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "🔥"},
 }
-
-# Фазы с задержкой (в секундах)
-ANIMATION = [
-    ("🤔 Анализирую запрос", "█░░░░░░░░░ 10%", 0.8),
-    ("🔍 Ищу информацию", "██░░░░░░░░ 20%", 0.8),
-    ("⚡ Обрабатываю данные", "████░░░░░░ 40%", 0.8),
-    ("🧠 Нейросеть думает", "██████░░░░ 60%", 0.8),
-    ("📝 Формирую ответ", "████████░░ 80%", 0.8),
-    ("✅ Завершаю", "██████████ 100%", 1.0),
-]
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 logger = logging.getLogger("NeBlockAI")
@@ -78,19 +68,12 @@ def get_user(user_id):
     
     defaults = {
         "joined": datetime.now().isoformat(),
-        "requests_today": 0,
-        "extra_requests": 0,
-        "unlimited_until": None,
-        "last_request": None,
-        "total_requests": 0,
+        "requests_today": 0, "extra_requests": 0, "unlimited_until": None,
+        "last_request": None, "total_requests": 0,
         "reset_date": datetime.now().strftime("%Y-%m-%d"),
-        "tokens": START_BONUS,
-        "daily_bonus_claimed": None,
+        "tokens": START_BONUS, "daily_bonus_claimed": None,
         "referral_code": "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8)),
-        "referred_by": None,
-        "referrals": 0,
-        "earned_tokens": 0,
-        "used_promos": [],
+        "referred_by": None, "referrals": 0, "earned_tokens": 0, "used_promos": [],
     }
     
     if uid not in users:
@@ -98,8 +81,7 @@ def get_user(user_id):
         save_users(users)
     else:
         for key, value in defaults.items():
-            if key not in users[uid]:
-                users[uid][key] = value
+            if key not in users[uid]: users[uid][key] = value
         save_users(users)
     
     today = datetime.now().strftime("%Y-%m-%d")
@@ -122,28 +104,24 @@ def add_request(user_id):
 
 def can_request(user_id):
     user = get_user(user_id)
-    unlimited = user.get("unlimited_until")
-    if unlimited:
+    if user.get("unlimited_until"):
         try:
-            until = datetime.fromisoformat(unlimited)
-            if datetime.now() < until: return True
+            if datetime.now() < datetime.fromisoformat(user["unlimited_until"]): return True
         except: pass
     return user.get("requests_today", 0) < (DAILY_LIMIT + user.get("extra_requests", 0))
 
 def remaining(user_id):
     user = get_user(user_id)
-    unlimited = user.get("unlimited_until")
-    if unlimited:
+    if user.get("unlimited_until"):
         try:
-            if datetime.now() < datetime.fromisoformat(unlimited): return "безлимит"
+            if datetime.now() < datetime.fromisoformat(user["unlimited_until"]): return "безлимит"
         except: pass
     return max(0, DAILY_LIMIT + user.get("extra_requests", 0) - user.get("requests_today", 0))
 
 def add_extra_requests(user_id, amount):
     users = load_users()
-    uid = str(user_id)
-    if uid in users:
-        users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + amount
+    if str(user_id) in users:
+        users[str(user_id)]["extra_requests"] = users[str(user_id)].get("extra_requests", 0) + amount
         save_users(users)
 
 def add_tokens(user_id, amount):
@@ -156,13 +134,11 @@ def add_tokens(user_id, amount):
 
 def remove_tokens(user_id, amount):
     users = load_users()
-    uid = str(user_id)
-    if uid in users:
-        users[uid]["tokens"] = users[uid].get("tokens", 0) - amount
+    if str(user_id) in users:
+        users[str(user_id)]["tokens"] = users[str(user_id)].get("tokens", 0) - amount
         save_users(users)
 
-def get_tokens(user_id):
-    return get_user(user_id).get("tokens", 0)
+def get_tokens(user_id): return get_user(user_id).get("tokens", 0)
 
 def create_promo(code, amount, max_uses=0):
     promos = load_promos()
@@ -174,7 +150,7 @@ def use_promo(user_id, code):
     code = code.upper()
     if code not in promos: return False, "Промокод не найден"
     promo = promos[code]
-    if promo["max_uses"] > 0 and len(promo["used_by"]) >= promo["max_uses"]: return False, "Лимит использований"
+    if promo["max_uses"] > 0 and len(promo["used_by"]) >= promo["max_uses"]: return False, "Лимит использований исчерпан"
     if str(user_id) in promo["used_by"]: return False, "Уже использован"
     add_tokens(user_id, promo["amount"])
     promo["used_by"].append(str(user_id))
@@ -224,22 +200,8 @@ def earn_keyboard():
 def limit_reached_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🛒 Купить запросы", callback_data="shop")],
-        [InlineKeyboardButton("💰 Заработать токены", callback_data="earn")],
-        [InlineKeyboardButton("🎟 Ввести промокод", callback_data="promo")],
+        [InlineKeyboardButton("🎟 Промокод", callback_data="promo")],
     ])
-
-# ═══════════════════════════════════════════
-# 🎬 Анимация - гарантированно полный цикл
-# ═══════════════════════════════════════════
-
-async def play_animation(message):
-    """Проигрывает анимацию от 10% до 100% с паузами"""
-    for text, bar, delay in ANIMATION:
-        try:
-            await message.edit_text(f"{text}\n{bar}")
-            await asyncio.sleep(delay)
-        except:
-            return
 
 # ═══════════════════════════════════════════
 # 🚀 Команды
@@ -248,21 +210,6 @@ async def play_animation(message):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user = get_user(user_id)
-    
-    if context.args and context.args[0].startswith("ref_"):
-        ref_code = context.args[0].replace("ref_", "")
-        users = load_users()
-        uid = str(user_id)
-        for u_id, u_data in users.items():
-            if u_data.get("referral_code") == ref_code and u_id != uid and not users[uid].get("referred_by"):
-                users[uid]["referred_by"] = u_id
-                add_tokens(int(u_id), REFERRAL_BONUS)
-                add_tokens(user_id, INVITED_BONUS)
-                users[u_id]["referrals"] = users[u_id].get("referrals", 0) + 1
-                save_users(users)
-                try: await context.bot.send_message(int(u_id), f"🎉 Новый реферал!\n💰 +{REFERRAL_BONUS} NeBlock Tokens")
-                except: pass
-                break
     
     extra = user.get("extra_requests", 0)
     total = DAILY_LIMIT + extra
@@ -275,20 +222,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👇 Просто напиши вопрос:",
         reply_markup=main_reply_keyboard()
     )
-    await update.message.reply_text("Дополнительно:", reply_markup=main_menu())
 
-# Админ команды
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: await update.message.reply_text("/give ID КОЛИЧЕСТВО"); return
+    if not context.args or len(context.args) < 2: return
     try:
         add_tokens(int(context.args[0]), int(context.args[1]))
-        await update.message.reply_text(f"✅ Начислено")
-    except: await update.message.reply_text("❌ Ошибка")
+        await update.message.reply_text("✅ Начислено")
+    except: pass
 
 async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: await update.message.reply_text("/createpromo КОД КОЛИЧЕСТВО [ЛИМИТ]"); return
+    if not context.args or len(context.args) < 2: return
     create_promo(context.args[0].upper(), int(context.args[1]), int(context.args[2]) if len(context.args) > 2 else 0)
     await update.message.reply_text(f"✅ Промокод {context.args[0].upper()} создан!")
 
@@ -308,18 +253,9 @@ async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
     code = context.args[0].upper()
     if code in promos: del promos[code]; save_promos(promos); await update.message.reply_text("✅ Удалён")
 
-async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id not in ADMIN_IDS: return
-    text = " ".join(context.args)
-    if not text: return
-    users = load_users()
-    sent = sum(1 for uid in users if not (lambda: None)())
-    await update.message.reply_text(f"✅ Отправлено {sent}")
-
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    users = load_users()
-    await update.message.reply_text(f"📊 Пользователей: {len(users)}")
+    await update.message.reply_text(f"📊 Пользователей: {len(load_users())}")
 
 # ═══════════════════════════════════════════
 # 🔘 Обычные кнопки
@@ -333,7 +269,13 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(f"📝 Напиши вопрос в чат.\n📊 Осталось: {remaining(user_id)}")
         return True
     if text == "👤 Профиль":
-        await update.message.reply_text(get_profile_text(user_id))
+        user = get_user(user_id)
+        extra = user.get("extra_requests", 0)
+        await update.message.reply_text(
+            f"👤 Профиль\n━━━━━━━━━━━━━━━━\n"
+            f"🆔 {user_id}\n💰 {user.get('tokens', 0)} токенов\n"
+            f"📊 {user.get('requests_today', 0)}/{DAILY_LIMIT + extra}"
+        )
         return True
     if text == "🛒 Магазин":
         await update.message.reply_text(f"🛒 Магазин\n💰 Баланс: {get_tokens(user_id)} токенов", reply_markup=shop_keyboard())
@@ -342,19 +284,6 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(f"💰 Заработок\n💎 Баланс: {get_tokens(user_id)}", reply_markup=earn_keyboard())
         return True
     return False
-
-def get_profile_text(user_id):
-    user = get_user(user_id)
-    joined = datetime.fromisoformat(user.get("joined", "")).strftime("%d.%m.%Y")
-    unlimited = "Не активен"
-    if user.get("unlimited_until"):
-        try:
-            if datetime.now() < datetime.fromisoformat(user["unlimited_until"]):
-                unlimited = "Активен"
-        except: pass
-    extra = user.get("extra_requests", 0)
-    total = DAILY_LIMIT + extra
-    return f"👤 Профиль\n🆔 {user_id}\n💰 {user.get('tokens', 0)} токенов\n📊 {user.get('requests_today', 0)}/{total}\n⚡ {unlimited}"
 
 # ═══════════════════════════════════════════
 # 🔘 Inline кнопки
@@ -367,12 +296,16 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     data = query.data
     
     if data == "menu":
-        user = get_user(user_id)
-        await query.edit_message_text(f"🧠 NeBlock AI V1\n💰 {user.get('tokens', 0)} токенов", reply_markup=main_menu())
+        await query.edit_message_text(f"🧠 NeBlock AI V1\n💰 {get_tokens(user_id)} токенов", reply_markup=main_menu())
     elif data == "about":
         await query.edit_message_text("ℹ️ NeBlock AI V1\n⚡ Быстрые ответы", reply_markup=back_button())
     elif data == "profile":
-        await query.edit_message_text(get_profile_text(user_id), reply_markup=back_button())
+        user = get_user(user_id)
+        extra = user.get("extra_requests", 0)
+        await query.edit_message_text(
+            f"👤 Профиль\n🆔 {user_id}\n💰 {user.get('tokens', 0)} токенов\n📊 {user.get('requests_today', 0)}/{DAILY_LIMIT + extra}",
+            reply_markup=back_button()
+        )
     elif data == "shop":
         await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов", reply_markup=shop_keyboard())
     elif data == "earn":
@@ -381,7 +314,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         context.user_data["waiting_promo"] = True
         await query.edit_message_text("🎟 Отправь промокод в чат.", reply_markup=back_button())
     elif data == "faq":
-        await query.edit_message_text("📚 FAQ\n\n❓ Лимит 5 запросов?\nЧтобы не перегружать нейросеть.", reply_markup=back_button())
+        await query.edit_message_text("📚 FAQ\n\n❓ Лимит 5 запросов - чтобы не перегружать нейросеть.\n❓ Сброс в 00:00 МСК.", reply_markup=back_button())
     elif data == "daily_bonus":
         user = get_user(user_id)
         today = datetime.now().strftime("%Y-%m-%d")
@@ -398,7 +331,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     elif data == "ref_link":
         user = get_user(user_id)
         bot_username = (await context.bot.get_me()).username
-        await query.edit_message_text(f"👥 Ссылка:\nhttps://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}", reply_markup=back_button())
+        await query.edit_message_text(f"👥 Твоя ссылка:\nhttps://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}", reply_markup=back_button())
     elif data.startswith("confirm_"):
         item_id = data.replace("confirm_", "")
         item = SHOP_ITEMS.get(item_id)
@@ -428,7 +361,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
 # ═══════════════════════════════════════════
-# 💬 Сообщения
+# 💬 Сообщения с анимацией
 # ═══════════════════════════════════════════
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -455,57 +388,54 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # Создаём сообщение и запускаем анимацию И API параллельно
+    # Отправляем первое сообщение
     msg = await update.message.reply_text("🤔 Анализирую запрос\n█░░░░░░░░░ 10%")
     
-    # Запускаем API в фоне
-    loop = asyncio.get_event_loop()
-    result_container = []
+    # Запускаем API запрос (синхронно в потоке)
+    import concurrent.futures
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(lambda: client.responses.create(prompt={"id": PROMPT_ID}, input=text))
     
-    async def call_api():
+    # Проигрываем анимацию с задержками
+    animation_steps = [
+        ("🤔 Анализирую запрос", "█░░░░░░░░░ 10%", 0.7),
+        ("🔍 Ищу информацию", "██░░░░░░░░ 20%", 0.7),
+        ("⚡ Обрабатываю данные", "████░░░░░░ 40%", 0.8),
+        ("🧠 Нейросеть думает", "██████░░░░ 60%", 0.8),
+        ("📝 Формирую ответ", "████████░░ 80%", 0.8),
+        ("✅ Завершаю", "██████████ 100%", 1.0),
+    ]
+    
+    for label, bar, delay in animation_steps:
         try:
-            response = client.responses.create(prompt={"id": PROMPT_ID}, input=text)
-            result_container.append(response.output_text)
-        except Exception as e:
-            result_container.append(e)
-    
-    api_task = asyncio.create_task(call_api())
-    
-    # Играем анимацию ПОЛНОСТЬЮ
-    await play_animation(msg)
-    
-    # Ждём API если ещё не готов
-    if not result_container:
-        try:
-            await asyncio.wait_for(api_task, timeout=15.0)
+            await msg.edit_text(f"{label}\n{bar}")
+            await asyncio.sleep(delay)
         except:
-            pass
+            break
     
-    # Получаем результат
+    # Ждём ответ от API
+    try:
+        response = future.result(timeout=10)
+        answer = response.output_text
+    except:
+        await msg.edit_text("❌ Ошибка генерации. Попробуй позже.")
+        return
+    
     await msg.delete()
+    add_request(user_id)
     
-    if result_container:
-        answer = result_container[0]
-        if isinstance(answer, Exception):
-            await update.message.reply_text("❌ Ошибка. Попробуй позже.")
-            return
+    if answer:
+        rem = remaining(user_id)
+        user = get_user(user_id)
+        used = user.get("requests_today", 0)
+        total = DAILY_LIMIT + user.get("extra_requests", 0)
+        footer = f"\n\n━━━━━━━━━━━━━━━━\n📊 {used}/{total} | Осталось: {rem}"
         
-        add_request(user_id)
-        
-        if answer:
-            rem = remaining(user_id)
-            user = get_user(user_id)
-            used = user.get("requests_today", 0)
-            total = DAILY_LIMIT + user.get("extra_requests", 0)
-            footer = f"\n\n━━━━━━━━━━━━━━━━\n📊 {used}/{total} | Осталось: {rem}"
-            
-            for i in range(0, len(answer), 4000):
-                chunk = answer[i:i+4000]
-                await update.message.reply_text(chunk + footer if i == 0 else chunk)
-        else:
-            await update.message.reply_text("🤷 Пустой ответ")
+        for i in range(0, len(answer), 4000):
+            chunk = answer[i:i+4000]
+            await update.message.reply_text(chunk + footer if i == 0 else chunk)
     else:
-        await update.message.reply_text("❌ Нет ответа от нейросети")
+        await update.message.reply_text("🤷 Пустой ответ")
 
 # ═══════════════════════════════════════════
 # 🚀 Запуск
@@ -521,7 +451,6 @@ def main():
     app.add_handler(CommandHandler("createpromo", admin_create_promo))
     app.add_handler(CommandHandler("promos", admin_promos))
     app.add_handler(CommandHandler("deletepromo", admin_delete_promo))
-    app.add_handler(CommandHandler("broadcast", admin_broadcast))
     app.add_handler(CommandHandler("stats", admin_stats))
     app.add_handler(CallbackQueryHandler(inline_button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
