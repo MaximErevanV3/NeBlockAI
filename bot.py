@@ -7,6 +7,7 @@ import logging
 import os
 import json
 import random
+import re
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
@@ -19,8 +20,14 @@ YANDEX_FOLDER = "b1guk4h3j9t48lsjl6sq"
 PROMPT_ID = "fvt621uiq1fftiu5qomu"
 IMAGE_MODEL = "art://b1guk4h3j9t48lsjl6sq/aliceai-image-art-3.0/latest"
 
+# Лимиты для ЛС
 DAILY_LIMIT = 5
 IMAGE_DAILY_LIMIT = 3
+
+# Лимиты для чатов (больше)
+CHAT_DAILY_LIMIT = 15
+CHAT_IMAGE_LIMIT = 10
+
 DATA_FILE = "users.json"
 PROMO_FILE = "promos.json"
 ADMIN_IDS = [1671403667]
@@ -32,15 +39,34 @@ INVITED_BONUS = 10
 
 DISCLAIMER = "\n\n━━━━━━━━━━━━━━━━\n⚠️ ИИ может ошибаться. Только для справки."
 
+BLOCKED_WORDS = [
+    r'\b(?:взлом|взломать|хак|hack|crack|warez|кряк)\b',
+    r'\b(?:наркотик|drugs|наркота|спайс|соль|героин|кокаин|метамфетамин)\b',
+    r'\b(?:оружие|weapon|gun|бомба|bomb|взрывчатка|explosive)\b',
+    r'\b(?:дет[иь] порно|child porn|cp |педофил|pedo)\b',
+    r'\b(?:уби[йт]|убью|kill|murder|зака[зж]|hitman|киллер)\b',
+    r'\b(?:террор|terror|теракт|attack|ата[кч])\b',
+    r'\b(?:суицид|suicide|самоубий|повес[иь])',
+    r'\b(?:расч?изм|racis|наци|nazi|фаши|fascis)\b',
+    r'\b(?:оскорбл|обид[еь]|туп[ой]|дур[ао]|идиот|дебил)\b',
+]
+COMPILED_BLOCKED = [re.compile(w, re.IGNORECASE) for w in BLOCKED_WORDS]
+
 SHOP_ITEMS = {
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "+5 запросов к дневному лимиту", "category": "text"},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "+10 запросов к дневному лимиту", "category": "text"},
-    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "♾️", "desc": "Безлимит на 1 час", "category": "text"},
-    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "♾️", "desc": "Безлимит на 24 часа", "category": "text"},
-    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "♾️", "desc": "Безлимит на 7 дней", "category": "text"},
+    # Текстовые запросы
+    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "+5 текстовых запросов", "category": "text"},
+    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "+10 текстовых запросов", "category": "text"},
+    "unlimited_1h": {"name": "Безлимит текст 1ч", "price": 30, "icon": "♾️", "desc": "Безлимит текстовых запросов на 1 час", "category": "text"},
+    "unlimited_24h": {"name": "Безлимит текст 24ч", "price": 100, "icon": "♾️", "desc": "Безлимит текстовых запросов на 24 часа", "category": "text"},
+    "unlimited_7d": {"name": "Безлимит текст 7д", "price": 500, "icon": "♾️", "desc": "Безлимит текстовых запросов на 7 дней", "category": "text"},
+    # Генерации фото
     "image1": {"name": "1 генерация фото", "price": 15, "icon": "🎨", "desc": "1 генерация изображения", "category": "image"},
     "image5": {"name": "5 генераций фото", "price": 60, "icon": "🎨", "desc": "5 генераций изображений", "category": "image"},
     "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "desc": "Безлимит генераций фото на 1 час", "category": "image"},
+    # Для чатов
+    "chat_extra10": {"name": "+10 запросов в чатах", "price": 15, "icon": "👥", "desc": "+10 текстовых запросов в группах", "category": "chat"},
+    "chat_extra20": {"name": "+20 запросов в чатах", "price": 25, "icon": "👥", "desc": "+20 текстовых запросов в группах", "category": "chat"},
+    "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 40, "icon": "♾️", "desc": "Безлимит в чатах на 1 час", "category": "chat"},
 }
 
 FAQ_TEXT = """
@@ -48,15 +74,21 @@ FAQ_TEXT = """
 ━━━━━━━━━━━━━━━━━━━━
 
 ❓ Что такое NeBlock AI?
-Платформа с двумя ИИ-моделями в Telegram:
+Платформа с ИИ-моделями в Telegram:
 • NeBlock AI V1 — отвечает на вопросы, пишет код
 • NeBlock Images V1 — генерирует изображения
 
-❓ Как переключаться между моделями?
-Используй кнопки «💬 NeBlock AI V1» или «🎨 NeBlock Images V1».
+❓ Бот работает в группах?
+Да! Добавь бота в чат и пиши @имя_бота вопрос. Также по ключевым словам: бот, нейробот, AI.
+В чатах увеличенные лимиты: 15 текстовых и 10 фото в день!
 
-❓ Почему лимиты 5 вопросов и 3 фото в день?
-Чтобы не перегружать нейросеть и обеспечить стабильную работу.
+❓ Какие лимиты?
+• ЛС: 5 вопросов + 3 фото/день
+• Чаты: 15 вопросов + 10 фото/день
+Можно купить дополнительные запросы в Магазине.
+
+❓ Как переключаться между моделями?
+Кнопки «💬 NeBlock AI V1» или «🎨 NeBlock Images V1».
 
 ❓ Что такое NeBlock Tokens?
 Внутренняя валюта для покупок в Магазине. Не продаётся за деньги.
@@ -73,10 +105,8 @@ FAQ_TEXT = """
 ❓ Когда сбрасываются лимиты?
 Каждый день в 00:00 по Москве.
 
-❓ Бот помнит историю?
-Да, текстовая модель учитывает контекст диалога.
-
 ⚠️ ИИ может ошибаться. Все ответы только для справки.
+⚠️ Запрещённый контент не обрабатывается.
 """
 
 MODELS_INFO = """
@@ -88,6 +118,11 @@ MODELS_INFO = """
 
 🎨 NeBlock Images V1 🆕
 Модель для генерации изображений по текстовому описанию.
+
+👥 Поддержка чатов:
+• @бот вопрос — бот ответит
+• Ключевые слова: бот, нейробот, AI
+• Увеличенные лимиты для групп!
 
 ⚠️ ИИ может ошибаться. Только для справки.
 
@@ -131,7 +166,8 @@ def get_user(user_id):
         "joined": datetime.now().isoformat(),
         "requests_today": 0, "extra_requests": 0,
         "image_requests_today": 0, "extra_image_requests": 0,
-        "unlimited_until": None, "image_unlimited_until": None,
+        "chat_requests_today": 0, "extra_chat_requests": 0,
+        "unlimited_until": None, "image_unlimited_until": None, "chat_unlimited_until": None,
         "last_request": None, "total_requests": 0, "total_images": 0,
         "reset_date": datetime.now().strftime("%Y-%m-%d"),
         "tokens": START_BONUS, "daily_bonus_claimed": None,
@@ -139,6 +175,7 @@ def get_user(user_id):
         "referral_code": "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8)),
         "referred_by": None, "referrals": 0, "earned_tokens": 0, "spent_tokens": 0,
         "used_promos": [], "waiting_for_image": False, "current_model": "text",
+        "warnings": 0, "muted_until": None,
     }
     
     if uid not in users:
@@ -155,16 +192,21 @@ def get_user(user_id):
         users[uid]["extra_requests"] = 0
         users[uid]["image_requests_today"] = 0
         users[uid]["extra_image_requests"] = 0
+        users[uid]["chat_requests_today"] = 0
+        users[uid]["extra_chat_requests"] = 0
         users[uid]["reset_date"] = today
         save_users(users)
     
     return users[uid]
 
-def add_request(user_id):
+def add_request(user_id, chat_type="private"):
     users = load_users()
     uid = str(user_id)
     if uid in users:
-        users[uid]["requests_today"] = users[uid].get("requests_today", 0) + 1
+        if chat_type in ["group", "supergroup"]:
+            users[uid]["chat_requests_today"] = users[uid].get("chat_requests_today", 0) + 1
+        else:
+            users[uid]["requests_today"] = users[uid].get("requests_today", 0) + 1
         users[uid]["total_requests"] = users[uid].get("total_requests", 0) + 1
         users[uid]["last_request"] = datetime.now().isoformat()
         save_users(users)
@@ -178,13 +220,25 @@ def add_image_request(user_id):
         users[uid]["last_request"] = datetime.now().isoformat()
         save_users(users)
 
-def can_request(user_id):
+def can_request(user_id, chat_type="private"):
     user = get_user(user_id)
-    if user.get("unlimited_until"):
+    
+    # Безлимит для ЛС
+    if chat_type == "private" and user.get("unlimited_until"):
         try:
             if datetime.now() < datetime.fromisoformat(user["unlimited_until"]): return True
         except: pass
-    return user.get("requests_today", 0) < (DAILY_LIMIT + user.get("extra_requests", 0))
+    
+    # Безлимит для чатов
+    if chat_type in ["group", "supergroup"] and user.get("chat_unlimited_until"):
+        try:
+            if datetime.now() < datetime.fromisoformat(user["chat_unlimited_until"]): return True
+        except: pass
+    
+    if chat_type in ["group", "supergroup"]:
+        return user.get("chat_requests_today", 0) < (CHAT_DAILY_LIMIT + user.get("extra_chat_requests", 0))
+    else:
+        return user.get("requests_today", 0) < (DAILY_LIMIT + user.get("extra_requests", 0))
 
 def can_image_request(user_id):
     user = get_user(user_id)
@@ -194,13 +248,23 @@ def can_image_request(user_id):
         except: pass
     return user.get("image_requests_today", 0) < (IMAGE_DAILY_LIMIT + user.get("extra_image_requests", 0))
 
-def remaining(user_id):
+def remaining(user_id, chat_type="private"):
     user = get_user(user_id)
-    if user.get("unlimited_until"):
+    
+    if chat_type == "private" and user.get("unlimited_until"):
         try:
             if datetime.now() < datetime.fromisoformat(user["unlimited_until"]): return "безлимит"
         except: pass
-    return max(0, DAILY_LIMIT + user.get("extra_requests", 0) - user.get("requests_today", 0))
+    
+    if chat_type in ["group", "supergroup"] and user.get("chat_unlimited_until"):
+        try:
+            if datetime.now() < datetime.fromisoformat(user["chat_unlimited_until"]): return "безлимит"
+        except: pass
+    
+    if chat_type in ["group", "supergroup"]:
+        return max(0, CHAT_DAILY_LIMIT + user.get("extra_chat_requests", 0) - user.get("chat_requests_today", 0))
+    else:
+        return max(0, DAILY_LIMIT + user.get("extra_requests", 0) - user.get("requests_today", 0))
 
 def image_remaining(user_id):
     user = get_user(user_id)
@@ -244,6 +308,32 @@ def use_promo(user_id, code):
     save_promos(promos)
     return True, promo["amount"]
 
+def moderate_content(text):
+    for pattern in COMPILED_BLOCKED:
+        if pattern.search(text): return False, "Содержит запрещённый контент"
+    return True, None
+
+def is_user_muted(user_id):
+    user = get_user(user_id)
+    muted = user.get("muted_until")
+    if muted:
+        try:
+            if datetime.now() < datetime.fromisoformat(muted): return True
+        except: pass
+    return False
+
+def warn_user(user_id):
+    users = load_users()
+    uid = str(user_id)
+    users[uid]["warnings"] = users[uid].get("warnings", 0) + 1
+    if users[uid]["warnings"] >= 3:
+        users[uid]["muted_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
+        users[uid]["warnings"] = 0
+        save_users(users)
+        return True, "Заблокирован на 1 час"
+    save_users(users)
+    return False, f"Предупреждение {users[uid]['warnings']}/3"
+
 async def generate_image(prompt):
     try:
         response = client.images.generate(model=IMAGE_MODEL, prompt=prompt, size="1024x1024")
@@ -277,9 +367,14 @@ def shop_keyboard():
     keyboard = []
     text_items = [item for item in SHOP_ITEMS.items() if item[1]["category"] == "text"]
     image_items = [item for item in SHOP_ITEMS.items() if item[1]["category"] == "image"]
+    chat_items = [item for item in SHOP_ITEMS.items() if item[1]["category"] == "chat"]
     
-    keyboard.append([InlineKeyboardButton("── 💬 NeBlock AI V1 ──", callback_data="none")])
+    keyboard.append([InlineKeyboardButton("── 💬 NeBlock AI V1 (ЛС) ──", callback_data="none")])
     for item_id, item in text_items:
+        keyboard.append([InlineKeyboardButton(f"{item['icon']} {item['name']} — {item['price']} токенов", callback_data=f"buy_{item_id}")])
+    
+    keyboard.append([InlineKeyboardButton("── 👥 Чаты и группы ──", callback_data="none")])
+    for item_id, item in chat_items:
         keyboard.append([InlineKeyboardButton(f"{item['icon']} {item['name']} — {item['price']} токенов", callback_data=f"buy_{item_id}")])
     
     keyboard.append([InlineKeyboardButton("── 🎨 NeBlock Images V1 ──", callback_data="none")])
@@ -316,6 +411,7 @@ def limit_reached_keyboard():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user = get_user(user_id)
+    chat_type = update.effective_chat.type
     
     if context.args and context.args[0].startswith("ref_"):
         ref_code = context.args[0].replace("ref_", "")
@@ -332,14 +428,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 except: pass
                 break
     
+    if chat_type in ["group", "supergroup"]:
+        await update.message.reply_text(
+            f"🧠 NeBlock AI активирован в чате!\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"👥 Лимиты чата: {CHAT_DAILY_LIMIT} вопросов + {CHAT_IMAGE_LIMIT} фото/день\n"
+            f"Пишите: @{context.bot.username} ваш вопрос\n"
+            f"Или: бот, нейробот, AI — и ваш вопрос\n"
+            f"🛒 /shop — магазин запросов для чата\n"
+            f"{DISCLAIMER}"
+        )
+        return
+    
     await update.message.reply_text(
         f"🧠 NeBlock AI\n"
         f"━━━━━━━━━━━━━━━━━━━━\n\n"
         f"💬 NeBlock AI V1 — ответы на вопросы\n"
-        f"🎨 NeBlock Images V1 🆕 — генерация фото\n\n"
-        f"📊 Лимиты:\n"
+        f"🎨 NeBlock Images V1 🆕 — генерация фото\n"
+        f"👥 Работает в чатах\n\n"
+        f"📊 Лимиты (ЛС):\n"
         f"   • Текст: {DAILY_LIMIT} запросов/день\n"
         f"   • Фото: {IMAGE_DAILY_LIMIT} генераций/день\n"
+        f"📊 Лимиты (Чаты):\n"
+        f"   • Текст: {CHAT_DAILY_LIMIT} запросов/день\n"
+        f"   • Фото: {CHAT_IMAGE_LIMIT} генераций/день\n"
         f"💰 Баланс: {user.get('tokens', 0)} NeBlock Tokens\n\n"
         f"👇 Выбери модель:\n"
         f"{DISCLAIMER}",
@@ -381,8 +493,9 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"📊 Статистика\n━━━━━━━━━━━━━━━━\n"
         f"👥 Пользователей: {len(users)}\n"
-        f"💬 Текстовых запросов: {sum(u.get('total_requests', 0) for u in users.values())}\n"
+        f"💬 Запросов: {sum(u.get('total_requests', 0) for u in users.values())}\n"
         f"🎨 Изображений: {sum(u.get('total_images', 0) for u in users.values())}\n"
+        f"⚠️ Предупреждений: {sum(u.get('warnings', 0) for u in users.values())}\n"
         f"💰 Токенов: {sum(u.get('tokens', 0) for u in users.values())}"
     )
 
@@ -414,11 +527,9 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         save_users(users)
         await update.message.reply_text(
             f"🎨 NeBlock Images V1 активирована\n━━━━━━━━━━━━━━━━\n"
-            f"Опиши что нарисовать.\n"
-            f"Например: космический кот на луне\n\n"
+            f"Опиши что нарисовать.\nНапример: космический кот на луне\n\n"
             f"📊 Осталось генераций: {image_remaining(user_id)}\n"
-            f"⏳ Генерация занимает 10-30 секунд\n"
-            f"{DISCLAIMER}"
+            f"⏳ 10-30 секунд\n{DISCLAIMER}"
         )
         return True
     
@@ -428,10 +539,8 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if text == "🛒 Магазин":
         await update.message.reply_text(
-            f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n"
-            f"💰 Баланс: {get_tokens(user_id)} токенов\n\n"
-            f"Выбери категорию:\n"
-            f"{DISCLAIMER}",
+            f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\n"
+            f"💬 ЛС | 👥 Чаты | 🎨 Фото | ♾️ Безлимиты\n{DISCLAIMER}",
             reply_markup=shop_keyboard()
         )
         return True
@@ -441,7 +550,7 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             f"💰 Заработок\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
             f"🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов/день\n"
             f"👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу\n"
-            f"🎟 Промокоды от админа",
+            f"🎟 Промокоды",
             reply_markup=earn_keyboard()
         )
         return True
@@ -474,22 +583,30 @@ def get_full_profile(user_id):
         except: pass
         return "Не активен"
     
+    warnings = user.get("warnings", 0)
+    muted = "Нет" if not is_user_muted(user_id) else "Да"
+    
     return (
         f"👤 Личный кабинет\n━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"🆔 ID: {user_id}\n"
-        f"📅 Регистрация: {joined}\n"
-        f"🔮 Активная модель: {current_model}\n\n"
+        f"🆔 ID: {user_id}\n📅 Регистрация: {joined}\n"
+        f"🔮 Модель: {current_model}\n\n"
         f"💰 Баланс: {user.get('tokens', 0)} токенов\n"
         f"💎 Заработано: {user.get('earned_tokens', 0)}\n"
         f"💸 Потрачено: {user.get('spent_tokens', 0)}\n\n"
-        f"💬 NeBlock AI V1:\n"
+        f"💬 NeBlock AI V1 (ЛС):\n"
         f"   • Сегодня: {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}\n"
         f"   • Всего: {user.get('total_requests', 0)}\n"
         f"   • Безлимит: {format_unlimited(user.get('unlimited_until'))}\n\n"
+        f"👥 Чаты и группы:\n"
+        f"   • Сегодня: {user.get('chat_requests_today', 0)}/{CHAT_DAILY_LIMIT + user.get('extra_chat_requests', 0)}\n"
+        f"   • Безлимит: {format_unlimited(user.get('chat_unlimited_until'))}\n\n"
         f"🎨 NeBlock Images V1:\n"
         f"   • Сегодня: {user.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + user.get('extra_image_requests', 0)}\n"
         f"   • Всего: {user.get('total_images', 0)}\n"
         f"   • Безлимит: {format_unlimited(user.get('image_unlimited_until'))}\n\n"
+        f"🛡 Модерация:\n"
+        f"   • Предупреждений: {warnings}/3\n"
+        f"   • Заблокирован: {muted}\n\n"
         f"🔥 Серия бонусов: {user.get('daily_bonus_streak', 0)} дней\n"
         f"👥 Рефералов: {user.get('referrals', 0)}\n"
         f"🕐 Активность: {last}\n"
@@ -506,8 +623,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     user_id = query.from_user.id
     data = query.data
     
-    if data == "none":
-        return
+    if data == "none": return
     
     if data == "menu":
         await query.edit_message_text(f"🧠 NeBlock AI\n💰 {get_tokens(user_id)} токенов\n{DISCLAIMER}", reply_markup=main_menu())
@@ -515,8 +631,9 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await query.edit_message_text(
             "ℹ️ NeBlock AI\n━━━━━━━━━━━━━━━━\n\n"
             "💬 NeBlock AI V1 — текстовая модель\n"
-            "🎨 NeBlock Images V1 — генерация фото 🆕\n\n"
-            "🌐 Все языки | 💰 Токены | 🔄 Сброс в 00:00\n"
+            "🎨 NeBlock Images V1 — генерация фото 🆕\n"
+            "👥 Поддержка чатов (отдельные лимиты)\n"
+            "🛡 Умная модерация\n\n"
             f"{DISCLAIMER}",
             reply_markup=back_button()
         )
@@ -526,21 +643,19 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         user = get_user(user_id)
         await query.edit_message_text(
             f"📊 Статистика\n━━━━━━━━━━━━━━━━\n\n"
-            f"💬 NeBlock AI V1: {user.get('total_requests', 0)} запросов\n"
-            f"🎨 NeBlock Images V1: {user.get('total_images', 0)} фото\n"
-            f"💰 Баланс: {user.get('tokens', 0)} токенов",
+            f"💬 Запросов в ЛС: {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}\n"
+            f"👥 Запросов в чатах: {user.get('chat_requests_today', 0)}/{CHAT_DAILY_LIMIT + user.get('extra_chat_requests', 0)}\n"
+            f"🎨 Фото: {user.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + user.get('extra_image_requests', 0)}\n"
+            f"💰 Баланс: {user.get('tokens', 0)}",
             reply_markup=back_button()
         )
     elif data == "shop":
         await query.edit_message_text(
-            f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов\n\n💬 Текст | 🎨 Фото | ♾️ Безлимиты\n{DISCLAIMER}",
+            f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов\n💬 ЛС | 👥 Чаты | 🎨 Фото\n{DISCLAIMER}",
             reply_markup=shop_keyboard()
         )
     elif data == "earn":
-        await query.edit_message_text(
-            f"💰 Заработок\n💎 {get_tokens(user_id)}\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}",
-            reply_markup=earn_keyboard()
-        )
+        await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)}\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}", reply_markup=earn_keyboard())
     elif data == "promo":
         context.user_data["waiting_promo"] = True
         await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
@@ -576,44 +691,104 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         if not item: return
         tokens = get_tokens(user_id)
         if tokens < item["price"]:
-            await query.answer(f"❌ Недостаточно!", show_alert=True)
+            await query.answer(f"❌ Недостаточно токенов!\nНужно {item['price']}, у вас {tokens}", show_alert=True)
             return
         remove_tokens(user_id, item["price"])
         users = load_users()
         uid = str(user_id)
+        
         if item_id == "extra5": users[uid]["extra_requests"] += 5
         elif item_id == "extra10": users[uid]["extra_requests"] += 10
         elif item_id == "image1": users[uid]["extra_image_requests"] += 1
         elif item_id == "image5": users[uid]["extra_image_requests"] += 5
+        elif item_id == "chat_extra10": users[uid]["extra_chat_requests"] += 10
+        elif item_id == "chat_extra20": users[uid]["extra_chat_requests"] += 20
         elif item_id == "unlimited_1h": users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
         elif item_id == "unlimited_24h": users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=24)).isoformat()
         elif item_id == "unlimited_7d": users[uid]["unlimited_until"] = (datetime.now() + timedelta(days=7)).isoformat()
         elif item_id == "image_unlimited_1h": users[uid]["image_unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
+        elif item_id == "chat_unlimited_1h": users[uid]["chat_unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
+        
         save_users(users)
-        await query.answer(f"✅ {item['name']}!", show_alert=True)
-        await query.edit_message_text(f"✅ {item['name']}\n💎 {get_tokens(user_id)}", reply_markup=back_button())
+        await query.answer(f"✅ {item['name']} активирован!", show_alert=True)
+        await query.edit_message_text(
+            f"✅ Покупка успешна!\n━━━━━━━━━━━━━━━━\n"
+            f"{item['icon']} {item['name']}\n📝 {item['desc']}\n"
+            f"💰 Потрачено: {item['price']} токенов\n💎 Остаток: {get_tokens(user_id)}",
+            reply_markup=back_button()
+        )
     elif data.startswith("buy_"):
         item_id = data.replace("buy_", "")
         item = SHOP_ITEMS.get(item_id)
         if not item: return
         tokens = get_tokens(user_id)
-        can = "✅ Хватает" if tokens >= item["price"] else "❌ Не хватает"
-        model_name = "NeBlock AI V1" if item["category"] == "text" else "NeBlock Images V1"
+        can = "✅ Достаточно средств" if tokens >= item["price"] else "❌ Недостаточно средств"
+        cat_names = {"text": "NeBlock AI V1 (ЛС)", "image": "NeBlock Images V1", "chat": "Чаты и группы"}
+        model_name = cat_names.get(item["category"], "")
         await query.edit_message_text(
-            f"🛒 {item['icon']} {item['name']}\n📝 Для: {model_name}\n💰 Цена: {item['price']}\n💎 Баланс: {tokens}\n{can}",
+            f"🛒 Подтверждение покупки\n━━━━━━━━━━━━━━━━\n\n"
+            f"{item['icon']} {item['name']}\n📝 Для: {model_name}\n📝 {item['desc']}\n"
+            f"💰 Цена: {item['price']} токенов\n💎 Баланс: {tokens}\n{can}\n\nПодтвердите:",
             reply_markup=confirm_keyboard(item_id)
         )
 
 # ═══════════════════════════════════════════
-# 💬 Сообщения
+# 💬 Обработчик сообщений
 # ═══════════════════════════════════════════
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.strip()
+    text = update.message.text.strip() if update.message.text else ""
     user_id = update.effective_user.id
+    chat_type = update.effective_chat.type
+    bot_username = context.bot.username
     
-    if await reply_button_handler(update, context):
+    if is_user_muted(user_id):
+        await update.message.reply_text("🚫 Вы временно заблокированы за нарушения.")
         return
+    
+    is_clean, mod_reason = moderate_content(text)
+    if not is_clean:
+        muted_now, warn_msg = warn_user(user_id)
+        await update.message.reply_text(
+            f"⚠️ {mod_reason}\n{warn_msg}\n\n"
+            f"{'🚫 Заблокирован на 1 час' if muted_now else '⚠️ Нарушение правил'}"
+        )
+        logger.warning(f"Модерация: user={user_id}, text={text[:50]}, action={warn_msg}")
+        return
+    
+    if chat_type == "private":
+        if await reply_button_handler(update, context):
+            return
+    
+    # Обработка чатов
+    if chat_type in ["group", "supergroup"]:
+        mention = f"@{bot_username}"
+        keywords = ["бот", "нейробот", "бот ", "нейросеть", "ai ", "AI "]
+        
+        should_respond = False
+        clean_text = text
+        
+        if mention in text:
+            should_respond = True
+            clean_text = text.replace(mention, "").strip()
+        
+        if not should_respond:
+            for kw in keywords:
+                if text.lower().startswith(kw.lower()):
+                    should_respond = True
+                    clean_text = text[len(kw):].strip()
+                    break
+        
+        if not should_respond:
+            return
+        
+        text = clean_text
+        if not text:
+            await update.message.reply_text(
+                f"🧠 NeBlock AI слушает!\nНапишите: @{bot_username} ваш вопрос",
+                reply_to_message_id=update.message.message_id
+            )
+            return
     
     user = get_user(user_id)
     current_model = user.get("current_model", "text")
@@ -622,7 +797,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data.get("waiting_promo"):
         context.user_data["waiting_promo"] = False
         success, result = use_promo(user_id, text)
-        await update.message.reply_text(f"🎟 +{result} токенов!\n💎 {get_tokens(user_id)}" if success else f"❌ {result}")
+        await update.message.reply_text(
+            f"🎟 +{result} токенов!\n💎 {get_tokens(user_id)}" if success else f"❌ {result}",
+            reply_to_message_id=update.message.message_id if chat_type != "private" else None
+        )
         return
     
     # Модель изображений
@@ -633,15 +811,17 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         if not can_image_request(user_id):
             await update.message.reply_text(
-                f"🚫 Лимит NeBlock Images V1 исчерпан!\n"
+                f"🚫 Лимит генераций исчерпан!\n"
                 f"📊 {user.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + user.get('extra_image_requests', 0)}\n"
                 f"🛒 Купи генерации в Магазине",
-                reply_markup=limit_reached_keyboard()
+                reply_to_message_id=update.message.message_id if chat_type != "private" else None
             )
             return
         
-        msg = await update.message.reply_text("🎨 NeBlock Images V1 генерирует...\n⏳ 10-30 секунд")
-        await update.message.chat.send_action("upload_photo")
+        msg = await update.message.reply_text(
+            "🎨 NeBlock Images V1 генерирует...\n⏳ 10-30 секунд",
+            reply_to_message_id=update.message.message_id if chat_type != "private" else None
+        )
         
         try:
             image_bytes, error = await generate_image(text)
@@ -651,7 +831,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 rem = image_remaining(user_id)
                 await update.message.reply_photo(
                     photo=image_bytes,
-                    caption=f"🎨 NeBlock Images V1\n📝 {text[:200]}\n\n📊 Осталось: {rem}\n{DISCLAIMER}"
+                    caption=f"🎨 NeBlock Images V1\n📝 {text[:200]}\n\n📊 Осталось: {rem}\n{DISCLAIMER}",
+                    reply_to_message_id=update.message.message_id if chat_type != "private" else None
                 )
             else:
                 await msg.edit_text(f"❌ Ошибка: {error[:100] if error else 'Неизвестная'}")
@@ -663,31 +844,49 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     # Текстовая модель
-    if not can_request(user_id):
+    if not can_request(user_id, chat_type):
+        if chat_type in ["group", "supergroup"]:
+            limit_msg = f"🚫 Лимит чата исчерпан!\n📊 {user.get('chat_requests_today', 0)}/{CHAT_DAILY_LIMIT + user.get('extra_chat_requests', 0)}\n🛒 Купи запросы: /shop"
+        else:
+            limit_msg = f"🚫 Лимит исчерпан!\n📊 {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}"
+        
         await update.message.reply_text(
-            f"🚫 Лимит NeBlock AI V1 исчерпан!\n"
-            f"📊 {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}",
-            reply_markup=limit_reached_keyboard()
+            limit_msg,
+            reply_markup=limit_reached_keyboard() if chat_type == "private" else None,
+            reply_to_message_id=update.message.message_id if chat_type != "private" else None
         )
         return
     
-    msg = await update.message.reply_text("💬 NeBlock AI V1 генерирует ответ...")
-    await update.message.chat.send_action("typing")
+    msg = await update.message.reply_text(
+        "💬 NeBlock AI V1 генерирует ответ...",
+        reply_to_message_id=update.message.message_id if chat_type != "private" else None
+    )
     
     try:
         response = client.responses.create(prompt={"id": PROMPT_ID}, input=text)
         answer = response.output_text
-        add_request(user_id)
+        add_request(user_id, chat_type)
         await msg.delete()
         
         if answer:
-            rem = remaining(user_id)
-            used = user.get("requests_today", 0) + 1
-            total = DAILY_LIMIT + user.get("extra_requests", 0)
-            footer = f"\n\n━━━━━━━━━━━━━━━━\n💬 NeBlock AI V1 | 📊 {used}/{total} | Осталось: {rem}\n{DISCLAIMER}"
+            rem = remaining(user_id, chat_type)
+            if chat_type in ["group", "supergroup"]:
+                used = user.get("chat_requests_today", 0) + 1
+                total = CHAT_DAILY_LIMIT + user.get("extra_chat_requests", 0)
+                model_name = "👥 Чат"
+            else:
+                used = user.get("requests_today", 0) + 1
+                total = DAILY_LIMIT + user.get("extra_requests", 0)
+                model_name = "💬 NeBlock AI V1"
+            
+            footer = f"\n\n━━━━━━━━━━━━━━━━\n{model_name} | 📊 {used}/{total} | Осталось: {rem}\n{DISCLAIMER}"
+            
             for i in range(0, len(answer), 4000):
                 chunk = answer[i:i+4000]
-                await update.message.reply_text(chunk + footer if i == 0 else chunk)
+                await update.message.reply_text(
+                    chunk + footer if i == 0 else chunk,
+                    reply_to_message_id=update.message.message_id if chat_type != "private" else None
+                )
         else:
             await update.message.reply_text(f"🤷 Пустой ответ\n{DISCLAIMER}")
     except Exception as e:
@@ -700,11 +899,12 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ═══════════════════════════════════════════
 
 def main():
-    print("🧠 NeBlock AI (V1 + Images V1)")
+    print("🧠 NeBlock AI (V1 + Images V1 + Groups + Shop)")
     
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("shop", lambda u, c: u.message.reply_text(f"🛒 Магазин\n💰 {get_tokens(u.effective_user.id)} токенов", reply_markup=shop_keyboard())))
     app.add_handler(CommandHandler("give", admin_give))
     app.add_handler(CommandHandler("createpromo", admin_create_promo))
     app.add_handler(CommandHandler("promos", admin_promos))
