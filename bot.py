@@ -24,8 +24,8 @@ REFERRAL_BONUS = 25
 INVITED_BONUS = 10
 
 SHOP_ITEMS = {
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "Добавляет 5 запросов к дневному лимиту"},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "Добавляет 10 запросов к дневному лимиту"},
+    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "Добавляет 5 запросов к текущему лимиту на сегодня"},
+    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "Добавляет 10 запросов к текущему лимиту на сегодня"},
     "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "⚡", "desc": "Безлимитные запросы на 1 час"},
     "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "⚡", "desc": "Безлимитные запросы на 24 часа"},
     "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "🔥", "desc": "Безлимитные запросы на 7 дней"},
@@ -87,10 +87,11 @@ def get_user(user_id):
         if updated:
             save_users(users)
     
+    # Сброс в новый день
     today = datetime.now().strftime("%Y-%m-%d")
     if users[uid].get("reset_date") != today:
         users[uid]["requests_today"] = 0
-        users[uid]["extra_requests"] = 0
+        users[uid]["extra_requests"] = 0  # Доп запросы сгорают
         users[uid]["reset_date"] = today
         save_users(users)
     
@@ -107,6 +108,8 @@ def add_request(user_id):
 
 def can_request(user_id):
     user = get_user(user_id)
+    
+    # Проверка безлимита
     unlimited = user.get("unlimited_until")
     if unlimited:
         try:
@@ -115,10 +118,18 @@ def can_request(user_id):
                 return True
         except:
             pass
-    return user.get("requests_today", 0) < (DAILY_LIMIT + user.get("extra_requests", 0))
+    
+    # Проверка обычного лимита + доп запросов
+    requests_today = user.get("requests_today", 0)
+    extra = user.get("extra_requests", 0)
+    total_limit = DAILY_LIMIT + extra
+    
+    return requests_today < total_limit
 
 def remaining(user_id):
     user = get_user(user_id)
+    
+    # Если безлимит
     unlimited = user.get("unlimited_until")
     if unlimited:
         try:
@@ -127,7 +138,20 @@ def remaining(user_id):
                 return "безлимит"
         except:
             pass
-    return max(0, DAILY_LIMIT + user.get("extra_requests", 0) - user.get("requests_today", 0))
+    
+    requests_today = user.get("requests_today", 0)
+    extra = user.get("extra_requests", 0)
+    total_limit = DAILY_LIMIT + extra
+    
+    return max(0, total_limit - requests_today)
+
+def add_extra_requests(user_id, amount):
+    """Добавляет доп запросы к текущему количеству"""
+    users = load_users()
+    uid = str(user_id)
+    if uid in users:
+        users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + amount
+        save_users(users)
 
 def add_tokens(user_id, amount):
     users = load_users()
@@ -197,12 +221,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user = get_user(user_id)
     
+    extra = user.get("extra_requests", 0)
+    total = DAILY_LIMIT + extra
+    
     text = (
         f"🧠 NeBlock AI V1\n"
         f"━━━━━━━━━━━━━━━━\n"
         f"⚡ Быстрые ответы\n"
         f"💻 Помощь с кодом\n"
-        f"📊 Лимит: {DAILY_LIMIT} запросов/день\n"
+        f"📊 Базовый лимит: {DAILY_LIMIT} запросов/день\n"
+        f"📦 Доп запросов: {extra}\n"
+        f"📊 Всего сегодня: {total}\n"
         f"💰 Баланс: {user.get('tokens', 0)} токенов\n\n"
         f"👇 Выбери действие:"
     )
@@ -212,71 +241,55 @@ async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     if user_id not in ADMIN_IDS:
-        await update.message.reply_text("❌ Нет доступа.")
         return
     
     if not context.args or len(context.args) < 2:
-        await update.message.reply_text("Использование: /give ID КОЛИЧЕСТВО\nПример: /give 1671403667 100")
+        await update.message.reply_text("/give ID КОЛИЧЕСТВО")
         return
     
     try:
         target_id = int(context.args[0])
         amount = int(context.args[1])
-        
         add_tokens(target_id, amount)
         
         await update.message.reply_text(
-            f"✅ Успешно!\n"
-            f"━━━━━━━━━━━━━━━━\n"
-            f"👤 Пользователь: {target_id}\n"
-            f"💰 Начислено: {amount} токенов\n"
-            f"💎 Новый баланс: {get_tokens(target_id)}"
+            f"✅ Начислено {amount} токенов пользователю {target_id}\n"
+            f"💰 Новый баланс: {get_tokens(target_id)}"
         )
-        
         try:
-            await context.bot.send_message(
-                target_id,
-                f"💰 Администратор начислил вам {amount} NeBlock Tokens!\n"
-                f"💎 Ваш баланс: {get_tokens(target_id)}"
-            )
+            await context.bot.send_message(target_id, f"💰 Админ начислил вам {amount} NeBlock Tokens!\n💎 Баланс: {get_tokens(target_id)}")
         except:
             pass
-            
     except:
-        await update.message.reply_text("❌ Ошибка. Используй: /give ID КОЛИЧЕСТВО")
+        await update.message.reply_text("❌ Ошибка. /give ID КОЛИЧЕСТВО")
 
 async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    
-    if user_id not in ADMIN_IDS:
+    if update.effective_user.id not in ADMIN_IDS:
         return
     
     text = " ".join(context.args)
     if not text:
-        await update.message.reply_text("Использование: /broadcast ТЕКСТ")
+        await update.message.reply_text("/broadcast ТЕКСТ")
         return
     
     users = load_users()
     sent = 0
     for uid in users:
         try:
-            await context.bot.send_message(int(uid), f"📢 Рассылка NeBlock AI:\n\n{text}")
+            await context.bot.send_message(int(uid), f"📢 {text}")
             sent += 1
         except:
             pass
     
-    await update.message.reply_text(f"✅ Отправлено {sent} пользователям")
+    await update.message.reply_text(f"✅ Отправлено {sent}")
 
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    
-    if user_id not in ADMIN_IDS:
+    if update.effective_user.id not in ADMIN_IDS:
         return
     
     users = load_users()
     await update.message.reply_text(
         f"📊 Статистика\n"
-        f"━━━━━━━━━━━━━━━━\n"
         f"👥 Пользователей: {len(users)}\n"
         f"📝 Запросов: {sum(u.get('total_requests', 0) for u in users.values())}\n"
         f"💰 Токенов: {sum(u.get('tokens', 0) for u in users.values())}"
@@ -294,14 +307,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     logger.info(f"Кнопка: {data} | User: {user_id}")
     
-    # 🔙 Меню
     if data == "menu":
         user = get_user(user_id)
-        text = f"🧠 NeBlock AI V1\n━━━━━━━━━━━━━━━━\n📊 Лимит: {DAILY_LIMIT} запросов/день\n💰 Баланс: {user.get('tokens', 0)} токенов\n\n👇 Выбери действие:"
+        extra = user.get("extra_requests", 0)
+        total = DAILY_LIMIT + extra
+        text = (
+            f"🧠 NeBlock AI V1\n━━━━━━━━━━━━━━━━\n"
+            f"📊 Базовый лимит: {DAILY_LIMIT}\n"
+            f"📦 Доп запросов: {extra}\n"
+            f"📊 Всего сегодня: {total}\n"
+            f"💰 Баланс: {user.get('tokens', 0)} токенов\n\n"
+            f"👇 Выбери действие:"
+        )
         await query.edit_message_text(text, reply_markup=main_menu())
         return
     
-    # 📝 Задать вопрос
     if data == "ask":
         await query.edit_message_text(
             f"📝 Задай вопрос\n━━━━━━━━━━━━━━━━\nНапиши в чат что угодно.\n\n📊 Осталось: {remaining(user_id)}",
@@ -309,15 +329,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # ℹ️ О боте
     if data == "about":
         await query.edit_message_text(
-            f"ℹ️ NeBlock AI V1\n━━━━━━━━━━━━━━━━\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые ответы\n💬 Контекст диалога\n🌐 Все языки\n💰 Токены",
+            f"ℹ️ NeBlock AI V1\n━━━━━━━━━━━━━━━━\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые ответы\n💬 Контекст диалога\n🌐 Все языки",
             reply_markup=back_button()
         )
         return
     
-    # 👤 Профиль
     if data == "profile":
         user = get_user(user_id)
         joined = datetime.fromisoformat(user.get("joined", datetime.now().isoformat())).strftime("%d.%m.%Y")
@@ -334,18 +352,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except:
                 pass
         
+        extra = user.get("extra_requests", 0)
+        total = DAILY_LIMIT + extra
+        
         await query.edit_message_text(
             f"👤 Личный кабинет\n━━━━━━━━━━━━━━━━\n"
             f"🆔 ID: {user_id}\n📅 Регистрация: {joined}\n"
             f"💰 Баланс: {user.get('tokens', 0)} токенов\n💎 Заработано: {user.get('earned_tokens', 0)}\n"
-            f"📊 Сегодня: {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}\n"
-            f"📈 Всего: {user.get('total_requests', 0)}\n⚡ Безлимит: {unlimited}\n"
+            f"📊 Базовый лимит: {DAILY_LIMIT}\n📦 Доп запросов: {extra}\n📊 Всего сегодня: {total}\n"
+            f"📝 Использовано: {user.get('requests_today', 0)}/{total}\n"
+            f"📈 Всего запросов: {user.get('total_requests', 0)}\n⚡ Безлимит: {unlimited}\n"
             f"👥 Рефералов: {user.get('referrals', 0)}\n🕐 Активность: {last}",
             reply_markup=back_button()
         )
         return
     
-    # 🛒 Магазин
     if data == "shop":
         await query.edit_message_text(
             f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\nВыбери товар:",
@@ -353,7 +374,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # 💰 Заработок
     if data == "earn":
         await query.edit_message_text(
             f"💰 Заработок\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
@@ -364,12 +384,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # 📚 FAQ
     if data == "faq":
         await query.edit_message_text(
             f"📚 FAQ\n━━━━━━━━━━━━━━━━\n\n"
             f"❓ Что такое NeBlock AI?\nИИ-бот в Telegram.\n\n"
             f"❓ Почему лимит 5?\nЧтобы не перегружать нейросеть.\n\n"
+            f"❓ Доп запросы сгорают?\nДа, в 00:00 МСК каждый день.\n\n"
             f"❓ NeBlock Tokens?\nВнутренняя валюта. Не продаётся.\n\n"
             f"❓ Как заработать?\nБонус, рефералы.\n\n"
             f"❓ Сброс лимита?\nВ 00:00 МСК.\n\n"
@@ -378,7 +398,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # 🎁 Ежедневный бонус
     if data == "daily_bonus":
         user = get_user(user_id)
         today = datetime.now().strftime("%Y-%m-%d")
@@ -400,7 +419,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # 👥 Реферальная ссылка
     if data == "ref_link":
         user = get_user(user_id)
         bot_username = (await context.bot.get_me()).username
@@ -411,7 +429,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # ✅ Подтверждение покупки
+    # Подтверждение покупки
     if data.startswith("confirm_"):
         item_id = data.replace("confirm_", "")
         item = SHOP_ITEMS.get(item_id)
@@ -425,30 +443,45 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         
         remove_tokens(user_id, item["price"])
-        users = load_users()
-        uid = str(user_id)
         
         if item_id == "extra5":
-            users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + 5
+            add_extra_requests(user_id, 5)
+            bonus_text = "+5 запросов"
         elif item_id == "extra10":
-            users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + 10
+            add_extra_requests(user_id, 10)
+            bonus_text = "+10 запросов"
         elif item_id == "unlimited_1h":
-            users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
+            users = load_users()
+            users[str(user_id)]["unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
+            save_users(users)
+            bonus_text = "Безлимит на 1 час"
         elif item_id == "unlimited_24h":
-            users[uid]["unlimited_until"] = (datetime.now() + timedelta(hours=24)).isoformat()
+            users = load_users()
+            users[str(user_id)]["unlimited_until"] = (datetime.now() + timedelta(hours=24)).isoformat()
+            save_users(users)
+            bonus_text = "Безлимит на 24 часа"
         elif item_id == "unlimited_7d":
-            users[uid]["unlimited_until"] = (datetime.now() + timedelta(days=7)).isoformat()
+            users = load_users()
+            users[str(user_id)]["unlimited_until"] = (datetime.now() + timedelta(days=7)).isoformat()
+            save_users(users)
+            bonus_text = "Безлимит на 7 дней"
         
-        save_users(users)
+        user = get_user(user_id)
+        extra = user.get("extra_requests", 0)
+        total = DAILY_LIMIT + extra
         
         await query.answer(f"✅ {item['name']} активирован!", show_alert=True)
         await query.edit_message_text(
-            f"✅ Покупка успешна!\n━━━━━━━━━━━━━━━━\n🛒 {item['name']}\n📝 {item['desc']}\n💰 Потрачено: {item['price']}\n💎 Остаток: {get_tokens(user_id)}",
+            f"✅ Покупка успешна!\n━━━━━━━━━━━━━━━━\n"
+            f"🛒 {item['name']}\n📝 {item['desc']}\n"
+            f"💰 Потрачено: {item['price']} токенов\n💎 Остаток: {get_tokens(user_id)}\n\n"
+            f"📊 Базовый лимит: {DAILY_LIMIT}\n📦 Доп запросов: {extra}\n📊 Всего сегодня: {total}\n\n"
+            f"⚠️ Доп запросы сгорят в 00:00 МСК",
             reply_markup=back_button()
         )
         return
     
-    # 🛍 Выбор товара
+    # Выбор товара
     if data.startswith("buy_"):
         item_id = data.replace("buy_", "")
         item = SHOP_ITEMS.get(item_id)
@@ -459,7 +492,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         can_buy = "✅ Хватает" if tokens >= item["price"] else "❌ Не хватает"
         
         await query.edit_message_text(
-            f"🛒 Покупка\n━━━━━━━━━━━━━━━━\n{item['icon']} {item['name']}\n📝 {item['desc']}\n💰 Цена: {item['price']} токенов\n💎 Баланс: {tokens}\n{can_buy}\n\nПодтверди:",
+            f"🛒 Покупка\n━━━━━━━━━━━━━━━━\n"
+            f"{item['icon']} {item['name']}\n📝 {item['desc']}\n"
+            f"💰 Цена: {item['price']} токенов\n💎 Баланс: {tokens}\n{can_buy}\n\n"
+            f"Подтверди:",
             reply_markup=confirm_keyboard(item_id)
         )
         return
@@ -474,8 +510,14 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not can_request(user_id):
         user = get_user(user_id)
+        extra = user.get("extra_requests", 0)
+        total = DAILY_LIMIT + extra
         await update.message.reply_text(
-            f"🚫 Лимит исчерпан!\n━━━━━━━━━━━━━━━━\n📊 {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}\n💰 Баланс: {user.get('tokens', 0)} токенов\n🛒 Магазин\n🔄 Сброс в 00:00"
+            f"🚫 Лимит исчерпан!\n━━━━━━━━━━━━━━━━\n"
+            f"📊 Базовый лимит: {DAILY_LIMIT}\n📦 Доп запросов: {extra}\n📊 Всего: {total}\n"
+            f"📝 Использовано: {user.get('requests_today', 0)}/{total}\n"
+            f"💰 Баланс: {user.get('tokens', 0)} токенов\n"
+            f"🛒 Купи доп запросы в Магазине\n🔄 Сброс в 00:00 МСК"
         )
         return
     
@@ -489,7 +531,13 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         if answer:
             rem = remaining(user_id)
-            footer = f"\n\n━━━━━━━━━━━━━━━━\n📊 Осталось: {rem}"
+            user = get_user(user_id)
+            extra = user.get("extra_requests", 0)
+            total = DAILY_LIMIT + extra
+            used = user.get("requests_today", 0)
+            
+            footer = f"\n\n━━━━━━━━━━━━━━━━\n📊 {used}/{total} | Доп: +{extra} | Осталось: {rem}"
+            
             for i in range(0, len(answer), 4000):
                 chunk = answer[i:i+4000]
                 await update.message.reply_text(chunk + footer if i == 0 else chunk)
