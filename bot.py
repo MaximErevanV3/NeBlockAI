@@ -1,10 +1,11 @@
 import openai
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 import logging
 import os
 import json
 import random
+import asyncio
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
@@ -31,6 +32,27 @@ SHOP_ITEMS = {
     "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "⚡", "desc": "Безлимитные запросы на 24 часа"},
     "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "🔥", "desc": "Безлимитные запросы на 7 дней"},
 }
+
+# Анимации загрузки
+THINKING_ANIMATIONS = [
+    ["🤔 Думаю над ответом", "🤔 Думаю над ответом.", "🤔 Думаю над ответом..", "🤔 Думаю над ответом..."],
+    ["🔍 Анализирую вопрос", "🔍 Анализирую вопрос.", "🔍 Анализирую вопрос..", "🔍 Анализирую вопрос..."],
+    ["⚡ Обрабатываю данные", "⚡ Обрабатываю данные.", "⚡ Обрабатываю данные..", "⚡ Обрабатываю данные..."],
+    ["📝 Формирую ответ", "📝 Формирую ответ.", "📝 Формирую ответ..", "📝 Формирую ответ..."],
+]
+
+PROGRESS_BARS = [
+    "█░░░░░░░░░ 10%",
+    "██░░░░░░░░ 20%",
+    "███░░░░░░░ 30%",
+    "████░░░░░░ 40%",
+    "█████░░░░░ 50%",
+    "██████░░░░ 60%",
+    "███████░░░ 70%",
+    "████████░░ 80%",
+    "█████████░ 90%",
+    "██████████ 100%",
+]
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 logger = logging.getLogger("NeBlockAI")
@@ -199,10 +221,7 @@ def use_promo(user_id, code):
     if code in user.get("used_promos", []):
         return False, "Вы уже использовали этот промокод"
     
-    # Начисляем токены
     add_tokens(user_id, promo["amount"])
-    
-    # Отмечаем использование
     promo["used_by"].append(str(user_id))
     save_promos(promos)
     
@@ -218,6 +237,13 @@ def use_promo(user_id, code):
 # ═══════════════════════════════════════════
 # 🎛 Клавиатуры
 # ═══════════════════════════════════════════
+
+def main_reply_keyboard():
+    return ReplyKeyboardMarkup([
+        [KeyboardButton("📝 Задать вопрос"), KeyboardButton("👤 Профиль")],
+        [KeyboardButton("🛒 Магазин"), KeyboardButton("💰 Заработать")],
+        [KeyboardButton("🎟 Промокод"), KeyboardButton("📚 FAQ")],
+    ], resize_keyboard=True)
 
 def main_menu():
     return InlineKeyboardMarkup([
@@ -256,6 +282,45 @@ def earn_keyboard():
         [InlineKeyboardButton("🔙 Назад", callback_data="menu")],
     ])
 
+def limit_reached_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🛒 Купить запросы", callback_data="shop")],
+        [InlineKeyboardButton("💰 Заработать токены", callback_data="earn")],
+        [InlineKeyboardButton("🎟 Ввести промокод", callback_data="promo")],
+    ])
+
+# ═══════════════════════════════════════════
+# 🎬 Анимация генерации
+# ═══════════════════════════════════════════
+
+async def thinking_animation(message, stop_event):
+    """Красивая анимация с разными фразами и прогресс-баром"""
+    animation_set = random.choice(THINKING_ANIMATIONS)
+    phase = 0
+    
+    while not stop_event.is_set():
+        try:
+            # Меняем фразу каждые 4 тика
+            if phase < 4:
+                text = animation_set[phase % 4]
+            elif phase < 8:
+                text = f"⚡ Обрабатываю данные\n{PROGRESS_BARS[min(phase - 4, 9)]}"
+            elif phase < 12:
+                text = f"🧠 Нейросеть думает\n{PROGRESS_BARS[min(phase - 4, 9)]}"
+            else:
+                text = f"📝 Формирую ответ\n{PROGRESS_BARS[min(phase - 4, 9)]}"
+            
+            await message.edit_text(text)
+            await asyncio.sleep(1.0)
+            phase += 1
+            
+            if phase >= 20:
+                phase = 0
+                animation_set = random.choice(THINKING_ANIMATIONS)
+                
+        except:
+            break
+
 # ═══════════════════════════════════════════
 # 🚀 Команды
 # ═══════════════════════════════════════════
@@ -264,7 +329,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user = get_user(user_id)
     
-    # Обработка реферала
     if context.args and context.args[0].startswith("ref_"):
         ref_code = context.args[0].replace("ref_", "")
         users = load_users()
@@ -297,9 +361,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💻 Помощь с кодом\n"
         f"📊 Лимит: {total} запросов/день\n"
         f"💰 Баланс: {user.get('tokens', 0)} токенов\n\n"
-        f"👇 Выбери действие:"
+        f"👇 Используй меню или кнопки:"
     )
-    await update.message.reply_text(text, reply_markup=main_menu())
+    await update.message.reply_text(text, reply_markup=main_reply_keyboard())
+    await update.message.reply_text("Или выбери действие:", reply_markup=main_menu())
 
 # Админ команды
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -315,12 +380,9 @@ async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amount = int(context.args[1])
         add_tokens(target_id, amount)
         
-        await update.message.reply_text(
-            f"✅ Начислено {amount} токенов пользователю {target_id}\n"
-            f"💰 Новый баланс: {get_tokens(target_id)}"
-        )
+        await update.message.reply_text(f"✅ Начислено {amount} токенов пользователю {target_id}")
         try:
-            await context.bot.send_message(target_id, f"💰 Админ начислил вам {amount} NeBlock Tokens!\n💎 Баланс: {get_tokens(target_id)}")
+            await context.bot.send_message(target_id, f"💰 Админ начислил вам {amount} NeBlock Tokens!")
         except:
             pass
     except:
@@ -331,7 +393,7 @@ async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
     
     if not context.args or len(context.args) < 2:
-        await update.message.reply_text("/createpromo КОД КОЛИЧЕСТВО [МАКС_ИСПОЛЬЗОВАНИЙ]\nПример: /createpromo HELLO 50 10")
+        await update.message.reply_text("/createpromo КОД КОЛИЧЕСТВО [МАКС_ИСП]")
         return
     
     code = context.args[0].upper()
@@ -340,12 +402,7 @@ async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     create_promo(code, amount, max_uses)
     
-    await update.message.reply_text(
-        f"✅ Промокод создан!\n"
-        f"🎟 Код: {code}\n"
-        f"💰 Награда: {amount} токенов\n"
-        f"👥 Макс использований: {max_uses if max_uses > 0 else 'Безлимит'}"
-    )
+    await update.message.reply_text(f"✅ Промокод {code} создан! Награда: {amount} токенов")
 
 async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS:
@@ -356,11 +413,11 @@ async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Нет активных промокодов.")
         return
     
-    text = "🎟 Активные промокоды:\n━━━━━━━━━━━━━━━━\n"
+    text = "🎟 Промокоды:\n"
     for code, data in promos.items():
         used = len(data["used_by"])
         max_u = data["max_uses"]
-        text += f"\n{code}: {data['amount']} токенов | {used}/{max_u if max_u > 0 else '∞'} использований"
+        text += f"\n{code}: {data['amount']} токенов | {used}/{max_u if max_u > 0 else '∞'}"
     
     await update.message.reply_text(text)
 
@@ -380,7 +437,7 @@ async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         save_promos(promos)
         await update.message.reply_text(f"✅ Промокод {code} удалён.")
     else:
-        await update.message.reply_text("❌ Промокод не найден.")
+        await update.message.reply_text("❌ Не найден.")
 
 async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS:
@@ -410,7 +467,7 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     promos = load_promos()
     
     await update.message.reply_text(
-        f"📊 Статистика\n━━━━━━━━━━━━━━━━\n"
+        f"📊 Статистика\n"
         f"👥 Пользователей: {len(users)}\n"
         f"📝 Запросов: {sum(u.get('total_requests', 0) for u in users.values())}\n"
         f"💰 Токенов: {sum(u.get('tokens', 0) for u in users.values())}\n"
@@ -418,16 +475,89 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ═══════════════════════════════════════════
-# 🔘 Кнопки
+# 🔘 Обработчик обычных кнопок
 # ═══════════════════════════════════════════
 
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    user_id = update.effective_user.id
+    
+    handlers = {
+        "📝 Задать вопрос": lambda: update.message.reply_text(f"📝 Задай вопрос\n━━━━━━━━━━━━━━━━\nПросто напиши в чат.\n\n📊 Осталось: {remaining(user_id)}"),
+        
+        "👤 Профиль": lambda: update.message.reply_text(get_profile_text(user_id)),
+        
+        "🛒 Магазин": lambda: update.message.reply_text(
+            f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\nВыбери товар:",
+            reply_markup=shop_keyboard()
+        ),
+        
+        "💰 Заработать": lambda: update.message.reply_text(
+            f"💰 Заработок\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
+            f"🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов/день\n"
+            f"👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу",
+            reply_markup=earn_keyboard()
+        ),
+        
+        "🎟 Промокод": lambda: (
+            context.user_data.update({"waiting_promo": True}),
+            update.message.reply_text(f"🎟 Промокод\n━━━━━━━━━━━━━━━━\nОтправь промокод в чат.")
+        ),
+        
+        "📚 FAQ": lambda: update.message.reply_text(
+            f"📚 FAQ\n━━━━━━━━━━━━━━━━\n\n"
+            f"❓ Что такое NeBlock AI?\nИИ-бот в Telegram.\n\n"
+            f"❓ Почему лимит 5?\nЧтобы не перегружать нейросеть.\n\n"
+            f"❓ Доп запросы сгорают?\nДа, в 00:00 МСК.\n\n"
+            f"❓ Промокоды?\nВводи в разделе Промокод.\n\n"
+            f"❓ Сброс лимита?\nВ 00:00 МСК."
+        ),
+    }
+    
+    if text in handlers:
+        handlers[text]()
+        return True
+    
+    return False
+
+def get_profile_text(user_id):
+    user = get_user(user_id)
+    joined = datetime.fromisoformat(user.get("joined", datetime.now().isoformat())).strftime("%d.%m.%Y")
+    last = "Никогда" if not user.get("last_request") else datetime.fromisoformat(user["last_request"]).strftime("%H:%M %d.%m.%Y")
+    unlimited = "Не активен"
+    if user.get("unlimited_until"):
+        try:
+            until = datetime.fromisoformat(user["unlimited_until"])
+            if datetime.now() < until:
+                diff = until - datetime.now()
+                h = diff.seconds // 3600
+                m = (diff.seconds % 3600) // 60
+                unlimited = f"Активен ({h}ч {m}м)"
+        except:
+            pass
+    
+    extra = user.get("extra_requests", 0)
+    total = DAILY_LIMIT + extra
+    
+    return (
+        f"👤 Личный кабинет\n━━━━━━━━━━━━━━━━\n"
+        f"🆔 ID: {user_id}\n📅 Регистрация: {joined}\n"
+        f"💰 Баланс: {user.get('tokens', 0)} токенов\n💎 Заработано: {user.get('earned_tokens', 0)}\n"
+        f"📊 Лимит: {total} (база: {DAILY_LIMIT} + доп: {extra})\n"
+        f"📝 Использовано: {user.get('requests_today', 0)}/{total}\n"
+        f"📈 Всего запросов: {user.get('total_requests', 0)}\n⚡ Безлимит: {unlimited}\n"
+        f"👥 Рефералов: {user.get('referrals', 0)}\n🕐 Активность: {last}"
+    )
+
+# ═══════════════════════════════════════════
+# 🔘 Inline кнопки
+# ═══════════════════════════════════════════
+
+async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
     data = query.data
-    
-    logger.info(f"Кнопка: {data} | User: {user_id}")
     
     if data == "menu":
         user = get_user(user_id)
@@ -438,55 +568,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     if data == "ask":
-        await query.edit_message_text(
-            f"📝 Задай вопрос\n━━━━━━━━━━━━━━━━\nНапиши в чат что угодно.\n\n📊 Осталось: {remaining(user_id)}",
-            reply_markup=back_button()
-        )
+        await query.edit_message_text(f"📝 Задай вопрос\n━━━━━━━━━━━━━━━━\nНапиши в чат что угодно.\n\n📊 Осталось: {remaining(user_id)}", reply_markup=back_button())
         return
     
     if data == "about":
-        await query.edit_message_text(
-            f"ℹ️ NeBlock AI V1\n━━━━━━━━━━━━━━━━\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые ответы\n💬 Контекст диалога\n🌐 Все языки\n🎟 Промокоды",
-            reply_markup=back_button()
-        )
+        await query.edit_message_text("ℹ️ NeBlock AI V1\n━━━━━━━━━━━━━━━━\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые ответы\n💬 Контекст диалога\n🌐 Все языки\n🎟 Промокоды", reply_markup=back_button())
         return
     
     if data == "profile":
-        user = get_user(user_id)
-        joined = datetime.fromisoformat(user.get("joined", datetime.now().isoformat())).strftime("%d.%m.%Y")
-        last = "Никогда" if not user.get("last_request") else datetime.fromisoformat(user["last_request"]).strftime("%H:%M %d.%m.%Y")
-        unlimited = "Не активен"
-        if user.get("unlimited_until"):
-            try:
-                until = datetime.fromisoformat(user["unlimited_until"])
-                if datetime.now() < until:
-                    diff = until - datetime.now()
-                    h = diff.seconds // 3600
-                    m = (diff.seconds % 3600) // 60
-                    unlimited = f"Активен ({h}ч {m}м)"
-            except:
-                pass
-        
-        extra = user.get("extra_requests", 0)
-        total = DAILY_LIMIT + extra
-        
-        await query.edit_message_text(
-            f"👤 Личный кабинет\n━━━━━━━━━━━━━━━━\n"
-            f"🆔 ID: {user_id}\n📅 Регистрация: {joined}\n"
-            f"💰 Баланс: {user.get('tokens', 0)} токенов\n💎 Заработано: {user.get('earned_tokens', 0)}\n"
-            f"📊 Лимит: {total} (база: {DAILY_LIMIT} + доп: {extra})\n"
-            f"📝 Использовано: {user.get('requests_today', 0)}/{total}\n"
-            f"📈 Всего запросов: {user.get('total_requests', 0)}\n⚡ Безлимит: {unlimited}\n"
-            f"👥 Рефералов: {user.get('referrals', 0)}\n🕐 Активность: {last}",
-            reply_markup=back_button()
-        )
+        await query.edit_message_text(get_profile_text(user_id), reply_markup=back_button())
         return
     
     if data == "shop":
-        await query.edit_message_text(
-            f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\nВыбери товар:",
-            reply_markup=shop_keyboard()
-        )
+        await query.edit_message_text(f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\nВыбери товар:", reply_markup=shop_keyboard())
         return
     
     if data == "earn":
@@ -494,22 +588,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"💰 Заработок\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
             f"🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов/день\n"
             f"👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу\n"
-            f"🎟 Промокоды: вводи в меню\n"
-            f"🎯 Старт: {START_BONUS} токенов",
+            f"🎟 Промокоды: вводи в меню\n🎯 Старт: {START_BONUS} токенов",
             reply_markup=earn_keyboard()
         )
         return
     
     if data == "promo":
-        await query.edit_message_text(
-            f"🎟 Промокод\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
-            f"Отправь промокод в чат.\n"
-            f"Например: HELLO2024\n\n"
-            f"Узнай промокоды у админа!",
-            reply_markup=back_button()
-        )
-        # Сохраняем что ждём промокод
         context.user_data["waiting_promo"] = True
+        await query.edit_message_text(f"🎟 Промокод\n━━━━━━━━━━━━━━━━\nОтправь промокод в чат.", reply_markup=back_button())
         return
     
     if data == "faq":
@@ -518,10 +604,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"❓ Что такое NeBlock AI?\nИИ-бот в Telegram.\n\n"
             f"❓ Почему лимит 5?\nЧтобы не перегружать нейросеть.\n\n"
             f"❓ Доп запросы сгорают?\nДа, в 00:00 МСК.\n\n"
-            f"❓ NeBlock Tokens?\nВнутренняя валюта.\n\n"
             f"❓ Промокоды?\nВводи в разделе Промокод.\n\n"
-            f"❓ Сброс лимита?\nВ 00:00 МСК.\n\n"
-            f"❓ Контекст?\nДа, бот помнит диалог.",
+            f"❓ Сброс лимита?\nВ 00:00 МСК.",
             reply_markup=back_button()
         )
         return
@@ -541,20 +625,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         add_tokens(user_id, bonus)
         
         await query.answer(f"🎉 +{bonus} NeBlock Tokens!", show_alert=True)
-        await query.edit_message_text(
-            f"🎁 Ежедневный бонус\n━━━━━━━━━━━━━━━━\n✅ +{bonus} токенов\n💰 Баланс: {get_tokens(user_id)}\n🔄 Приходи завтра!",
-            reply_markup=back_button()
-        )
+        await query.edit_message_text(f"🎁 Ежедневный бонус\n━━━━━━━━━━━━━━━━\n✅ +{bonus} токенов\n💰 Баланс: {get_tokens(user_id)}\n🔄 Приходи завтра!", reply_markup=back_button())
         return
     
     if data == "ref_link":
         user = get_user(user_id)
         bot_username = (await context.bot.get_me()).username
         ref_link = f"https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}"
-        await query.edit_message_text(
-            f"👥 Рефералы\n━━━━━━━━━━━━━━━━\n🔗 {ref_link}\n\n💰 +{REFERRAL_BONUS} тебе\n🎁 +{INVITED_BONUS} другу\n👥 Приглашено: {user.get('referrals', 0)}",
-            reply_markup=back_button()
-        )
+        await query.edit_message_text(f"👥 Рефералы\n━━━━━━━━━━━━━━━━\n🔗 {ref_link}\n\n💰 +{REFERRAL_BONUS} тебе\n🎁 +{INVITED_BONUS} другу\n👥 Приглашено: {user.get('referrals', 0)}", reply_markup=back_button())
         return
     
     if data.startswith("confirm_"):
@@ -571,10 +649,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         remove_tokens(user_id, item["price"])
         
-        if item_id == "extra5":
-            add_extra_requests(user_id, 5)
-        elif item_id == "extra10":
-            add_extra_requests(user_id, 10)
+        if item_id == "extra5": add_extra_requests(user_id, 5)
+        elif item_id == "extra10": add_extra_requests(user_id, 10)
         elif item_id == "unlimited_1h":
             users = load_users()
             users[str(user_id)]["unlimited_until"] = (datetime.now() + timedelta(hours=1)).isoformat()
@@ -597,8 +673,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"✅ Покупка успешна!\n━━━━━━━━━━━━━━━━\n"
             f"🛒 {item['name']}\n📝 {item['desc']}\n"
             f"💰 Потрачено: {item['price']} токенов\n💎 Остаток: {get_tokens(user_id)}\n\n"
-            f"📊 Новый лимит: {total} запросов/день\n"
-            f"⚠️ Доп запросы сгорят в 00:00 МСК",
+            f"📊 Новый лимит: {total} запросов/день\n⚠️ Доп запросы сгорят в 00:00 МСК",
             reply_markup=back_button()
         )
         return
@@ -615,19 +690,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             f"🛒 Покупка\n━━━━━━━━━━━━━━━━\n"
             f"{item['icon']} {item['name']}\n📝 {item['desc']}\n"
-            f"💰 Цена: {item['price']} токенов\n💎 Баланс: {tokens}\n{can_buy}\n\n"
-            f"Подтверди:",
+            f"💰 Цена: {item['price']} токенов\n💎 Баланс: {tokens}\n{can_buy}\n\nПодтверди:",
             reply_markup=confirm_keyboard(item_id)
         )
         return
 
 # ═══════════════════════════════════════════
-# 💬 Сообщения
+# 💬 Обработчик сообщений
 # ═══════════════════════════════════════════
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     user_id = update.effective_user.id
+    
+    # Проверяем обычные кнопки
+    if await reply_button_handler(update, context):
+        return
     
     # Проверка на промокод
     if context.user_data.get("waiting_promo"):
@@ -649,20 +727,33 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = get_user(user_id)
         extra = user.get("extra_requests", 0)
         total = DAILY_LIMIT + extra
+        
         await update.message.reply_text(
-            f"🚫 Лимит исчерпан!\n━━━━━━━━━━━━━━━━\n"
-            f"📊 {user.get('requests_today', 0)}/{total}\n"
-            f"💰 Баланс: {user.get('tokens', 0)} токенов\n"
-            f"🛒 Магазин\n🔄 Сброс в 00:00"
+            f"🚫 Дневной лимит исчерпан!\n━━━━━━━━━━━━━━━━\n"
+            f"📊 Использовано: {user.get('requests_today', 0)}/{total}\n"
+            f"💰 Баланс: {user.get('tokens', 0)} токенов\n\n"
+            f"Что делать?\n• Купить доп запросы\n• Заработать токены\n• Ввести промокод\n\n"
+            f"🔄 Сброс в 00:00 МСК",
+            reply_markup=limit_reached_keyboard()
         )
         return
     
-    msg = await update.message.reply_text("⚡ Генерирую...")
+    # Запускаем анимацию
+    msg = await update.message.reply_text("🤔 Думаю над ответом")
+    stop_anim = asyncio.Event()
+    anim_task = asyncio.create_task(thinking_animation(msg, stop_anim))
+    
+    # Отправляем статус "печатает"
+    await update.message.chat.send_action("typing")
     
     try:
         response = client.responses.create(prompt={"id": PROMPT_ID}, input=text)
         answer = response.output_text
         add_request(user_id)
+        
+        # Останавливаем анимацию
+        stop_anim.set()
+        await anim_task
         await msg.delete()
         
         if answer:
@@ -680,12 +771,13 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("🤷 Не удалось сгенерировать ответ.")
     except Exception as e:
+        stop_anim.set()
+        await anim_task
         try:
-            await msg.delete()
+            await msg.edit_text("❌ Ошибка генерации. Попробуй позже.")
         except:
             pass
         logger.error(f"Ошибка: {str(e)[:100]}")
-        await update.message.reply_text("❌ Ошибка. Попробуй позже.")
 
 # ═══════════════════════════════════════════
 # 🚀 Запуск
@@ -696,19 +788,14 @@ def main():
     
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    # Пользовательские команды
     app.add_handler(CommandHandler("start", start))
-    
-    # Админ команды
     app.add_handler(CommandHandler("give", admin_give))
     app.add_handler(CommandHandler("createpromo", admin_create_promo))
     app.add_handler(CommandHandler("promos", admin_promos))
     app.add_handler(CommandHandler("deletepromo", admin_delete_promo))
     app.add_handler(CommandHandler("broadcast", admin_broadcast))
     app.add_handler(CommandHandler("stats", admin_stats))
-    
-    # Обработчики
-    app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(CallbackQueryHandler(inline_button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
     
     print("✅ Бот запущен!")
