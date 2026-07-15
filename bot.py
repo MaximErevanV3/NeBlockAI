@@ -5,7 +5,6 @@ import logging
 import os
 import json
 import random
-import asyncio
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
@@ -28,9 +27,9 @@ INVITED_BONUS = 10
 SHOP_ITEMS = {
     "extra5": {"name": "+5 запросов", "price": 10, "icon": "📦", "desc": "Добавляет 5 запросов к дневному лимиту на сегодня"},
     "extra10": {"name": "+10 запросов", "price": 18, "icon": "📦", "desc": "Добавляет 10 запросов к дневному лимиту на сегодня"},
-    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "⚡", "desc": "Неограниченные запросы в течение 1 часа"},
-    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "⚡", "desc": "Неограниченные запросы в течение 24 часов"},
-    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "🔥", "desc": "Неограниченные запросы в течение 7 дней"},
+    "unlimited_1h": {"name": "Безлимит 1 час", "price": 30, "icon": "♾️", "desc": "Неограниченные запросы в течение 1 часа"},
+    "unlimited_24h": {"name": "Безлимит 24 часа", "price": 100, "icon": "♾️", "desc": "Неограниченные запросы в течение 24 часов"},
+    "unlimited_7d": {"name": "Безлимит 7 дней", "price": 500, "icon": "♾️", "desc": "Неограниченные запросы в течение 7 дней"},
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -311,77 +310,42 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     user_id = update.effective_user.id
     
     if text == "📝 Задать вопрос":
-        await update.message.reply_text(
-            f"📝 Задай свой вопрос\n"
-            f"━━━━━━━━━━━━━━━━\n"
-            f"Просто напиши в чат что угодно.\n"
-            f"Я отвечу быстро и по делу.\n\n"
-            f"📊 Осталось запросов: {remaining(user_id)}"
-        )
+        await update.message.reply_text(f"📝 Задай свой вопрос\n━━━━━━━━━━━━━━━━\nПросто напиши в чат.\n\n📊 Осталось: {remaining(user_id)}")
         return True
-    
     if text == "👤 Профиль":
         await update.message.reply_text(get_full_profile(user_id), reply_markup=main_menu())
         return True
-    
     if text == "🛒 Магазин":
-        await update.message.reply_text(
-            f"🛒 Магазин NeBlock\n━━━━━━━━━━━━━━━━\n"
-            f"💰 Твой баланс: {get_tokens(user_id)} NeBlock Tokens\n\n"
-            f"Выбери товар для покупки:",
-            reply_markup=shop_keyboard()
-        )
+        await update.message.reply_text(f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\nВыбери товар:", reply_markup=shop_keyboard())
         return True
-    
     if text == "💰 Заработать":
         await update.message.reply_text(
-            f"💰 Заработок NeBlock Tokens\n━━━━━━━━━━━━━━━━\n"
-            f"💎 Твой баланс: {get_tokens(user_id)} токенов\n\n"
-            f"Способы заработка:\n"
-            f"🎁 Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов\n"
+            f"💰 Заработок\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
+            f"🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов/день\n"
             f"👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу\n"
-            f"🎯 Стартовый бонус: {START_BONUS} токенов\n"
-            f"🎟 Промокоды от админа",
+            f"🎯 Старт: {START_BONUS} токенов\n🎟 Промокоды",
             reply_markup=earn_keyboard()
         )
         return True
-    
     if text == "🎟 Промокод":
         context.user_data["waiting_promo"] = True
-        await update.message.reply_text(
-            f"🎟 Активация промокода\n━━━━━━━━━━━━━━━━\n"
-            f"Отправь промокод в чат одним сообщением.\n\n"
-            f"Пример: HELLO2024"
-        )
+        await update.message.reply_text("🎟 Отправь промокод в чат.")
         return True
-    
     if text == "📚 FAQ":
         await update.message.reply_text(
-            f"📚 Часто задаваемые вопросы\n━━━━━━━━━━━━━━━━\n\n"
-            f"❓ Что такое NeBlock AI?\n"
-            f"ИИ-бот в Telegram. Отвечает на вопросы, пишет код, объясняет темы.\n\n"
-            f"❓ Почему лимит 5 запросов?\n"
-            f"Чтобы не перегружать нейросеть и сохранять быстрые ответы для всех.\n\n"
-            f"❓ Что такое NeBlock Tokens?\n"
-            f"Внутренняя валюта бота для покупок в Магазине. Не продаётся за деньги.\n\n"
-            f"❓ Доп запросы сгорают?\n"
-            f"Да, каждый день в 00:00 МСК.\n\n"
-            f"❓ Как заработать токены?\n"
-            f"Ежедневный бонус, рефералы, промокоды.\n\n"
-            f"❓ Бот помнит контекст?\n"
-            f"Да, можно вести диалог."
+            "📚 FAQ\n━━━━━━━━━━━━━━━━\n\n"
+            "❓ Лимит 5 запросов - чтобы не перегружать нейросеть.\n"
+            "❓ Сброс в 00:00 МСК.\n❓ Токены - внутренняя валюта.\n"
+            "❓ Безлимит отключает лимит на выбранное время."
         )
         return True
-    
     return False
 
 def get_full_profile(user_id):
     user = get_user(user_id)
-    
     joined = datetime.fromisoformat(user.get("joined", datetime.now().isoformat())).strftime("%d.%m.%Y в %H:%M")
     last = "Никогда"
-    if user.get("last_request"):
-        last = datetime.fromisoformat(user["last_request"]).strftime("%d.%m.%Y в %H:%M")
+    if user.get("last_request"): last = datetime.fromisoformat(user["last_request"]).strftime("%d.%m.%Y в %H:%M")
     
     unlimited = "Не активен"
     if user.get("unlimited_until"):
@@ -389,37 +353,34 @@ def get_full_profile(user_id):
             until = datetime.fromisoformat(user["unlimited_until"])
             if datetime.now() < until:
                 diff = until - datetime.now()
-                h = diff.seconds // 3600
-                m = (diff.seconds % 3600) // 60
-                unlimited = f"Активен (осталось {h}ч {m}м)"
+                days = diff.days
+                hours = diff.seconds // 3600
+                minutes = (diff.seconds % 3600) // 60
+                if days > 0: unlimited = f"Активен (осталось {days}д {hours}ч)"
+                else: unlimited = f"Активен (осталось {hours}ч {minutes}м)"
         except: pass
     
     extra = user.get("extra_requests", 0)
     total = DAILY_LIMIT + extra
     used = user.get("requests_today", 0)
-    
     streak = user.get("daily_bonus_streak", 0)
     
     return (
-        f"👤 Личный кабинет\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"🆔 ID: {user_id}\n"
-        f"📅 Регистрация: {joined}\n\n"
+        f"👤 Личный кабинет\n━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"🆔 ID: {user_id}\n📅 Регистрация: {joined}\n\n"
         f"💰 Баланс: {user.get('tokens', 0)} NeBlock Tokens\n"
-        f"💎 Заработано всего: {user.get('earned_tokens', 0)}\n"
-        f"💸 Потрачено всего: {user.get('spent_tokens', 0)}\n\n"
+        f"💎 Заработано: {user.get('earned_tokens', 0)}\n"
+        f"💸 Потрачено: {user.get('spent_tokens', 0)}\n\n"
         f"📊 Лимит запросов:\n"
         f"   • Базовый: {DAILY_LIMIT}\n"
-        f"   • Дополнительные: +{extra}\n"
-        f"   • Всего сегодня: {total}\n"
+        f"   • Доп: +{extra}\n"
+        f"   • Всего: {total}\n"
         f"   • Использовано: {used}/{total}\n\n"
-        f"📈 Всего запросов за всё время: {user.get('total_requests', 0)}\n\n"
-        f"⚡ Безлимитный режим: {unlimited}\n\n"
-        f"🔥 Серия ежедневных бонусов: {streak} дней\n\n"
-        f"👥 Реферальная программа:\n"
-        f"   • Приглашено друзей: {user.get('referrals', 0)}\n"
-        f"   • Реферальный код: {user.get('referral_code', '')}\n\n"
-        f"🕐 Последняя активность: {last}"
+        f"📈 Всего запросов: {user.get('total_requests', 0)}\n\n"
+        f"♾️ Безлимит: {unlimited}\n\n"
+        f"🔥 Серия бонусов: {streak} дней\n\n"
+        f"👥 Рефералы: {user.get('referrals', 0)}\n"
+        f"🕐 Активность: {last}"
     )
 
 # ═══════════════════════════════════════════
@@ -433,58 +394,31 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     data = query.data
     
     if data == "menu":
-        await query.edit_message_text(
-            f"🧠 NeBlock AI V1\n━━━━━━━━━━━━━━━━\n"
-            f"💰 Баланс: {get_tokens(user_id)} токенов",
-            reply_markup=main_menu()
-        )
+        await query.edit_message_text(f"🧠 NeBlock AI V1\n💰 {get_tokens(user_id)} токенов", reply_markup=main_menu())
     elif data == "about":
         await query.edit_message_text(
-            "ℹ️ О NeBlock AI\n━━━━━━━━━━━━━━━━\n\n"
-            "🧠 Модель: NeBlock AI V1\n"
-            "⚡ Быстрые и точные ответы\n"
-            "💬 Понимание контекста\n"
-            "🌐 Поддержка всех языков\n"
-            "💰 Внутренняя экономика\n\n"
-            "Создан с заботой о пользователях.",
+            "ℹ️ NeBlock AI V1\n━━━━━━━━━━━━━━━━\n\n🧠 Модель: NeBlock AI V1\n⚡ Быстрые ответы\n💬 Контекст\n🌐 Все языки\n💰 Токены\n♾️ Безлимиты",
             reply_markup=back_button()
         )
     elif data == "stats":
         user = get_user(user_id)
-        extra = user.get("extra_requests", 0)
-        total = DAILY_LIMIT + extra
         await query.edit_message_text(
-            f"📊 Твоя статистика\n━━━━━━━━━━━━━━━━\n\n"
-            f"📝 Запросов сегодня: {user.get('requests_today', 0)}/{total}\n"
-            f"📈 Всего запросов: {user.get('total_requests', 0)}\n"
-            f"💰 Баланс: {user.get('tokens', 0)} токенов\n"
-            f"👥 Рефералов: {user.get('referrals', 0)}",
+            f"📊 Статистика\n━━━━━━━━━━━━━━━━\n\n📝 Сегодня: {user.get('requests_today', 0)}\n📈 Всего: {user.get('total_requests', 0)}\n💰 Баланс: {user.get('tokens', 0)}",
             reply_markup=back_button()
         )
     elif data == "shop":
-        await query.edit_message_text(
-            f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n"
-            f"💰 Баланс: {get_tokens(user_id)} токенов\n\n"
-            f"Выбери товар:",
-            reply_markup=shop_keyboard()
-        )
+        await query.edit_message_text(f"🛒 Магазин\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} токенов\n\nВыбери товар:", reply_markup=shop_keyboard())
     elif data == "earn":
         await query.edit_message_text(
-            f"💰 Заработок\n━━━━━━━━━━━━━━━━\n"
-            f"💎 Баланс: {get_tokens(user_id)}\n\n"
-            f"🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов/день\n"
-            f"👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу",
+            f"💰 Заработок\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)}\n\n"
+            f"🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов/день\n👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу",
             reply_markup=earn_keyboard()
         )
     elif data == "promo":
         context.user_data["waiting_promo"] = True
         await query.edit_message_text("🎟 Отправь промокод в чат.", reply_markup=back_button())
     elif data == "faq":
-        await query.edit_message_text(
-            "📚 FAQ\n\n❓ Лимит 5 запросов - чтобы не перегружать нейросеть.\n"
-            "❓ Сброс в 00:00 МСК.\n❓ Токены - внутренняя валюта.",
-            reply_markup=back_button()
-        )
+        await query.edit_message_text("📚 FAQ\n\n❓ Лимит 5 - чтобы не перегружать нейросеть.\n❓ Сброс в 00:00.\n❓ Безлимит ♾️ отключает лимит.", reply_markup=back_button())
     elif data == "daily_bonus":
         user = get_user(user_id)
         today = datetime.now().strftime("%Y-%m-%d")
@@ -496,13 +430,11 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             uid = str(user_id)
             users[uid]["daily_bonus_claimed"] = today
             
-            # Считаем серию
             yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
             if users[uid].get("last_bonus_date") == yesterday:
                 users[uid]["daily_bonus_streak"] = users[uid].get("daily_bonus_streak", 0) + 1
             elif users[uid].get("last_bonus_date") != today:
                 users[uid]["daily_bonus_streak"] = 1
-            
             users[uid]["last_bonus_date"] = today
             save_users(users)
             add_tokens(user_id, bonus)
@@ -510,48 +442,53 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             streak = users[uid].get("daily_bonus_streak", 1)
             await query.answer(f"🎉 +{bonus} NeBlock Tokens!\n🔥 Серия: {streak} дней", show_alert=True)
             await query.edit_message_text(
-                f"🎁 Ежедневный бонус\n━━━━━━━━━━━━━━━━\n"
-                f"✅ Получено: +{bonus} токенов\n"
-                f"💰 Баланс: {get_tokens(user_id)}\n"
-                f"🔥 Серия: {streak} дней\n\n"
-                f"🔄 Приходи завтра!",
+                f"🎁 +{bonus} токенов\n💰 Баланс: {get_tokens(user_id)}\n🔥 Серия: {streak} дней",
                 reply_markup=back_button()
             )
     elif data == "ref_link":
         user = get_user(user_id)
         bot_username = (await context.bot.get_me()).username
-        ref_link = f"https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}"
         await query.edit_message_text(
-            f"👥 Реферальная программа\n━━━━━━━━━━━━━━━━\n\n"
-            f"🔗 Твоя ссылка:\n{ref_link}\n\n"
-            f"💰 Ты получишь: +{REFERRAL_BONUS} токенов\n"
-            f"🎁 Друг получит: +{INVITED_BONUS} токенов\n"
-            f"👥 Уже приглашено: {user.get('referrals', 0)}",
+            f"👥 Реферальная ссылка:\nhttps://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n\n💰 +{REFERRAL_BONUS} тебе\n🎁 +{INVITED_BONUS} другу\n👥 Приглашено: {user.get('referrals', 0)}",
             reply_markup=back_button()
         )
     elif data.startswith("confirm_"):
         item_id = data.replace("confirm_", "")
         item = SHOP_ITEMS.get(item_id)
         if not item: return
+        
         tokens = get_tokens(user_id)
         if tokens < item["price"]:
             await query.answer(f"❌ Недостаточно токенов!\nНужно: {item['price']}\nУ вас: {tokens}", show_alert=True)
             return
+        
         remove_tokens(user_id, item["price"])
-        if item_id == "extra5": add_extra_requests(user_id, 5)
-        elif item_id == "extra10": add_extra_requests(user_id, 10)
-        elif item_id in ["unlimited_1h", "unlimited_24h", "unlimited_7d"]:
-            hours = 1 if item_id == "unlimited_1h" else 24 if item_id == "unlimited_24h" else 168
+        
+        if item_id == "extra5":
+            add_extra_requests(user_id, 5)
+        elif item_id == "extra10":
+            add_extra_requests(user_id, 10)
+        elif item_id == "unlimited_1h":
+            hours = 1
             users = load_users()
             users[str(user_id)]["unlimited_until"] = (datetime.now() + timedelta(hours=hours)).isoformat()
             save_users(users)
+        elif item_id == "unlimited_24h":
+            hours = 24
+            users = load_users()
+            users[str(user_id)]["unlimited_until"] = (datetime.now() + timedelta(hours=hours)).isoformat()
+            save_users(users)
+        elif item_id == "unlimited_7d":
+            days = 7
+            users = load_users()
+            users[str(user_id)]["unlimited_until"] = (datetime.now() + timedelta(days=days)).isoformat()
+            save_users(users)
+        
         await query.answer(f"✅ {item['name']} активирован!", show_alert=True)
         await query.edit_message_text(
             f"✅ Покупка успешна!\n━━━━━━━━━━━━━━━━\n"
-            f"🛒 {item['name']}\n"
-            f"📝 {item['desc']}\n"
-            f"💰 Потрачено: {item['price']} токенов\n"
-            f"💎 Остаток: {get_tokens(user_id)} токенов",
+            f"{item['icon']} {item['name']}\n📝 {item['desc']}\n"
+            f"💰 Потрачено: {item['price']} токенов\n💎 Остаток: {get_tokens(user_id)}",
             reply_markup=back_button()
         )
     elif data.startswith("buy_"):
@@ -559,15 +496,9 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         item = SHOP_ITEMS.get(item_id)
         if not item: return
         tokens = get_tokens(user_id)
-        can_buy = "✅ Достаточно средств" if tokens >= item["price"] else "❌ Недостаточно средств"
+        can_buy = "✅ Хватает" if tokens >= item["price"] else "❌ Не хватает"
         await query.edit_message_text(
-            f"🛒 Подтверждение покупки\n━━━━━━━━━━━━━━━━\n\n"
-            f"{item['icon']} Товар: {item['name']}\n"
-            f"📝 Описание: {item['desc']}\n"
-            f"💰 Цена: {item['price']} токенов\n"
-            f"💎 Ваш баланс: {tokens} токенов\n"
-            f"{can_buy}\n\n"
-            f"Подтвердите покупку:",
+            f"🛒 {item['icon']} {item['name']}\n📝 {item['desc']}\n💰 Цена: {item['price']}\n💎 Баланс: {tokens}\n{can_buy}",
             reply_markup=confirm_keyboard(item_id)
         )
 
@@ -586,30 +517,17 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["waiting_promo"] = False
         success, result = use_promo(user_id, text)
         if success:
-            await update.message.reply_text(
-                f"🎟 Промокод активирован!\n━━━━━━━━━━━━━━━━\n"
-                f"✅ Код: {text.upper()}\n"
-                f"💰 Начислено: {result} NeBlock Tokens\n"
-                f"💎 Баланс: {get_tokens(user_id)}"
-            )
+            await update.message.reply_text(f"🎟 +{result} токенов!\n💎 Баланс: {get_tokens(user_id)}")
         else:
             await update.message.reply_text(f"❌ {result}")
         return
     
     if not can_request(user_id):
         user = get_user(user_id)
-        extra = user.get("extra_requests", 0)
-        total = DAILY_LIMIT + extra
         await update.message.reply_text(
-            f"🚫 Дневной лимит исчерпан!\n"
-            f"━━━━━━━━━━━━━━━━\n"
-            f"📊 Использовано: {user.get('requests_today', 0)}/{total}\n"
-            f"💰 Баланс: {user.get('tokens', 0)} токенов\n\n"
-            f"Что делать?\n"
-            f"• Купить доп запросы в Магазине\n"
-            f"• Заработать токены\n"
-            f"• Ввести промокод\n\n"
-            f"🔄 Сброс в 00:00 МСК",
+            f"🚫 Лимит исчерпан!\n━━━━━━━━━━━━━━━━\n"
+            f"📊 {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}\n"
+            f"💰 Баланс: {user.get('tokens', 0)} токенов",
             reply_markup=limit_reached_keyboard()
         )
         return
@@ -639,7 +557,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try: await msg.delete()
         except: pass
         logger.error(f"Ошибка: {str(e)[:100]}")
-        await update.message.reply_text("❌ Ошибка генерации. Попробуй позже.")
+        await update.message.reply_text("❌ Ошибка. Попробуй позже.")
 
 # ═══════════════════════════════════════════
 # 🚀 Запуск
