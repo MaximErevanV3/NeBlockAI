@@ -12,7 +12,7 @@ import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V3.5 - Конфигурация
+# 🧠 NeBlock AI V3.6 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -33,17 +33,20 @@ DISCOUNTS_FILE = "discounts.json"
 TOKEN_RATE_FILE = "token_rate.json"
 TOKEN_HISTORY_FILE = "token_history.json"
 TRANSFER_LOG_FILE = "transfer_log.json"
+DONATION_FILE = "donations.json"
 ADMIN_IDS = [1671403667]
 START_BONUS = 50
 DAILY_BONUS_MIN = 5
 DAILY_BONUS_MAX = 15
 REFERRAL_BONUS = 25
 INVITED_BONUS = 10
-BOT_VERSION = "3.5"
+BOT_VERSION = "3.6"
 
 MIN_TRANSFER = 1
 MAX_TRANSFER = 10000
 DAILY_TRANSFER_LIMIT = 50000
+MIN_DONATION = 1
+MAX_DONATION = 100000
 
 TRANSFER_TAX_BRACKETS = [
     {"min": 0, "max": 199, "tax_percent": 0, "name": "Без налога"},
@@ -61,13 +64,6 @@ TRANSFER_WARNING = """
 Убедитесь что получатель указан верно!
 Если вы отправите токены не тому пользователю — вернуть их будет НЕВОЗМОЖНО!
 Транзакции в блокчейне NeBlock необратимы.
-
-Проверьте:
-• Правильность получателя
-• Сумму перевода
-• Размер налога и итоговую сумму
-
-Подтверждая перевод, вы соглашаетесь с условиями.
 """
 
 BASE_PRICES_USD = {
@@ -88,14 +84,15 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
+Версия 3.6 (21.07.2026)
+• 🌍 Система благотворительности
+• 🔥 Сжигание токенов через донаты
+• 🏆 Топ благотворителей
+• 💮 Донаты влияют на курс NBT
+
 Версия 3.5 (21.07.2026)
 • Команда /genimage для чатов
-• Исправлен баг с "нарисуй" в группах
-• Переводы по @username
-
-Версия 3.4 (21.07.2026)
-• Исправлен баг с фото в чатах
-• Полная информация в разделах
+• Исправлен баг с фото в группах
 """
 
 FAQ_TEXT = f"""
@@ -103,76 +100,34 @@ FAQ_TEXT = f"""
 ━━━━━━━━━━━━━━━━━━━━
 
 ❓ Что такое NeBlock AI?
-Платформа с двумя ИИ-моделями в Telegram:
-💬 NeBlock AI V2 — текст (качество +40%, скорость x2, 50+ языков)
-🎨 NeBlock Images V2 — фото (качество +50%, стили, 1024x1024)
+Платформа с двумя ИИ-моделями в Telegram.
 
 ❓ Как пользоваться?
-• ЛС: просто напишите вопрос или используйте кнопки
-• Чаты: @имя_бота вопрос, или ключевые слова: бот, нейробот, AI, нарисуй
-• Команды: /start, /shop, /faq, /discounts, /tokenrate, /transfer, /genimage
-
-❓ Какие лимиты?
-ЛС: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день
-Чаты: {CHAT_DAILY_LIMIT} текст + {CHAT_IMAGE_LIMIT} фото/день
-Сброс в 00:00 МСК. Доп. запросы сгорают, безлимиты — нет.
+ЛС: напишите вопрос. Чаты: @бот вопрос, нарисуй, /genimage.
 
 ❓ Что такое 💮 NBT?
-Внутренняя валюта. Курс каждые 4 часа.
-Факторы: предложение, активность, сжигание, волатильность.
-Где посмотреть: /tokenrate
+Внутренняя валюта. Курс каждые 4 часа. /tokenrate
 
 ❓ Как заработать 💮?
-• Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} 💮
-• Рефералы: +{REFERRAL_BONUS} 💮 тебе, +{INVITED_BONUS} 💮 другу
-• Стартовый бонус: {START_BONUS} 💮
-• Промокоды, переводы от других
+Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день | Рефералы: +{REFERRAL_BONUS} | Старт: {START_BONUS}
 
-❓ Как работают скидки?
-Обновление каждые 2 дня в 9:00 МСК. 6 типов:
-🟢 Обычная (5-25%) 🔴 Супер (30-50%) 📦 Набор (15-35%)
-⚡ Флеш (40-70%, 24ч) 💎 Премиум (10-30%) 🌟 ЛЕГЕНДАРНАЯ (100%, 0.5%, 3ч)
-
-❓ Что такое Премиум?
-Безлимит текста и фото. ЛС: 1д/7д/навсегда. Чат: для всех участников.
+❓ Что такое благотворительность? 🌍
+Вы можете сжечь свои токены навсегда! Это уменьшает предложение NBT и повышает курс для всех.
+• /donate СУММА — сжечь токены
+• /donatetop — топ благотворителей
+• Сожжённые токены навсегда удаляются из экономики
+• Каждый донат повышает курс NBT!
 
 ❓ Как работают переводы?
-• ЛС: /transfer ID КОЛИЧЕСТВО
-• Чат (reply): ответ + /transfer КОЛИЧЕСТВО
-• Чат (@username): /transfer @username КОЛИЧЕСТВО
-⚠️ Проверяйте получателя! Ошибка = потеря токенов!
-Налоги: 0% до 199 💮, 3% до 499, 5% до 999, 8% до 2499, 12% до 4999, 15% до 10000
+ЛС: /transfer ID КОЛИЧЕСТВО | Чат: /transfer @username КОЛИЧЕСТВО
+Налоги: 0-15% в зависимости от суммы.
 
 ❓ Как генерировать фото в чатах?
-• @бот нарисуй описание
-• нарисуй описание
-• /genimage описание — специальная команда
-
-❓ Кто покупает для чата?
-Только владелец. /chatowner — список владельцев. /chatshop — магазин.
-"""
-
-TRANSFER_INFO = f"""
-💸 ПЕРЕВОДЫ 💮 NBT
-━━━━━━━━━━━━━━━━━━━━
-
-📋 СПОСОБЫ:
-1. ЛС: /transfer ID КОЛИЧЕСТВО
-2. Чат (reply): ответ + /transfer КОЛИЧЕСТВО
-3. Чат (@username): /transfer @username КОЛИЧЕСТВО
-4. Кнопка "💸 Перевод"
-
-⚠️ Проверяйте получателя! Ошибка = потеря токенов!
-
-📊 Лимиты: {MIN_TRANSFER}-{MAX_TRANSFER} 💮/раз, {DAILY_TRANSFER_LIMIT} 💮/день
-
-💰 Налоги:
-1-199 💮 — 0% | 200-499 — 3% | 500-999 — 5%
-1000-2499 — 8% | 2500-4999 — 12% | 5000+ — 15%
+@бот нарисуй описание | нарисуй описание | /genimage описание
 """
 
 COMMANDS_LIST = """
-📋 КОМАНДЫ NeBlock AI V3.5
+📋 КОМАНДЫ NeBlock AI V3.6
 ━━━━━━━━━━━━━━━━━━━━
 
 /start — меню
@@ -180,16 +135,13 @@ COMMANDS_LIST = """
 /faq — вопросы
 /discounts — скидки
 /tokenrate — курс 💮
-/transfer — перевод 💮
-/transferinfo — о переводах
+/transfer — перевод
+/donate — благотворительность 🌍
+/donatetop — топ благотворителей
 /genimage — генерация фото
 /changelog — обновления
 /promo — промокод
 /commands — команды
-
-👥 ЧАТЫ:
-/chatowner — владельцы
-/chatshop — магазин чата
 """
 
 DISCOUNT_TYPES = {
@@ -250,6 +202,24 @@ def load_chats(): return load_json(CHATS_FILE)
 def save_chats(chats): save_json(CHATS_FILE, chats)
 def load_discounts(): return load_json(DISCOUNTS_FILE)
 def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
+def load_donations(): return load_json(DONATION_FILE)
+def save_donations(donations): save_json(DONATION_FILE, donations)
+
+def get_donation_stats():
+    """Статистика благотворительности"""
+    donations = load_donations()
+    total = sum(d.get("amount", 0) for d in donations.get("donations", []))
+    count = len(donations.get("donations", []))
+    
+    # Топ благотворителей
+    users = {}
+    for d in donations.get("donations", []):
+        uid = str(d.get("user_id", ""))
+        users[uid] = users.get(uid, 0) + d.get("amount", 0)
+    
+    top_donors = sorted(users.items(), key=lambda x: x[1], reverse=True)[:10]
+    
+    return total, count, top_donors
 
 def get_transfer_tax(amount):
     for bracket in TRANSFER_TAX_BRACKETS:
@@ -269,6 +239,19 @@ def log_transfer(from_id, to_id, amount, tax, final_amount, chat_type="private",
     if len(log["transfers"]) > 1000: log["transfers"] = log["transfers"][-1000:]
     save_json(TRANSFER_LOG_FILE, log)
 
+def log_donation(user_id, amount):
+    """Логирует донат (сжигание токенов)"""
+    donations = load_donations()
+    if "donations" not in donations: donations["donations"] = []
+    donations["donations"].append({
+        "date": datetime.now().strftime("%Y-%m-%d"),
+        "timestamp": datetime.now().isoformat(),
+        "user_id": user_id,
+        "amount": amount,
+    })
+    if len(donations["donations"]) > 1000: donations["donations"] = donations["donations"][-1000:]
+    save_donations(donations)
+
 def get_token_rate():
     rate_data = load_json(TOKEN_RATE_FILE)
     history = load_json(TOKEN_HISTORY_FILE)
@@ -281,13 +264,18 @@ def get_token_rate():
         total_tokens = sum(u.get("tokens", 0) for u in users.values())
         total_earned = sum(u.get("earned_tokens", 0) for u in users.values())
         total_spent = sum(u.get("spent_tokens", 0) for u in users.values())
+        
+        # Учитываем сожжённые токены (донаты)
+        donated_total, _, _ = get_donation_stats()
+        total_burned = total_spent + donated_total  # потрачено + сожжено
+        
         active_users = sum(1 for u in users.values() if u.get("requests_today", 0) > 0)
         total_users = len(users)
         
         base_rate = 0.01
         supply_factor = max(0.3, min(3.0, 15000 / max(total_tokens, 500))) if total_tokens > 0 else 1.0
         activity_factor = 0.7 + ((active_users / max(total_users, 1)) * 0.6) if total_users > 0 else 1.0
-        burn_factor = 0.8 + ((total_spent / max(total_earned, 1)) * 0.4) if total_earned > 0 else 1.0
+        burn_factor = 0.8 + ((total_burned / max(total_earned + donated_total, 1)) * 0.4) if (total_earned + donated_total) > 0 else 1.0
         
         volatility = 1.0
         if history:
@@ -308,7 +296,9 @@ def get_token_rate():
         
         rate_data = {
             "hour_block": current_hour_block, "date": now.strftime("%Y-%m-%d"), "rate": rate,
-            "total_supply": total_tokens, "market_cap": market_cap, "change_24h": change_24h, "trend": trend,
+            "total_supply": total_tokens, "total_burned": total_burned,
+            "total_donated": donated_total,
+            "market_cap": market_cap, "change_24h": change_24h, "trend": trend,
             "updated_at": now.isoformat(),
         }
         save_json(TOKEN_RATE_FILE, rate_data)
@@ -405,6 +395,7 @@ def get_user(user_id):
         "tokens": START_BONUS, "daily_bonus_claimed": None, "daily_bonus_streak": 0, "last_bonus_date": None,
         "referral_code": "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8)),
         "referred_by": None, "referrals": 0, "earned_tokens": 0, "spent_tokens": 0,
+        "donated_tokens": 0,
         "used_promos": [], "waiting_for_image": False, "current_model": "text",
         "warnings": 0, "muted_until": None, "banned": False,
         "daily_transfer_total": 0, "transfer_reset_date": datetime.now().strftime("%Y-%m-%d"),
@@ -498,6 +489,19 @@ def remove_tokens(user_id, amount):
         users[str(user_id)]["tokens"] = users[str(user_id)].get("tokens", 0) - amount
         users[str(user_id)]["spent_tokens"] = users[str(user_id)].get("spent_tokens", 0) + amount; save_users(users)
 
+def donate_tokens(user_id, amount):
+    """Сжигает токены (благотворительность)"""
+    users = load_users()
+    uid = str(user_id)
+    if uid in users:
+        users[uid]["tokens"] = users[uid].get("tokens", 0) - amount
+        users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount
+        users[uid]["donated_tokens"] = users[uid].get("donated_tokens", 0) + amount
+        save_users(users)
+        log_donation(user_id, amount)
+        return True
+    return False
+
 def get_tokens(user_id): return get_user(user_id).get("tokens", 0)
 
 def create_promo(code, amount, max_uses=0):
@@ -574,7 +578,7 @@ def main_reply_keyboard():
         [KeyboardButton("💬 NeBlock AI V2"), KeyboardButton("🎨 NeBlock Images V2")],
         [KeyboardButton("👤 Профиль"), KeyboardButton("🛒 Магазин")],
         [KeyboardButton("💰 Заработать"), KeyboardButton("💸 Перевод")],
-        [KeyboardButton("🎫 Скидки"), KeyboardButton("💮 Курс NBT")],
+        [KeyboardButton("🌍 Донат"), KeyboardButton("💮 Курс NBT")],
     ], resize_keyboard=True)
 
 def main_menu():
@@ -582,7 +586,7 @@ def main_menu():
         [InlineKeyboardButton("ℹ️ О боте", callback_data="about"), InlineKeyboardButton("📊 Статистика", callback_data="stats")],
         [InlineKeyboardButton("🧠 Модели", callback_data="models"), InlineKeyboardButton("💎 Премиум", callback_data="premium_info")],
         [InlineKeyboardButton("🎫 Скидки", callback_data="discounts_info"), InlineKeyboardButton("💮 Курс NBT", callback_data="tokenrate")],
-        [InlineKeyboardButton("💸 Перевод", callback_data="transfer"), InlineKeyboardButton("📋 Команды", callback_data="commands")],
+        [InlineKeyboardButton("💸 Перевод", callback_data="transfer"), InlineKeyboardButton("🌍 Донат", callback_data="donate_info")],
     ])
 
 def back_button(): return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
@@ -628,65 +632,133 @@ def transfer_confirm_keyboard(to_id, amount):
         [InlineKeyboardButton("❌ Отменить", callback_data="transfer_cancel")],
     ])
 
+def donate_confirm_keyboard(amount):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔥 Подтвердить сжигание", callback_data=f"donate_confirm_{amount}")],
+        [InlineKeyboardButton("❌ Отменить", callback_data="donate_cancel")],
+    ])
+
 def earn_keyboard():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("🎁 Ежедневный бонус", callback_data="daily_bonus"), InlineKeyboardButton("👥 Реферальная ссылка", callback_data="ref_link")], [InlineKeyboardButton("💸 Перевод", callback_data="transfer"), InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🎁 Ежедневный бонус", callback_data="daily_bonus"), InlineKeyboardButton("👥 Реферальная ссылка", callback_data="ref_link")], [InlineKeyboardButton("💸 Перевод", callback_data="transfer"), InlineKeyboardButton("🌍 Донат", callback_data="donate_info")], [InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
 
 def limit_reached_keyboard():
     return InlineKeyboardMarkup([[InlineKeyboardButton("🛒 Купить запросы", callback_data="shop"), InlineKeyboardButton("💰 Заработать", callback_data="earn")], [InlineKeyboardButton("💎 Премиум", callback_data="premium_info")]])
 
 # ═══════════════════════════════════════════
-# 🎨 КОМАНДА /genimage ДЛЯ ЧАТОВ
+# 🌍 БЛАГОТВОРИТЕЛЬНОСТЬ
 # ═══════════════════════════════════════════
 
+async def donate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Сжигание токенов (благотворительность)"""
+    user_id = update.effective_user.id
+    
+    if not context.args:
+        await update.message.reply_text(
+            "🌍 БЛАГОТВОРИТЕЛЬНОСТЬ\n━━━━━━━━━━━━━━━━\n\n"
+            "/donate СУММА — сжечь токены навсегда\n"
+            "Пример: /donate 100\n\n"
+            "🔥 Сожжённые токены уменьшают предложение\n"
+            "💮 Это повышает курс NBT для всех!\n"
+            "🏆 /donatetop — топ благотворителей"
+        )
+        return
+    
+    try:
+        amount = int(context.args[0])
+    except:
+        await update.message.reply_text("❌ /donate СУММА\nПример: /donate 100")
+        return
+    
+    if amount < MIN_DONATION:
+        await update.message.reply_text(f"❌ Минимум: {MIN_DONATION} 💮")
+        return
+    if amount > MAX_DONATION:
+        await update.message.reply_text(f"❌ Максимум: {MAX_DONATION} 💮")
+        return
+    
+    user = get_user(user_id)
+    if user.get("tokens", 0) < amount:
+        await update.message.reply_text(f"❌ Недостаточно!\n💰 Баланс: {user.get('tokens', 0)} 💮")
+        return
+    
+    await update.message.reply_text(
+        f"🌍 ПОДТВЕРЖДЕНИЕ ДОНАТА\n━━━━━━━━━━━━━━━━\n\n"
+        f"💰 Сумма: {amount} 💮\n"
+        f"🔥 Токены будут сожжены НАВСЕГДА\n"
+        f"💮 Это повысит курс NBT для всех\n"
+        f"💎 Ваш баланс: {user.get('tokens', 0)} 💮\n"
+        f"💎 После доната: {user.get('tokens', 0) - amount} 💮\n\n"
+        f"Подтвердите:",
+        reply_markup=donate_confirm_keyboard(amount)
+    )
+
+async def donatetop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Топ благотворителей"""
+    total, count, top_donors = get_donation_stats()
+    
+    if not top_donors:
+        await update.message.reply_text("🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\nПока никто не делал донатов.\nБудьте первым! /donate СУММА")
+        return
+    
+    text = f"🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\n"
+    text += f"🔥 Всего сожжено: {total:,} 💮\n"
+    text += f"📊 Количество донатов: {count}\n\n"
+    text += "🏆 ТОП-10:\n"
+    
+    users = load_users()
+    medals = ["🥇", "🥈", "🥉"]
+    
+    for i, (uid, donated) in enumerate(top_donors):
+        name = f"@{users.get(uid, {}).get('username', 'Неизвестный')}" if uid in users else f"ID:{uid}"
+        medal = medals[i] if i < 3 else f"{i+1}."
+        text += f"{medal} {name}: {donated:,} 💮\n"
+    
+    text += "\n💡 /donate СУММА — сделать вклад"
+    await update.message.reply_text(text)
+
+async def donate_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    total, count, _ = get_donation_stats()
+    await update.message.reply_text(
+        f"🌍 БЛАГОТВОРИТЕЛЬНОСТЬ\n━━━━━━━━━━━━━━━━\n\n"
+        f"Вы можете сжечь свои токены навсегда!\n"
+        f"Это уменьшает предложение NBT и повышает курс для всех.\n\n"
+        f"🔥 Всего сожжено: {total:,} 💮\n"
+        f"📊 Донатов: {count}\n\n"
+        f"Команды:\n"
+        f"/donate СУММА — сжечь токены\n"
+        f"/donatetop — топ благотворителей\n\n"
+        f"💡 Каждый донат влияет на курс!"
+    )
+
 async def genimage_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Генерация изображения по команде /genimage (работает везде)"""
     user_id = update.effective_user.id
     chat_type = update.effective_chat.type
     chat_id = update.effective_chat.id if chat_type != "private" else None
     
     if not context.args:
-        await update.message.reply_text(
-            "🎨 ГЕНЕРАЦИЯ ФОТО\n━━━━━━━━━━━━━━━━\n\n"
-            "Использование: /genimage ОПИСАНИЕ\n"
-            "Пример: /genimage кот на луне\n\n"
-            "📊 Лимиты: проверьте в /tokenrate"
-        )
+        await update.message.reply_text("🎨 /genimage ОПИСАНИЕ\nПример: /genimage кот на луне")
         return
     
     text = " ".join(context.args)
-    
     if not can_image_request(user_id, chat_type, chat_id):
-        rem = image_remaining(user_id, chat_type, chat_id)
-        await update.message.reply_text(f"🚫 Лимит фото!\n📊 Осталось: {rem}")
+        await update.message.reply_text(f"🚫 Лимит фото!\n📊 Осталось: {image_remaining(user_id, chat_type, chat_id)}")
         return
     
-    msg = await update.message.reply_text("🎨 Генерирую изображение...")
+    msg = await update.message.reply_text("🎨 Генерирую...")
     try:
         image_bytes, error = await generate_image(text)
         if image_bytes:
-            add_image_request(user_id, chat_type)
-            await msg.delete()
-            rem = image_remaining(user_id, chat_type, chat_id)
-            await update.message.reply_photo(
-                photo=image_bytes,
-                caption=f"🎨 NeBlock Images V2\n📝 {text[:200]}\n📊 Осталось: {rem}",
-                reply_to_message_id=update.message.message_id if chat_type != "private" else None
-            )
+            add_image_request(user_id, chat_type); await msg.delete()
+            await update.message.reply_photo(photo=image_bytes, caption=f"🎨 NeBlock Images V2\n📝 {text[:200]}\n📊 Осталось: {image_remaining(user_id, chat_type, chat_id)}")
         else:
-            await msg.edit_text(f"❌ Ошибка: {error[:100] if error else 'Неизвестная'}")
+            await msg.edit_text("❌ Ошибка")
     except:
         try: await msg.delete()
         except: pass
-        await update.message.reply_text("❌ Ошибка генерации.")
-
-# ═══════════════════════════════════════════
-# 💸 ПЕРЕВОДЫ
-# ═══════════════════════════════════════════
+        await update.message.reply_text("❌ Ошибка.")
 
 async def transfer_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    chat_type = update.effective_chat.type
-    
+    user_id = update.effective_user.id; chat_type = update.effective_chat.type
     to_id = None; amount = None
     
     if chat_type in ["group", "supergroup"]:
@@ -694,39 +766,32 @@ async def transfer_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             to_id = update.message.reply_to_message.from_user.id
             if context.args and len(context.args) >= 1:
                 try: amount = int(context.args[0])
-                except: await update.message.reply_text("❌ /transfer КОЛИЧЕСТВО"); return
-            else: await update.message.reply_text("❌ /transfer КОЛИЧЕСТВО"); return
+                except: return
         elif context.args and len(context.args) >= 2 and context.args[0].startswith("@"):
             username = context.args[0].replace("@", "")
             try: amount = int(context.args[1])
-            except: await update.message.reply_text("❌ /transfer @username КОЛИЧЕСТВО"); return
+            except: return
             users = load_users()
-            found_id = None
             for uid, data in users.items():
                 if data.get("username", "").lower() == username.lower():
-                    found_id = int(uid); break
-            if not found_id: await update.message.reply_text(f"❌ @{username} не найден."); return
-            to_id = found_id
+                    to_id = int(uid); break
+            if not to_id: await update.message.reply_text(f"❌ @{username} не найден."); return
         else:
-            await update.message.reply_text("💸 /transfer @username КОЛИЧЕСТВО\nИли ответьте на сообщение и /transfer КОЛИЧЕСТВО"); return
+            await update.message.reply_text("💸 /transfer @username КОЛИЧЕСТВО или ответьте на сообщение"); return
     else:
-        if not context.args or len(context.args) < 2:
-            await update.message.reply_text("💸 /transfer ID КОЛИЧЕСТВО\n⚠️ Проверяйте ID!"); return
+        if not context.args or len(context.args) < 2: return
         try: to_id = int(context.args[0]); amount = int(context.args[1])
-        except: await update.message.reply_text("❌ /transfer ID КОЛИЧЕСТВО"); return
+        except: return
     
     if not to_id or not amount: return
-    if amount < MIN_TRANSFER: await update.message.reply_text(f"❌ Мин: {MIN_TRANSFER} 💮"); return
-    if amount > MAX_TRANSFER: await update.message.reply_text(f"❌ Макс: {MAX_TRANSFER} 💮"); return
+    if amount < MIN_TRANSFER or amount > MAX_TRANSFER: return
     if to_id == user_id: await update.message.reply_text("❌ Нельзя себе!"); return
     
     sender = get_user(user_id)
-    if sender.get("daily_transfer_total", 0) + amount > DAILY_TRANSFER_LIMIT:
-        await update.message.reply_text(f"❌ Лимит дня: {DAILY_TRANSFER_LIMIT} 💮"); return
-    
-    tax, tax_percent, tax_name = get_transfer_tax(amount)
+    if sender.get("daily_transfer_total", 0) + amount > DAILY_TRANSFER_LIMIT: return
     if sender.get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно!"); return
     
+    tax, tax_percent, _ = get_transfer_tax(amount)
     receiver = get_user(to_id)
     if not receiver: await update.message.reply_text("❌ Не найден!"); return
     
@@ -735,16 +800,16 @@ async def transfer_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tax_info = f"Налог: {tax} 💮 ({tax_percent}%)" if tax > 0 else "Без налога"
     
     await update.message.reply_text(
-        f"{TRANSFER_WARNING}\n\n📋 ДЕТАЛИ:\n👤 @{receiver_name}\n🆔 {to_id}\n💸 {amount} 💮\n📊 {tax_info}\n💰 Получит: {final_amount} 💮\n💳 Спишется: {amount} 💮\n\nПодтвердите:",
+        f"⚠️ ПРОВЕРЬТЕ ДАННЫЕ!\n👤 @{receiver_name}\n🆔 {to_id}\n💸 {amount} 💮\n📊 {tax_info}\n💰 Получит: {final_amount} 💮\n\nПодтвердите:",
         reply_markup=transfer_confirm_keyboard(to_id, amount)
     )
 
 async def transfer_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["waiting_transfer"] = True
-    await update.message.reply_text("💸 Отправьте: ID КОЛИЧЕСТВО\n⚠️ Проверяйте ID!")
+    await update.message.reply_text("💸 Отправьте: ID КОЛИЧЕСТВО")
 
 async def transfer_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(TRANSFER_INFO)
+    await update.message.reply_text(f"💸 ПЕРЕВОДЫ\n💰 Налоги: 0-15%\n📊 Лимит: {DAILY_TRANSFER_LIMIT} 💮/день")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; user = get_user(user_id); chat_type = update.effective_chat.type
@@ -766,26 +831,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if chat_type in ["group", "supergroup"]:
         chat_premium = "💎 Активен" if is_chat_premium(update.effective_chat.id) else "Не активен"
-        await update.message.reply_text(
-            f"🧠 NeBlock AI V{BOT_VERSION} в чате!\n━━━━━━━━━━━━━━━━━━━━\n"
-            f"💬 @{context.bot.username} вопрос — текст\n"
-            f"🎨 @{context.bot.username} нарисуй — фото\n"
-            f"🎨 /genimage — генерация фото\n"
-            f"💸 /transfer @username СУММА — перевод\n"
-            f"💎 Премиум: {chat_premium}\n"
-            f"👑 /chatowner | 🛒 /chatshop"
-        )
+        await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION} в чате!\n💬 @{context.bot.username} вопрос\n🎨 /genimage описание\n💸 /transfer\n🌍 /donate")
         return
     
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
     rate_data = get_token_rate(); rate = rate_data.get("rate", 0.01)
+    donated_total, _, _ = get_donation_stats()
     
     await update.message.reply_text(
         f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"💬 Текст | 🎨 Фото | 💸 Переводы\n"
+        f"💬 Текст | 🎨 Фото | 💸 Переводы | 🌍 Донаты\n"
         f"💎 Премиум ЛС: {premium}\n\n"
         f"💰 Баланс: {user.get('tokens', 0)} 💮 (~${user.get('tokens', 0) * rate:.2f})\n"
         f"💮 1 NBT = ${rate:.8f}\n"
+        f"🔥 Сожжено всего: {donated_total:,} 💮\n"
         f"📊 Лимиты: {DAILY_LIMIT} вопр. + {IMAGE_DAILY_LIMIT} фото/день\n\n"
         f"👇 Выбери модель:",
         reply_markup=main_reply_keyboard()
@@ -794,9 +853,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rate_data = get_token_rate(); history = load_json(TOKEN_HISTORY_FILE)
     rate = rate_data.get("rate", 0.01); supply = rate_data.get("total_supply", 0)
-    market_cap = rate_data.get("market_cap", 0); updated = rate_data.get("updated_at", "")
+    market_cap = rate_data.get("market_cap", 0); donated = rate_data.get("total_donated", 0)
+    burned = rate_data.get("total_burned", 0); updated = rate_data.get("updated_at", "")
     updated_time = datetime.fromisoformat(updated).strftime("%d.%m.%Y %H:%M") if updated else "Нет"
-    text = f"💮 КУРС NBT\n💰 1 = ${rate:.8f}\n💎 Кап: ${market_cap:,.2f}\n🪙 {supply:,} NBT\n🕐 {updated_time}\n\n📈 7д:\n"
+    
+    text = (f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n💰 1 NBT = ${rate:.8f}\n"
+            f"💎 Кап: ${market_cap:,.2f}\n🪙 В обороте: {supply:,} NBT\n"
+            f"🔥 Сожжено всего: {burned:,} 💮 (из них донатов: {donated:,} 💮)\n"
+            f"🕐 {updated_time}\n\n📈 7д:\n")
     for date, h in sorted(history.items())[-7:]: text += f"{date}: ${h.get('rate', 0):.8f}\n"
     await update.message.reply_text(text)
 
@@ -835,7 +899,7 @@ async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_chat_owner(chat_id, user_id): return
     await update.message.reply_text(f"🛒 Магазин чата\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("chat"))
 
-# Админ команды
+# Админ
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args or len(context.args) < 2: return
@@ -878,7 +942,7 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args: return
     try:
         u = get_user(int(context.args[0])); un = u.get("username") or "Не указан"
-        await update.message.reply_text(f"👤 @{un}\n💰 {u.get('tokens', 0)} 💮\n⚠️ {u.get('warnings', 0)}/5")
+        await update.message.reply_text(f"👤 @{un}\n💰 {u.get('tokens', 0)} 💮\n🔥 Донатов: {u.get('donated_tokens', 0)} 💮")
     except: pass
 
 async def admin_top(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -917,7 +981,8 @@ async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users(); rate_data = get_token_rate()
-    await update.message.reply_text(f"📊 Статистика\n👥 {len(users)}\n💮 В обороте: {rate_data.get('total_supply', 0):,} NBT")
+    donated_total, _, _ = get_donation_stats()
+    await update.message.reply_text(f"📊 Статистика\n👥 {len(users)}\n💮 В обороте: {rate_data.get('total_supply', 0):,} NBT\n🔥 Донатов: {donated_total:,} 💮")
 
 async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -975,6 +1040,7 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             f"💰 Баланс: {u.get('tokens', 0)} 💮 (~${usd:.2f})\n"
             f"💮 Курс: 1 NBT = ${rate:.8f}\n"
             f"💎 Заработано: {u.get('earned_tokens', 0)} | 💸 Потрачено: {u.get('spent_tokens', 0)}\n"
+            f"🌍 Донатов: {u.get('donated_tokens', 0)} 💮\n"
             f"🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n\n"
             f"💬 ЛС: {u.get('requests_today', 0)}/{DAILY_LIMIT + u.get('extra_requests', 0)} | {fmt(u.get('unlimited_until'))}\n"
             f"🎨 Фото: {u.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + u.get('extra_image_requests', 0)} | {fmt(u.get('image_unlimited_until'))}\n"
@@ -986,8 +1052,9 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return True
     if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("private")); return True
-    if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок\n💎 {get_tokens(user_id)} 💮\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день\n👥 Рефералы: +{REFERRAL_BONUS} 💮\n💸 Переводы", reply_markup=earn_keyboard()); return True
+    if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок\n💎 {get_tokens(user_id)} 💮\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день\n👥 Рефералы: +{REFERRAL_BONUS} 💮", reply_markup=earn_keyboard()); return True
     if text == "💸 Перевод": await transfer_button_handler(update, context); return True
+    if text == "🌍 Донат": await donate_info_cmd(update, context); return True
     if text == "🎟 Промокод": await promo_cmd(update, context); return True
     if text == "📚 FAQ": await update.message.reply_text(FAQ_TEXT); return True
     if text == "🎫 Скидки": await discounts_cmd(update, context); return True
@@ -1000,22 +1067,36 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     
     if data == "none": return
     if data == "transfer_cancel": await query.edit_message_text("❌ Перевод отменён."); return
+    if data == "donate_cancel": await query.edit_message_text("❌ Донат отменён."); return
+    
+    if data.startswith("donate_confirm_"):
+        amount = int(data.replace("donate_confirm_", ""))
+        user = get_user(user_id)
+        if user.get("tokens", 0) < amount:
+            await query.edit_message_text("❌ Недостаточно средств!")
+            return
+        
+        if donate_tokens(user_id, amount):
+            donated_total, _, _ = get_donation_stats()
+            await query.edit_message_text(
+                f"🌍 ДОНАТ ВЫПОЛНЕН!\n━━━━━━━━━━━━━━━━\n\n"
+                f"🔥 Сожжено: {amount} 💮\n"
+                f"💎 Ваш баланс: {get_tokens(user_id)} 💮\n"
+                f"🌍 Всего сожжено: {donated_total:,} 💮\n\n"
+                f"Спасибо за вклад в экосистему! 💮"
+            )
+        return
     
     if data.startswith("transfer_confirm_"):
         parts = data.split("_")
         if len(parts) >= 4:
             to_id = int(parts[2]); amount = int(parts[3])
-            if amount < MIN_TRANSFER or amount > MAX_TRANSFER: await query.edit_message_text("❌ Ошибка."); return
-            if to_id == user_id: await query.edit_message_text("❌ Нельзя себе!"); return
-            
             sender = get_user(user_id)
-            if sender.get("daily_transfer_total", 0) + amount > DAILY_TRANSFER_LIMIT: await query.edit_message_text("❌ Лимит."); return
+            if sender.get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно!"); return
             
-            tax, tax_percent, tax_name = get_transfer_tax(amount)
-            if sender.get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно."); return
-            
+            tax, tax_percent, _ = get_transfer_tax(amount)
             receiver = get_user(to_id)
-            if not receiver: await query.edit_message_text("❌ Не найден."); return
+            if not receiver: await query.edit_message_text("❌ Не найден!"); return
             
             final_amount = amount - tax
             users = load_users()
@@ -1028,23 +1109,20 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             save_users(users)
             log_transfer(user_id, to_id, amount, tax, final_amount)
             
-            tax_info = f"\n📊 Налог: {tax} 💮 ({tax_percent}%)" if tax > 0 else "\n📊 Без налога"
+            tax_info = f"\n📊 Налог: {tax} 💮 ({tax_percent}%)" if tax > 0 else ""
             await query.edit_message_text(f"✅ ПЕРЕВОД ВЫПОЛНЕН!\n👤 {to_id}\n💸 {amount} 💮\n💰 Зачислено: {final_amount} 💮{tax_info}\n💎 Баланс: {get_tokens(user_id)} 💮")
-            try:
-                sn = sender.get("username") or f"ID:{user_id}"
-                await context.bot.send_message(to_id, f"📨 Вам перевели 💮\n👤 @{sn}\n💰 +{final_amount} 💮\n💎 Баланс: {get_tokens(to_id)} 💮")
-            except: pass
         return
     
     if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n💰 {get_tokens(user_id)} 💮", reply_markup=main_menu())
-    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n💸 Переводы\n💮 NBT\n📚 /faq", reply_markup=back_button())
+    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n💸 Переводы\n🌍 Донаты\n💮 NBT", reply_markup=back_button())
+    elif data == "donate_info": await donate_info_cmd(update, context)
     elif data == "models": await query.edit_message_text("🧠 МОДЕЛИ\n\n💬 NeBlock AI V2\n🎨 NeBlock Images V2", reply_markup=back_button())
     elif data == "tokenrate":
         rd = get_token_rate()
-        await query.edit_message_text(f"💮 NBT\n💰 1 = ${rd.get('rate', 0.01):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}", reply_markup=back_button())
+        await query.edit_message_text(f"💮 NBT\n💰 1 = ${rd.get('rate', 0.01):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n🔥 Сожжено: {rd.get('total_donated', 0):,} 💮", reply_markup=back_button())
     elif data == "transfer":
         context.user_data["waiting_transfer"] = True
-        await query.edit_message_text("💸 ПЕРЕВОД\n\nОтправьте ID и сумму:\nID КОЛИЧЕСТВО\n\n⚠️ Проверяйте ID!", reply_markup=back_button())
+        await query.edit_message_text("💸 ПЕРЕВОД\n\nОтправьте ID и сумму:\nID КОЛИЧЕСТВО", reply_markup=back_button())
     elif data == "commands": await query.edit_message_text(COMMANDS_LIST, reply_markup=back_button())
     elif data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button())
     elif data == "discounts_info":
@@ -1061,7 +1139,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     elif data == "premium_info": await query.edit_message_text(f"💎 ПРЕМИУМ\n\nЛС: {shop_items.get('premium_day', {}).get('price', '?')}/{shop_items.get('premium_week', {}).get('price', '?')}/{shop_items.get('premium_forever', {}).get('price', '?')} 💮", reply_markup=back_button())
     elif data == "stats":
         u = get_user(user_id)
-        await query.edit_message_text(f"📊 Статистика\n💬 {u.get('requests_today', 0)}\n🎨 {u.get('image_requests_today', 0)}\n💰 {u.get('tokens', 0)} 💮\n💸 Переводов: {u.get('daily_transfer_total', 0)}", reply_markup=back_button())
+        await query.edit_message_text(f"📊 Статистика\n💬 {u.get('requests_today', 0)}\n🎨 {u.get('image_requests_today', 0)}\n💰 {u.get('tokens', 0)} 💮\n🌍 Донатов: {u.get('donated_tokens', 0)} 💮", reply_markup=back_button())
     elif data == "shop": await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("private"))
     elif data == "earn": await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)} 💮", reply_markup=earn_keyboard())
     elif data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
@@ -1131,7 +1209,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_clean, severity, reason = moderate_content(text)
     if not is_clean: muted, warn = warn_user(user_id, severity); await update.message.reply_text(f"⚠️ {reason}\n{warn}"); return
     
-    # Перевод через текст
     if context.user_data.get("waiting_transfer"):
         context.user_data["waiting_transfer"] = False
         parts = text.split()
@@ -1142,14 +1219,10 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await transfer_cmd(update, context)
                 return
             except: await update.message.reply_text("❌ ID КОЛИЧЕСТВО"); return
-        else: await update.message.reply_text("❌ ID КОЛИЧЕСТВО"); return
     
     if chat_type == "private":
         if await reply_button_handler(update, context): return
     
-    # ═══════════════════════════════════════════
-    # ОБРАБОТКА ЧАТОВ (ИСПРАВЛЕНО)
-    # ═══════════════════════════════════════════
     is_image_request = False
     should_respond = False
     
@@ -1157,39 +1230,25 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mention = f"@{bot_username}"
         text_lower = text.lower().strip()
         
-        # Проверяем упоминание бота
         if mention in text:
             clean_text = text.replace(mention, "").strip()
             should_respond = True
-            
-            # Проверяем запрос на фото после упоминания
             if clean_text.lower().startswith("нарисуй"):
                 text = clean_text[7:].strip()
-                is_image_request = True
-            elif clean_text.lower().startswith("сгенерируй") or clean_text.lower().startswith("создай"):
-                text = clean_text
                 is_image_request = True
             else:
                 text = clean_text
         
-        # Проверяем ключевые слова (если не было упоминания)
         if not should_respond:
             keywords_map = {
-                "нарисуй ": True,
-                "сгенерируй ": True,
-                "создай ": True,
-                "бот ": False,
-                "нейробот ": False,
-                "нейросеть ": False,
-                "ai ": False,
-                "AI ": False,
+                "нарисуй ": True, "сгенерируй ": True, "создай ": True,
+                "бот ": False, "нейробот ": False, "нейросеть ": False,
+                "ai ": False, "AI ": False,
             }
-            
             for kw, is_image in keywords_map.items():
                 if text_lower.startswith(kw):
                     clean_text = text[len(kw):].strip()
                     should_respond = True
-                    
                     if is_image:
                         is_image_request = True
                         text = clean_text
@@ -1197,33 +1256,23 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text = clean_text
                     break
         
-        if not should_respond:
-            return
+        if not should_respond: return
         
         if not text:
-            await update.message.reply_text(
-                f"🧠 NeBlock AI V2!\n\n"
-                f"💬 @{bot_username} вопрос — текстовый ответ\n"
-                f"🎨 @{bot_username} нарисуй описание — генерация фото\n"
-                f"🎨 /genimage описание — генерация фото\n"
-                f"💸 /transfer @username СУММА — перевод",
-                reply_to_message_id=update.message.message_id
-            )
+            await update.message.reply_text(f"🧠 NeBlock AI V2!\n💬 @{bot_username} вопрос\n🎨 @{bot_username} нарисуй\n🎨 /genimage\n💸 /transfer\n🌍 /donate", reply_to_message_id=update.message.message_id)
             return
     
     user = get_user(user_id)
     if context.user_data.get("waiting_promo"): context.user_data["waiting_promo"] = False; success, result = use_promo(user_id, text); await update.message.reply_text(f"🎟 +{result} 💮!" if success else f"❌ {result}"); return
     
-    # Генерация фото
     if is_image_request or (chat_type == "private" and (user.get("current_model") == "image" or user.get("waiting_for_image"))):
         if chat_type == "private": users = load_users(); users[str(user_id)]["waiting_for_image"] = False; save_users(users)
         if not can_image_request(user_id, chat_type, chat_id):
-            rem = image_remaining(user_id, chat_type, chat_id)
-            await update.message.reply_text(f"🚫 Лимит фото!\n📊 Осталось: {rem}", reply_to_message_id=update.message.message_id if chat_type != "private" else None, reply_markup=limit_reached_keyboard() if chat_type == "private" else None); return
+            await update.message.reply_text(f"🚫 Лимит фото!\n📊 Осталось: {image_remaining(user_id, chat_type, chat_id)}", reply_to_message_id=update.message.message_id if chat_type != "private" else None, reply_markup=limit_reached_keyboard() if chat_type == "private" else None); return
         msg = await update.message.reply_text("🎨 Генерирую...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
         try:
             image_bytes, error = await generate_image(text)
-            if image_bytes: add_image_request(user_id, chat_type); await msg.delete(); rem = image_remaining(user_id, chat_type, chat_id); await update.message.reply_photo(photo=image_bytes, caption=f"🎨 NeBlock Images V2\n📝 {text[:200]}\n📊 Осталось: {rem}", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
+            if image_bytes: add_image_request(user_id, chat_type); await msg.delete(); await update.message.reply_photo(photo=image_bytes, caption=f"🎨 NeBlock Images V2\n📝 {text[:200]}\n📊 Осталось: {image_remaining(user_id, chat_type, chat_id)}", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
             else: await msg.edit_text("❌ Ошибка")
         except:
             try: await msg.delete()
@@ -1231,10 +1280,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ Ошибка.")
         return
     
-    # Текст
     if not can_request(user_id, chat_type, chat_id):
-        rem = remaining(user_id, chat_type, chat_id)
-        await update.message.reply_text(f"🚫 Лимит!\n📊 Осталось: {rem}", reply_markup=limit_reached_keyboard() if chat_type == "private" else None, reply_to_message_id=update.message.message_id if chat_type != "private" else None); return
+        await update.message.reply_text(f"🚫 Лимит!\n📊 Осталось: {remaining(user_id, chat_type, chat_id)}", reply_markup=limit_reached_keyboard() if chat_type == "private" else None, reply_to_message_id=update.message.message_id if chat_type != "private" else None); return
     
     msg = await update.message.reply_text("💬 Генерирую...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
     try:
@@ -1262,6 +1309,8 @@ def main():
     app.add_handler(CommandHandler("discounts", discounts_cmd))
     app.add_handler(CommandHandler("transfer", transfer_cmd))
     app.add_handler(CommandHandler("transferinfo", transfer_info_cmd))
+    app.add_handler(CommandHandler("donate", donate_cmd))
+    app.add_handler(CommandHandler("donatetop", donatetop_cmd))
     app.add_handler(CommandHandler("promo", promo_cmd))
     app.add_handler(CommandHandler("faq", lambda u, c: u.message.reply_text(FAQ_TEXT[:4000])))
     app.add_handler(CommandHandler("changelog", changelog_cmd))
