@@ -12,7 +12,7 @@ import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V3.8 - Конфигурация
+# 🧠 NeBlock AI V3.9 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -40,7 +40,7 @@ DAILY_BONUS_MIN = 5
 DAILY_BONUS_MAX = 15
 REFERRAL_BONUS = 25
 INVITED_BONUS = 10
-BOT_VERSION = "3.8"
+BOT_VERSION = "3.9"
 
 MIN_TRANSFER = 1
 MAX_TRANSFER = 10000
@@ -61,23 +61,47 @@ TRANSFER_TAX_BRACKETS = [
 # 📅 ДИНАМИЧЕСКИЙ ФАКТОР ДНЯ НЕДЕЛИ
 # ═══════════════════════════════════════════
 
-# Коэффициенты для каждого дня недели
-# 0 = Понедельник, 6 = Воскресенье
 DAY_FACTORS = {
-    0: {"name": "Понедельник", "factor": 1.05, "icon": "📈", "desc": "Начало рабочей недели. Повышенная активность пользователей. Курс растёт."},
+    0: {"name": "Понедельник", "factor": 1.05, "icon": "📈", "desc": "Начало рабочей недели. Повышенная активность пользователей."},
     1: {"name": "Вторник", "factor": 1.02, "icon": "📊", "desc": "Стабильный рабочий день. Умеренная активность."},
     2: {"name": "Среда", "factor": 1.03, "icon": "📊", "desc": "Пик середины недели. Активность выше среднего."},
     3: {"name": "Четверг", "factor": 1.04, "icon": "📈", "desc": "Предпятничная активность. Рост перед выходными."},
-    4: {"name": "Пятница", "factor": 1.10, "icon": "🚀", "desc": "Максимальная активность! Самый высокий коэффициент курса."},
-    5: {"name": "Суббота", "factor": 0.95, "icon": "📉", "desc": "Выходной день. Пониженная активность. Курс снижается."},
-    6: {"name": "Воскресенье", "factor": 0.95, "icon": "📉", "desc": "Выходной день. Пониженная активность. Курс снижается."},
+    4: {"name": "Пятница", "factor": 1.10, "icon": "🚀", "desc": "Максимальная активность! Самый высокий коэффициент."},
+    5: {"name": "Суббота", "factor": 0.95, "icon": "📉", "desc": "Выходной день. Пониженная активность."},
+    6: {"name": "Воскресенье", "factor": 0.95, "icon": "📉", "desc": "Выходной день. Пониженная активность."},
 }
 
 def get_day_factor():
-    """Возвращает коэффициент для текущего дня недели"""
-    today = datetime.now().weekday()  # 0 = Понедельник
-    day_info = DAY_FACTORS.get(today, {"factor": 1.0, "name": "Неизвестно", "icon": "❓"})
+    today = datetime.now().weekday()
+    day_info = DAY_FACTORS.get(today, {"factor": 1.0, "name": "Неизвестно", "icon": "❓", "desc": ""})
     return day_info["factor"], day_info["name"], day_info["icon"], day_info["desc"]
+
+# ═══════════════════════════════════════════
+# 🕐 КУРС ПО РАСПИСАНИЮ (0:00, 4:00, 8:00... МСК)
+# ═══════════════════════════════════════════
+
+def get_current_rate_block():
+    """
+    Определяет текущий 4-часовой блок по МСК.
+    Блоки: 0:00, 4:00, 8:00, 12:00, 16:00, 20:00
+    """
+    now = datetime.now()
+    hour = now.hour
+    # Округляем до ближайшего 4-часового блока
+    block_hour = (hour // 4) * 4
+    return f"{now.strftime('%Y-%m-%d')}-{block_hour:02d}", block_hour
+
+def get_next_rate_update():
+    """Возвращает время следующего обновления курса"""
+    now = datetime.now()
+    hour = now.hour
+    block_hour = (hour // 4) * 4
+    next_block = block_hour + 4
+    if next_block >= 24:
+        next_update = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    else:
+        next_update = now.replace(hour=next_block, minute=0, second=0, microsecond=0)
+    return next_update
 
 BASE_PRICES_USD = {
     "extra5": 10, "extra10": 18, "extra50": 80,
@@ -97,15 +121,14 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
-Версия 3.8 (21.07.2026)
-• 📅 Фактор дня недели для курса NBT
-• Пн: x1.05 | Вт: x1.02 | Ср: x1.03 | Чт: x1.04
-• Пт: x1.10 🚀 | Сб-Вс: x0.95
-• Подробная информация в /tokenrate
+Версия 3.9 (21.07.2026)
+• 🕐 Курс обновляется строго в 0:00, 4:00, 8:00, 12:00, 16:00, 20:00 МСК
+• 📅 Фактор дня недели (Пн x1.05, Пт x1.10, Сб-Вс x0.95)
+• 💡 Советы по использованию курса
 
-Версия 3.7 (21.07.2026)
-• Максимально подробная информация
-• Система благотворительности
+Версия 3.8 (21.07.2026)
+• День недели влияет на курс
+• Подробная информация в /tokenrate
 """
 
 FAQ_TEXT = f"""
@@ -128,7 +151,9 @@ FAQ_TEXT = f"""
 Сброс в 00:00 МСК. Доп. запросы сгорают, безлимиты — нет.
 
 ❓ Что такое 💮 NBT и как работает курс?
-Внутренняя валюта. Курс каждые 4 часа.
+Внутренняя валюта. Курс обновляется каждые 4 часа строго по МСК:
+🕐 0:00, 4:00, 8:00, 12:00, 16:00, 20:00
+
 ФАКТОРЫ КУРСА:
 1. Предложение (чем больше токенов — тем выше курс)
 2. Активность пользователей
@@ -137,14 +162,7 @@ FAQ_TEXT = f"""
 5. Волатильность (исторические колебания)
 6. Рыночный шум (±8%)
 
-ФОРМУЛА: rate = $0.01 × supply × activity × burn × day × volatility × noise
-Просмотр: /tokenrate
-
-❓ Как день недели влияет на курс? 📅
-• Понедельник: x1.05 — начало недели, рост активности
-• Вторник-Четверг: x1.02-1.04 — стабильные дни
-• Пятница: x1.10 🚀 — пик активности!
-• Суббота-Воскресенье: x0.95 — выходные, активность снижена
+💡 СОВЕТ: Зарабатывайте токены в будни (выше курс — больше бонусов), тратьте в выходные (ниже курс — дешевле товары)!
 
 ❓ Как заработать 💮?
 • Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} 💮
@@ -152,12 +170,8 @@ FAQ_TEXT = f"""
 • Стартовый бонус: {START_BONUS} 💮
 • Промокоды, переводы от других
 
-❓ Как работают скидки?
-Обновление каждые 2 дня в 9:00 МСК. 6 типов:
-🟢 Обычная (5-25%) 🔴 Супер (30-50%) 📦 Набор (15-35%)
-⚡ Флеш (40-70%, 24ч) 💎 Премиум (10-30%) 🌟 ЛЕГЕНДАРНАЯ (100%, 0.5%, 3ч)
-
-❓ Что такое Премиум? Переводы? Благотворительность?
+❓ Как работают скидки? Премиум? Переводы? Благотворительность?
+Скидки — каждые 2 дня в 9:00 МСК. 6 типов (обычная, супер, набор, флеш, премиум, легендарная).
 Премиум — безлимит текста и фото. Переводы — отправка 💮 другим.
 Благотворительность — сжигание токенов для повышения курса.
 """
@@ -204,38 +218,23 @@ TOKEN_RATE_INFO = """
 💮 КУРС NeBlock Token (NBT) — ПОДРОБНО
 ━━━━━━━━━━━━━━━━━━━━
 
-Тикер: NBT | Символ: 💮 | Обновление: каждые 4 часа
+Тикер: NBT | Символ: 💮
+Обновление: каждые 4 часа по МСК
+🕐 0:00 → 4:00 → 8:00 → 12:00 → 16:00 → 20:00
 
 ═══════════════════════
 📅 ФАКТОР ДНЯ НЕДЕЛИ
 ═══════════════════════
 
-Курс учитывает день недели. В разные дни — разная активность:
+📈 Понедельник (x1.05): Начало недели, рост активности
+📊 Вторник (x1.02): Стабильный день
+📊 Среда (x1.03): Пик середины недели
+📈 Четверг (x1.04): Предпятничный рост
+🚀 Пятница (x1.10): Максимальная активность!
+📉 Суббота (x0.95): Выходной, активность снижена
+📉 Воскресенье (x0.95): Выходной, активность снижена
 
-📈 Понедельник (x1.05):
-Начало рабочей недели. Пользователи возвращаются после выходных.
-Повышенная активность. Курс растёт на 5%.
-
-📊 Вторник (x1.02):
-Стабильный рабочий день. Умеренная активность.
-
-📊 Среда (x1.03):
-Пик середины недели. Активность выше среднего.
-
-📈 Четверг (x1.04):
-Предпятничная активность. Рост перед выходными.
-
-🚀 Пятница (x1.10):
-Максимальная активность! Самый высокий коэффициент.
-Курс вырастает на 10% — лучшее время для заработка!
-
-📉 Суббота (x0.95):
-Выходной день. Активность снижена. Курс падает на 5%.
-
-📉 Воскресенье (x0.95):
-Выходной день. Активность минимальна. Курс снижен.
-
-💡 СОВЕТ: Покупайте токены в выходные (дешевле), продавайте в пятницу (дороже)!
+💡 СОВЕТ: Зарабатывайте токены в будни (выше курс — больше бонусов), тратьте в выходные (ниже курс — дешевле товары)!
 
 ═══════════════════════
 📊 ВСЕ ФАКТОРЫ КУРСА
@@ -253,7 +252,7 @@ rate = $0.01 × supply × activity × burn × day × volatility × noise
 """
 
 COMMANDS_LIST = """
-📋 КОМАНДЫ NeBlock AI V3.8
+📋 КОМАНДЫ NeBlock AI V3.9
 ━━━━━━━━━━━━━━━━━━━━
 
 /start — главное меню
@@ -383,13 +382,19 @@ def log_donation(user_id, amount):
     save_donations(donations)
 
 def get_token_rate():
+    """
+    Курс обновляется строго по 4-часовым блокам МСК:
+    0:00, 4:00, 8:00, 12:00, 16:00, 20:00
+    """
     rate_data = load_json(TOKEN_RATE_FILE)
     history = load_json(TOKEN_HISTORY_FILE)
     now = datetime.now()
-    current_hour_block = now.strftime("%Y-%m-%d-%H")
-    last_update = rate_data.get("hour_block", "")
     
-    if last_update != current_hour_block:
+    # Определяем текущий блок
+    current_block, block_hour = get_current_rate_block()
+    last_update = rate_data.get("rate_block", "")
+    
+    if last_update != current_block:
         users = load_users()
         total_tokens = sum(u.get("tokens", 0) for u in users.values())
         total_earned = sum(u.get("earned_tokens", 0) for u in users.values())
@@ -404,7 +409,6 @@ def get_token_rate():
         activity_factor = 0.7 + ((active_users / max(total_users, 1)) * 0.6) if total_users > 0 else 1.0
         burn_factor = 0.8 + ((total_burned / max(total_earned + donated_total, 1)) * 0.4) if (total_earned + donated_total) > 0 else 1.0
         
-        # 📅 Фактор дня недели
         day_factor, day_name, day_icon, day_desc = get_day_factor()
         
         volatility = 1.0
@@ -416,36 +420,50 @@ def get_token_rate():
                 volatility = 1.0 + (std_dev / max(avg_rate, 0.0001)) * 0.5
         
         market_noise = random.uniform(0.92, 1.08)
-        
-        # Итоговый курс с учётом дня недели
         rate = round(base_rate * supply_factor * activity_factor * burn_factor * day_factor * volatility * market_noise, 8)
         rate = max(0.0001, min(1.0, rate))
         market_cap = round(total_tokens * rate, 2)
+        
+        # Изменение за 24 часа
         yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
         yesterday_rate = history.get(yesterday, {}).get("rate", rate)
         change_24h = round(((rate - yesterday_rate) / max(yesterday_rate, 0.0001)) * 100, 2)
         trend = "📈" if change_24h > 0.5 else "📉" if change_24h < -0.5 else "📊"
         
+        next_update = get_next_rate_update()
+        
         rate_data = {
-            "hour_block": current_hour_block, "date": now.strftime("%Y-%m-%d"), "rate": rate,
-            "total_supply": total_tokens, "total_burned": total_burned,
+            "rate_block": current_block,
+            "block_hour": block_hour,
+            "date": now.strftime("%Y-%m-%d"),
+            "rate": rate,
+            "total_supply": total_tokens,
+            "total_burned": total_burned,
             "total_donated": donated_total,
-            "day_factor": day_factor, "day_name": day_name, "day_icon": day_icon,
+            "day_factor": day_factor,
+            "day_name": day_name,
+            "day_icon": day_icon,
             "supply_factor": round(supply_factor, 4),
             "activity_factor": round(activity_factor, 4),
             "burn_factor": round(burn_factor, 4),
             "volatility_index": round(volatility, 4),
-            "market_cap": market_cap, "change_24h": change_24h, "trend": trend,
+            "market_cap": market_cap,
+            "change_24h": change_24h,
+            "trend": trend,
+            "next_update": next_update.strftime("%H:%M МСК"),
             "updated_at": now.isoformat(),
         }
         save_json(TOKEN_RATE_FILE, rate_data)
         
         today = now.strftime("%Y-%m-%d")
-        history[today] = {"rate": rate, "supply": total_tokens, "market_cap": market_cap, "day_factor": day_factor, "day_name": day_name}
+        history[today] = {
+            "rate": rate, "supply": total_tokens, "market_cap": market_cap,
+            "day_factor": day_factor, "day_name": day_name, "block_hour": block_hour
+        }
         if len(history) > 30: history = dict(sorted(history.items())[-30:])
         save_json(TOKEN_HISTORY_FILE, history)
         
-        logger.info(f"💮 Курс: ${rate:.8f} | День: {day_name} {day_icon} x{day_factor}")
+        logger.info(f"💮 Курс обновлён: ${rate:.8f} | Блок: {block_hour}:00 МСК | День: {day_name} {day_icon}")
     
     return rate_data
 
@@ -792,6 +810,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
     rate_data = get_token_rate(); rate = rate_data.get("rate", 0.01)
     day_icon = rate_data.get("day_icon", "📊"); day_name = rate_data.get("day_name", "")
+    next_update = rate_data.get("next_update", "")
     donated_total, _, _ = get_donation_stats()
     await update.message.reply_text(
         f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -799,7 +818,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💎 Премиум ЛС: {premium}\n\n"
         f"💰 Баланс: {user.get('tokens', 0)} 💮 (~${user.get('tokens', 0) * rate:.2f})\n"
         f"💮 1 NBT = ${rate:.8f}\n"
-        f"📅 {day_icon} {day_name}\n"
+        f"📅 {day_icon} {day_name} | 🕐 След. обновление: {next_update}\n"
         f"🔥 Сожжено всего: {donated_total:,} 💮\n"
         f"📊 Лимиты: {DAILY_LIMIT} вопр. + {IMAGE_DAILY_LIMIT} фото/день\n\n"
         f"👇 Выбери модель:",
@@ -810,16 +829,18 @@ async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rate_data = get_token_rate(); history = load_json(TOKEN_HISTORY_FILE)
     rate = rate_data.get("rate", 0.01); supply = rate_data.get("total_supply", 0)
     market_cap = rate_data.get("market_cap", 0); donated = rate_data.get("total_donated", 0)
-    burned = rate_data.get("total_burned", 0); updated = rate_data.get("updated_at", "")
+    burned = rate_data.get("total_burned", 0)
     day_factor = rate_data.get("day_factor", 1.0); day_name = rate_data.get("day_name", "")
     day_icon = rate_data.get("day_icon", "📊")
     supply_factor = rate_data.get("supply_factor", 1.0)
     activity_factor = rate_data.get("activity_factor", 1.0)
     burn_factor = rate_data.get("burn_factor", 1.0)
     volatility_index = rate_data.get("volatility_index", 1.0)
+    block_hour = rate_data.get("block_hour", 0)
+    next_update = rate_data.get("next_update", "")
+    updated = rate_data.get("updated_at", "")
     updated_time = datetime.fromisoformat(updated).strftime("%d.%m.%Y %H:%M") if updated else "Нет"
     
-    # Информация о всех днях недели
     days_info = ""
     for day_num, day_data in DAY_FACTORS.items():
         days_info += f"{day_data['icon']} {day_data['name']}: x{day_data['factor']:.2f} — {day_data['desc']}\n"
@@ -830,7 +851,8 @@ async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💎 Капитализация: ${market_cap:,.2f}\n"
         f"🪙 В обороте: {supply:,} NBT\n"
         f"🔥 Сожжено: {burned:,} 💮 (донатов: {donated:,})\n"
-        f"🕐 Обновлён: {updated_time}\n🔄 Каждые 4 часа\n\n"
+        f"🕐 Обновлён: {updated_time} (блок {block_hour}:00 МСК)\n"
+        f"🔄 Следующее обновление: {next_update}\n\n"
         f"📅 ДЕНЬ НЕДЕЛИ:\n"
         f"{day_icon} Сегодня: {day_name} (коэффициент x{day_factor:.2f})\n\n"
         f"📊 ФАКТОРЫ КУРСА:\n"
@@ -840,12 +862,15 @@ async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"• День недели: {day_factor} {day_icon}\n"
         f"• Волатильность: {volatility_index}\n\n"
         f"📅 КОЭФФИЦИЕНТЫ ДНЕЙ НЕДЕЛИ:\n{days_info}\n"
-        f"💡 Совет: покупайте в выходные (дешевле), продавайте в пятницу (дороже)!\n\n"
+        f"💡 СОВЕТ: Зарабатывайте токены в будни (выше курс — больше бонусов), тратьте в выходные (ниже курс — дешевле товары)!\n\n"
+        f"🕐 РАСПИСАНИЕ ОБНОВЛЕНИЙ (МСК):\n"
+        f"0:00 → 4:00 → 8:00 → 12:00 → 16:00 → 20:00\n\n"
         f"📈 История (7д):\n"
     )
     for date, h in sorted(history.items())[-7:]:
         h_day = h.get("day_name", "")
-        text += f"{date}: ${h.get('rate', 0):.8f} ({h_day})\n"
+        h_block = h.get("block_hour", 0)
+        text += f"{date}: ${h.get('rate', 0):.8f} ({h_day}, {h_block}:00)\n"
     
     await update.message.reply_text(text)
 
@@ -1067,7 +1092,7 @@ async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def admin_force_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    rate_data = load_json(TOKEN_RATE_FILE); rate_data["hour_block"] = ""; save_json(TOKEN_RATE_FILE, rate_data)
+    rate_data = load_json(TOKEN_RATE_FILE); rate_data["rate_block"] = ""; save_json(TOKEN_RATE_FILE, rate_data)
     new_rate = get_token_rate()
     await update.message.reply_text(f"💮 Курс: ${new_rate.get('rate', 0.01):.8f}")
 
@@ -1180,7 +1205,8 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     elif data == "models": await query.edit_message_text("🧠 МОДЕЛИ\n\n💬 NeBlock AI V2\n🎨 NeBlock Images V2", reply_markup=back_button())
     elif data == "tokenrate":
         rd = get_token_rate(); day_icon = rd.get("day_icon", "📊"); day_name = rd.get("day_name", "")
-        await query.edit_message_text(f"💮 NBT\n💰 1 = ${rd.get('rate', 0.01):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n{day_icon} {day_name}\n🔥 Сожжено: {rd.get('total_donated', 0):,} 💮", reply_markup=back_button())
+        next_update = rd.get("next_update", "")
+        await query.edit_message_text(f"💮 NBT\n💰 1 = ${rd.get('rate', 0.01):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n{day_icon} {day_name}\n🔄 Обновление: {next_update}\n🔥 Сожжено: {rd.get('total_donated', 0):,} 💮", reply_markup=back_button())
     elif data == "transfer": context.user_data["waiting_transfer"] = True; await query.edit_message_text("💸 ПЕРЕВОД\n\nОтправьте ID и сумму:\nID КОЛИЧЕСТВО", reply_markup=back_button())
     elif data == "commands": await query.edit_message_text(COMMANDS_LIST, reply_markup=back_button())
     elif data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button())
