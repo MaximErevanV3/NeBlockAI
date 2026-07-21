@@ -8,10 +8,11 @@ import os
 import json
 import random
 import re
+import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V2.6 - Конфигурация
+# 🧠 NeBlock AI V2.7 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -30,15 +31,15 @@ PROMO_FILE = "promos.json"
 CHATS_FILE = "chats.json"
 DISCOUNTS_FILE = "discounts.json"
 TOKEN_RATE_FILE = "token_rate.json"
+TOKEN_HISTORY_FILE = "token_history.json"
 ADMIN_IDS = [1671403667]
 START_BONUS = 50
 DAILY_BONUS_MIN = 5
 DAILY_BONUS_MAX = 15
 REFERRAL_BONUS = 25
 INVITED_BONUS = 10
-BOT_VERSION = "2.6"
+BOT_VERSION = "2.7"
 
-# Базовые цены товаров (в USD центах для расчёта курса)
 BASE_PRICES_USD = {
     "extra5": 10, "extra10": 18, "extra50": 80,
     "unlimited_1h": 30, "unlimited_24h": 100, "unlimited_7d": 500,
@@ -57,16 +58,17 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
-Версия 2.6 (21.07.2026)
-• Динамический курс токена (меняется раз в сутки)
-• Цены в магазине зависят от курса
-• Глобальная статистика токенов в обороте
-• Токеномика в реальном времени
+Версия 2.7 (21.07.2026)
+• Улучшенный динамический курс 💮
+• История курса за 7 дней
+• Рыночная капитализация
+• Индекс волатильности
+• Тренд курса (рост/падение)
 
-Версия 2.5 (21.07.2026)
-• Легендарная скидка 100%
-• Скидки в 9:00 МСК каждые 2 дня
-• Расширенные админ-команды
+Версия 2.6 (21.07.2026)
+• Динамический курс токена
+• Цены в NBT
+• Токеномика
 
 Версия 2.0 (15.07.2026)
 • Две модели V2
@@ -77,19 +79,15 @@ FAQ_TEXT = f"""
 📚 ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ
 ━━━━━━━━━━━━━━━━━━━━
 
-❓ Что такое NeBlock AI?
-Платформа с ИИ-моделями в Telegram.
-
-❓ Как работает курс токена?
-Курс NeBlock Token (NBT) меняется раз в сутки в 00:00 МСК.
-Цены в магазине привязаны к курсу и меняются вместе с ним.
-Курс зависит от количества токенов в обороте.
+❓ Что такое 💮 NeBlock Token (NBT)?
+Внутренняя валюта платформы с динамическим курсом.
+Курс обновляется раз в сутки и зависит от:
+• Количества токенов в обороте
+• Активности пользователей
+• Рыночной волатильности
 
 ❓ Где посмотреть курс?
-/tokenrate — текущий курс и статистика токена.
-
-❓ Бот работает в группах?
-Да! @имя_бота вопрос или нарисуй описание.
+💮 /tokenrate — текущий курс, капитализация, история
 
 ❓ Какие лимиты?
 • ЛС: {DAILY_LIMIT} текстовых + {IMAGE_DAILY_LIMIT} фото/день
@@ -114,77 +112,7 @@ client = openai.OpenAI(
 )
 
 # ═══════════════════════════════════════════
-# 💱 ДИНАМИЧЕСКИЙ КУРС ТОКЕНА
-# ═══════════════════════════════════════════
-
-def get_token_rate():
-    """Получает текущий курс токена. Обновляется раз в сутки."""
-    rate_data = load_json(TOKEN_RATE_FILE)
-    today = datetime.now().strftime("%Y-%m-%d")
-    
-    if rate_data.get("date") != today:
-        # Считаем токены в обороте
-        users = load_users()
-        total_tokens = sum(u.get("tokens", 0) for u in users.values())
-        total_earned = sum(u.get("earned_tokens", 0) for u in users.values())
-        total_spent = sum(u.get("spent_tokens", 0) for u in users.values())
-        
-        # Курс зависит от количества токенов в обороте
-        # Чем больше токенов — тем выше курс (дефляция)
-        # Базовый курс: 1 NBT = 0.01 USD
-        base_rate = 0.01
-        
-        if total_tokens > 0:
-            # Коэффициент от количества токенов
-            supply_factor = max(0.5, min(2.0, 10000 / max(total_tokens, 1000)))
-        else:
-            supply_factor = 1.0
-        
-        # Добавляем случайную волатильность ±15%
-        volatility = random.uniform(0.85, 1.15)
-        
-        # Итоговый курс
-        rate = round(base_rate * supply_factor * volatility, 6)
-        
-        rate_data = {
-            "date": today,
-            "rate": rate,
-            "total_supply": total_tokens,
-            "total_earned": total_earned,
-            "total_spent": total_spent,
-            "supply_factor": round(supply_factor, 4),
-            "volatility": round(volatility, 4),
-            "updated_at": datetime.now().isoformat(),
-        }
-        save_json(TOKEN_RATE_FILE, rate_data)
-        logger.info(f"💱 Курс обновлён: 1 NBT = ${rate} (в обороте: {total_tokens} NBT)")
-    
-    return rate_data
-
-def get_item_price(item_id):
-    """Получает цену товара в токенах с учётом курса"""
-    rate_data = get_token_rate()
-    rate = rate_data.get("rate", 0.01)
-    
-    base_usd = BASE_PRICES_USD.get(item_id, 10)
-    # Цена в токенах = цена в USD / курс
-    token_price = max(1, int(base_usd / 100 / rate))
-    
-    return token_price
-
-def get_dynamic_shop_items():
-    """Возвращает SHOP_ITEMS с динамическими ценами"""
-    items = {}
-    for item_id, base_price in BASE_PRICES_USD.items():
-        token_price = get_item_price(item_id)
-        items[item_id] = {
-            "price": token_price,
-            "base_usd": base_price,
-        }
-    return items
-
-# ═══════════════════════════════════════════
-# 📂 База данных
+# 💮 УЛУЧШЕННЫЙ ДИНАМИЧЕСКИЙ КУРС ТОКЕНА
 # ═══════════════════════════════════════════
 
 def load_json(filename):
@@ -197,18 +125,129 @@ def save_json(filename, data):
 
 def load_users(): return load_json(DATA_FILE)
 def save_users(users): save_json(DATA_FILE, users)
-def load_promos(): return load_json(PROMO_FILE)
-def save_promos(promos): save_json(PROMO_FILE, promos)
-def load_chats(): return load_json(CHATS_FILE)
-def save_chats(chats): save_json(CHATS_FILE, chats)
-def load_discounts(): return load_json(DISCOUNTS_FILE)
-def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
 
-# Оригинальные SHOP_ITEMS с базовыми ценами (будут пересчитываться)
+def get_token_rate():
+    """Улучшенный курс токена с историей и рыночными метриками"""
+    rate_data = load_json(TOKEN_RATE_FILE)
+    history = load_json(TOKEN_HISTORY_FILE)
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    if rate_data.get("date") != today:
+        users = load_users()
+        total_tokens = sum(u.get("tokens", 0) for u in users.values())
+        total_earned = sum(u.get("earned_tokens", 0) for u in users.values())
+        total_spent = sum(u.get("spent_tokens", 0) for u in users.values())
+        active_users = sum(1 for u in users.values() if u.get("requests_today", 0) > 0)
+        total_users = len(users)
+        
+        # 1. Базовый курс
+        base_rate = 0.01
+        
+        # 2. Фактор предложения (дефляция)
+        if total_tokens > 0:
+            supply_factor = max(0.3, min(3.0, 15000 / max(total_tokens, 500)))
+        else:
+            supply_factor = 1.0
+        
+        # 3. Фактор активности (чем активнее — тем выше курс)
+        if total_users > 0:
+            activity_ratio = active_users / max(total_users, 1)
+            activity_factor = 0.7 + (activity_ratio * 0.6)
+        else:
+            activity_factor = 1.0
+        
+        # 4. Коэффициент сжигания (чем больше потрачено — тем выше курс)
+        if total_earned > 0:
+            burn_ratio = total_spent / max(total_earned, 1)
+            burn_factor = 0.8 + (burn_ratio * 0.4)
+        else:
+            burn_factor = 1.0
+        
+        # 5. Волатильность на основе истории
+        volatility = 1.0
+        if history:
+            rates = [h.get("rate", base_rate) for h in history.values() if h.get("rate")]
+            if len(rates) > 1:
+                avg_rate = sum(rates) / len(rates)
+                std_dev = math.sqrt(sum((r - avg_rate) ** 2 for r in rates) / len(rates))
+                volatility = 1.0 + (std_dev / max(avg_rate, 0.0001)) * 0.5
+        
+        # 6. Случайный рыночный шум ±10%
+        market_noise = random.uniform(0.90, 1.10)
+        
+        # 7. Итоговый курс
+        rate = round(base_rate * supply_factor * activity_factor * burn_factor * volatility * market_noise, 8)
+        rate = max(0.0001, min(1.0, rate))
+        
+        # 8. Рыночная капитализация
+        market_cap = round(total_tokens * rate, 2)
+        
+        # 9. Изменение за 24 часа
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        yesterday_rate = history.get(yesterday, {}).get("rate", rate)
+        change_24h = round(((rate - yesterday_rate) / max(yesterday_rate, 0.0001)) * 100, 2)
+        
+        # 10. Тренд
+        if change_24h > 0.5:
+            trend = "📈 Рост"
+        elif change_24h < -0.5:
+            trend = "📉 Падение"
+        else:
+            trend = "📊 Стабильно"
+        
+        rate_data = {
+            "date": today,
+            "rate": rate,
+            "total_supply": total_tokens,
+            "total_earned": total_earned,
+            "total_spent": total_spent,
+            "market_cap": market_cap,
+            "change_24h": change_24h,
+            "trend": trend,
+            "active_users": active_users,
+            "total_users": total_users,
+            "supply_factor": round(supply_factor, 4),
+            "activity_factor": round(activity_factor, 4),
+            "burn_factor": round(burn_factor, 4),
+            "volatility_index": round(volatility, 4),
+            "updated_at": datetime.now().isoformat(),
+        }
+        save_json(TOKEN_RATE_FILE, rate_data)
+        
+        # Сохраняем в историю
+        history[today] = {
+            "rate": rate,
+            "supply": total_tokens,
+            "market_cap": market_cap,
+            "change_24h": change_24h,
+        }
+        # Оставляем только последние 30 дней
+        if len(history) > 30:
+            history = dict(sorted(history.items())[-30:])
+        save_json(TOKEN_HISTORY_FILE, history)
+        
+        logger.info(f"💮 Курс обновлён: 1 NBT = ${rate:.8f} | Кап: ${market_cap:.2f} | Изм: {change_24h:+.2f}%")
+    
+    return rate_data
+
+def get_item_price(item_id):
+    rate_data = get_token_rate()
+    rate = rate_data.get("rate", 0.01)
+    base_usd = BASE_PRICES_USD.get(item_id, 10)
+    token_price = max(1, int(base_usd / 100 / rate))
+    return token_price
+
+def get_shop_items():
+    items = {}
+    for item_id, item in SHOP_ITEMS_BASE.items():
+        dynamic_price = get_item_price(item_id)
+        items[item_id] = {**item, "price": dynamic_price}
+    return items
+
 SHOP_ITEMS_BASE = {
     "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "5 текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
     "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "category": "text", "desc": "10 текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
-    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "50 запросов. Экономия!", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
+    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "50 запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
     "unlimited_1h": {"name": "Безлимит текст 1ч", "price": 30, "icon": "♾️", "category": "text", "desc": "Безлимит на 1 час.", "warning": "⚠️ Действует 1 час.", "location": "private"},
     "unlimited_24h": {"name": "Безлимит текст 24ч", "price": 100, "icon": "♾️", "category": "text", "desc": "Безлимит на 24 часа.", "warning": "⚠️ Действует 24 часа.", "location": "private"},
     "unlimited_7d": {"name": "Безлимит текст 7д", "price": 500, "icon": "♾️", "category": "text", "desc": "Безлимит на 7 дней.", "warning": "⚠️ Действует 7 дней.", "location": "private"},
@@ -216,7 +255,7 @@ SHOP_ITEMS_BASE = {
     "image5": {"name": "5 генераций фото", "price": 60, "icon": "🎨", "category": "image", "desc": "5 генераций.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
     "image20": {"name": "20 генераций фото", "price": 200, "icon": "🎨", "category": "image", "desc": "20 генераций.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
     "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "category": "image", "desc": "Безлимит фото на 1 час.", "warning": "⚠️ Действует 1 час.", "location": "private"},
-    "premium_day": {"name": "Премиум ЛС 1 день", "price": 200, "icon": "⭐", "category": "premium", "desc": "Безлимит текста и фото на 24ч.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private"},
+    "premium_day": {"name": "Премиум ЛС 1 день", "price": 200, "icon": "⭐", "category": "premium", "desc": "Безлимит на 24ч.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private"},
     "premium_week": {"name": "Премиум ЛС 7 дней", "price": 1000, "icon": "⭐", "category": "premium", "desc": "Безлимит на 7 дней.", "warning": "⚠️ 7 дней. Только ЛС.", "location": "private"},
     "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "category": "premium", "desc": "Безлимит навсегда.", "warning": "⚠️ Только ЛС. Бессрочно.", "location": "private"},
     "chat_extra10": {"name": "+10 запросов в чатах", "price": 15, "icon": "👥", "category": "chat", "desc": "10 запросов для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
@@ -230,13 +269,12 @@ SHOP_ITEMS_BASE = {
     "chat_premium_forever": {"name": "Премиум чат навсегда", "price": 3500, "icon": "👑", "category": "chat_premium", "desc": "Безлимит навсегда.", "warning": "⚠️ Владелец. Бессрочно.", "location": "chat"},
 }
 
-def get_shop_items():
-    """Возвращает товары с динамическими ценами"""
-    items = {}
-    for item_id, item in SHOP_ITEMS_BASE.items():
-        dynamic_price = get_item_price(item_id)
-        items[item_id] = {**item, "price": dynamic_price}
-    return items
+def load_promos(): return load_json(PROMO_FILE)
+def save_promos(promos): save_json(PROMO_FILE, promos)
+def load_chats(): return load_json(CHATS_FILE)
+def save_chats(chats): save_json(CHATS_FILE, chats)
+def load_discounts(): return load_json(DISCOUNTS_FILE)
+def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
 
 def generate_discounts():
     all_items = list(SHOP_ITEMS_BASE.keys())
@@ -255,7 +293,6 @@ def generate_discounts():
             "special": True
         }
         used_items.add(item_id)
-        logger.info(f"🌟 ЛЕГЕНДАРНАЯ СКИДКА на {item_id}!")
     
     available_types = []
     for dtype, dconfig in DISCOUNT_TYPES.items():
@@ -324,27 +361,21 @@ def get_next_update_time():
     now = datetime.now()
     discounts = load_discounts()
     last_update = discounts.get("last_update", "")
-    
     if last_update:
         last_date = datetime.fromisoformat(last_update)
-        next_update = last_date.replace(hour=9, minute=0, second=0, microsecond=0) + timedelta(days=2)
-    else:
-        next_update = now.replace(hour=9, minute=0, second=0, microsecond=0)
-        if now >= next_update:
-            next_update += timedelta(days=2)
-    
+        return last_date.replace(hour=9, minute=0, second=0, microsecond=0) + timedelta(days=2)
+    next_update = now.replace(hour=9, minute=0, second=0, microsecond=0)
+    if now >= next_update: next_update += timedelta(days=2)
     return next_update
 
 def get_discounted_price(item_id):
     discounts = get_discounts()
     shop_items = get_shop_items()
-    
     if item_id in discounts and item_id not in ["last_update", "generated_at"]:
         disc = discounts[item_id]
         if disc.get("expires") and datetime.now() > datetime.fromisoformat(disc["expires"]):
             return shop_items[item_id]["price"], 0, None
         return disc["new_price"], disc["percent"], disc
-    
     return shop_items[item_id]["price"], 0, None
 
 def get_user(user_id):
@@ -559,14 +590,14 @@ def main_reply_keyboard():
         [KeyboardButton("💬 NeBlock AI V2"), KeyboardButton("🎨 NeBlock Images V2")],
         [KeyboardButton("👤 Профиль"), KeyboardButton("🛒 Магазин")],
         [KeyboardButton("💰 Заработать"), KeyboardButton("📚 FAQ")],
-        [KeyboardButton("🎫 Скидки"), KeyboardButton("💱 Курс NBT")],
+        [KeyboardButton("🎫 Скидки"), KeyboardButton("💮 Курс NBT")],
     ], resize_keyboard=True)
 
 def main_menu():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("ℹ️ О боте", callback_data="about"), InlineKeyboardButton("📊 Статистика", callback_data="stats")],
         [InlineKeyboardButton("🧠 Модели", callback_data="models"), InlineKeyboardButton("💎 Премиум", callback_data="premium_info")],
-        [InlineKeyboardButton("🎫 Скидки", callback_data="discounts_info"), InlineKeyboardButton("💱 Курс токена", callback_data="tokenrate")],
+        [InlineKeyboardButton("🎫 Скидки", callback_data="discounts_info"), InlineKeyboardButton("💮 Курс NBT", callback_data="tokenrate")],
     ])
 
 def back_button(): return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
@@ -579,7 +610,7 @@ def shop_keyboard(location="private"):
     active_discounts = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
     if active_discounts:
         legendary = any(d.get("type") == "legendary" for d in active_discounts.values())
-        banner = "🌟 ЛЕГЕНДАРНАЯ СКИДКА! 🌟" if legendary else f"🎫 Скидки"
+        banner = "🌟 ЛЕГЕНДАРНАЯ СКИДКА! 🌟" if legendary else "🎫 Скидки"
         keyboard.append([InlineKeyboardButton(banner, callback_data="discounts_info")])
     
     cats = {
@@ -599,9 +630,9 @@ def shop_keyboard(location="private"):
                     if disc_info.get("type") == "legendary":
                         price_text = f"🌟 БЕСПЛАТНО! -100%"
                     else:
-                        price_text = f"{disc_info.get('color', '🟢')} {price} NBT -{percent}%"
+                        price_text = f"{disc_info.get('color', '🟢')} {price} 💮 -{percent}%"
                 else:
-                    price_text = f"{price} NBT"
+                    price_text = f"{price} 💮"
                 keyboard.append([InlineKeyboardButton(f"{item['icon']} {item['name']} — {price_text}", callback_data=f"buy_{item_id}")])
     
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
@@ -630,7 +661,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if u_data.get("referral_code") == ref_code and u_id != uid and not users[uid].get("referred_by"):
                 users[uid]["referred_by"] = u_id; add_tokens(int(u_id), REFERRAL_BONUS); add_tokens(user_id, INVITED_BONUS)
                 users[u_id]["referrals"] = users[u_id].get("referrals", 0) + 1; save_users(users)
-                try: await context.bot.send_message(int(u_id), f"🎉 Новый реферал!\n💰 +{REFERRAL_BONUS} NBT")
+                try: await context.bot.send_message(int(u_id), f"🎉 Новый реферал!\n💰 +{REFERRAL_BONUS} 💮")
                 except: pass
                 break
     
@@ -642,27 +673,37 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
     rate_data = get_token_rate()
     rate = rate_data.get("rate", 0.01)
+    trend = rate_data.get("trend", "📊 Стабильно")
     
     await update.message.reply_text(
         f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
         f"💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n"
         f"💎 Премиум ЛС: {premium}\n\n"
-        f"💰 Баланс: {user.get('tokens', 0)} NBT\n"
-        f"💱 Курс: 1 NBT = ${rate:.6f}\n"
+        f"💰 Баланс: {user.get('tokens', 0)} 💮\n"
+        f"💮 1 NBT = ${rate:.8f} {trend}\n"
         f"📊 Лимиты: {DAILY_LIMIT} вопр. + {IMAGE_DAILY_LIMIT} фото/день\n\n"
         f"👇 Выбери модель:",
         reply_markup=main_reply_keyboard()
     )
 
 async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показывает курс токена и токеномику"""
     rate_data = get_token_rate()
+    history = load_json(TOKEN_HISTORY_FILE)
+    shop_items = get_shop_items()
+    
     rate = rate_data.get("rate", 0.01)
     supply = rate_data.get("total_supply", 0)
     earned = rate_data.get("total_earned", 0)
     spent = rate_data.get("total_spent", 0)
+    market_cap = rate_data.get("market_cap", 0)
+    change_24h = rate_data.get("change_24h", 0)
+    trend = rate_data.get("trend", "📊 Стабильно")
+    active_users = rate_data.get("active_users", 0)
+    total_users = rate_data.get("total_users", 0)
     supply_factor = rate_data.get("supply_factor", 1.0)
-    volatility = rate_data.get("volatility", 1.0)
+    activity_factor = rate_data.get("activity_factor", 1.0)
+    burn_factor = rate_data.get("burn_factor", 1.0)
+    volatility_index = rate_data.get("volatility_index", 1.0)
     updated = rate_data.get("updated_at", "")
     
     if updated:
@@ -670,29 +711,50 @@ async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         updated_time = "Неизвестно"
     
-    # Примеры цен
-    shop_items = get_shop_items()
+    change_emoji = "📈" if change_24h > 0 else "📉" if change_24h < 0 else "📊"
     
     text = (
-        f"💱 КУРС NeBlock Token (NBT)\n━━━━━━━━━━━━━━━━\n\n"
-        f"💰 1 NBT = ${rate:.6f} USD\n"
-        f"📊 В обороте: {supply:,} NBT\n"
-        f"💎 Заработано всего: {earned:,} NBT\n"
-        f"💸 Потрачено всего: {spent:,} NBT\n\n"
-        f"📈 Фактор предложения: {supply_factor}\n"
-        f"📉 Волатильность: {volatility}\n"
+        f"💮 КУРС NeBlock Token (NBT)\n━━━━━━━━━━━━━━━━\n\n"
+        f"💰 1 NBT = ${rate:.8f} USD\n"
+        f"{trend} Изменение за 24ч: {change_24h:+.2f}% {change_emoji}\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"📊 РЫНОЧНЫЕ ДАННЫЕ\n"
+        f"💎 Рыночная капитализация: ${market_cap:,.2f}\n"
+        f"🪙 Токенов в обороте: {supply:,} NBT\n"
+        f"💸 Заработано всего: {earned:,} NBT\n"
+        f"🔥 Потрачено всего: {spent:,} NBT\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"📈 ФАКТОРЫ КУРСА\n"
+        f"📊 Фактор предложения: {supply_factor}\n"
+        f"👥 Фактор активности: {activity_factor}\n"
+        f"🔥 Фактор сжигания: {burn_factor}\n"
+        f"📉 Индекс волатильности: {volatility_index}\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"👥 Пользователей: {total_users} (активных: {active_users})\n"
         f"🕐 Обновлён: {updated_time}\n"
         f"🔄 Следующее обновление: завтра в 00:00 МСК\n\n"
         f"━━━━━━━━━━━━━━━━\n"
-        f"📋 Примеры цен:\n"
-        f"📝 +5 запросов: {shop_items.get('extra5', {}).get('price', '?')} NBT\n"
-        f"🎨 1 фото: {shop_items.get('image1', {}).get('price', '?')} NBT\n"
-        f"⭐ Премиум день: {shop_items.get('premium_day', {}).get('price', '?')} NBT\n"
-        f"👑 Премиум навсегда: {shop_items.get('premium_forever', {}).get('price', '?')} NBT\n\n"
-        f"💡 Курс зависит от количества NBT в обороте.\n"
-        f"Чем больше токенов — тем выше курс (дефляция).\n"
-        f"Цены в магазине меняются вместе с курсом."
+        f"📋 ПРИМЕРЫ ЦЕН:\n"
+        f"📝 +5 запросов: {shop_items.get('extra5', {}).get('price', '?')} 💮\n"
+        f"🎨 1 фото: {shop_items.get('image1', {}).get('price', '?')} 💮\n"
+        f"⭐ Премиум день: {shop_items.get('premium_day', {}).get('price', '?')} 💮\n"
+        f"👑 Премиум навсегда: {shop_items.get('premium_forever', {}).get('price', '?')} 💮\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"💡 Чем больше токенов в обороте — тем выше курс.\n"
+        f"💡 Чем активнее пользователи — тем выше курс.\n"
+        f"💡 Чем больше тратят — тем выше курс.\n"
+        f"💡 Курс обновляется ежедневно в 00:00 МСК."
     )
+    
+    # Добавляем историю если есть
+    if len(history) > 1:
+        text += "\n\n📈 ИСТОРИЯ КУРСА (7 дней)\n━━━━━━━━━━━━━━━━\n"
+        history_items = sorted(history.items())[-7:]
+        for date, hdata in history_items:
+            hrate = hdata.get("rate", 0)
+            hchange = hdata.get("change_24h", 0)
+            change_str = f"{hchange:+.2f}%" if hchange != 0 else "0%"
+            text += f"{date}: ${hrate:.8f} ({change_str})\n"
     
     await update.message.reply_text(text)
 
@@ -700,30 +762,21 @@ async def discounts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     discounts = get_discounts()
     active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
     next_update = get_next_update_time()
-    generated_at = discounts.get("generated_at", "")
     shop_items = get_shop_items()
     
-    text = "🎫 СИСТЕМА СКИДОК\n━━━━━━━━━━━━━━━━\n\n"
-    if generated_at:
-        gen_time = datetime.fromisoformat(generated_at)
-        text += f"🕐 Созданы: {gen_time.strftime('%d.%m.%Y %H:%M МСК')}\n"
+    text = "🎫 СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
     text += f"🔄 Обновление: {next_update.strftime('%d.%m.%Y в 9:00 МСК')}\n\n"
     
     if not active: text += "Нет активных скидок.\n"
     else:
         legendary = any(d.get("type") == "legendary" for d in active.values())
         if legendary: text += "🌟 ЛЕГЕНДАРНАЯ СКИДКА 100%! (3 часа) 🌟\n\n"
-        
         for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
             item = shop_items.get(item_id)
             if not item: continue
-            color = disc.get("color", "🟢")
-            text += f"{color} {item['icon']} {item['name']}: -{disc['percent']}%\n"
-            text += f"💵 Было: {disc['original']} → 🔥 Стало: {disc['new_price']} NBT\n"
-            if disc.get("special"): text += "🌟 БЕСПЛАТНО! Действует 3 часа!\n"
-            text += "\n"
+            text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}: -{disc['percent']}%\n"
+            text += f"💵 {disc['original']} → 🔥 {disc['new_price']} 💮\n\n"
     
-    text += "━━━━━━━━━━━━━━━━\n🛒 /shop — купить"
     await update.message.reply_text(text)
 
 async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -731,7 +784,7 @@ async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def chatowner_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.effective_chat.type
-    if chat_type not in ["group", "supergroup"]: await update.message.reply_text("Только для чатов."); return
+    if chat_type not in ["group", "supergroup"]: return
     chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
     chats = load_chats(); chat_data = chats.get(str(chat_id), {})
     owners = chat_data.get("owners", []) if isinstance(chat_data, dict) else chat_data
@@ -743,27 +796,27 @@ async def chatowner_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.effective_chat.type
-    if chat_type not in ["group", "supergroup"]: await update.message.reply_text("Только для чатов."); return
+    if chat_type not in ["group", "supergroup"]: return
     chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
-    if not is_chat_owner(chat_id, user_id): await update.message.reply_text("❌ Только владелец."); return
-    await update.message.reply_text(f"🛒 Магазин чата\n👑 Вы владелец\n💰 {get_tokens(user_id)} NBT", reply_markup=shop_keyboard("chat"))
+    if not is_chat_owner(chat_id, user_id): return
+    await update.message.reply_text(f"🛒 Магазин чата\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("chat"))
 
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: await update.message.reply_text("/give ID КОЛИЧЕСТВО"); return
-    try: add_tokens(int(context.args[0]), int(context.args[1])); await update.message.reply_text(f"✅ Начислено {context.args[1]} NBT")
+    if not context.args or len(context.args) < 2: return
+    try: add_tokens(int(context.args[0]), int(context.args[1])); await update.message.reply_text(f"✅ +{context.args[1]} 💮")
     except: pass
 
 async def admin_take(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: await update.message.reply_text("/take ID КОЛИЧЕСТВО"); return
+    if not context.args or len(context.args) < 2: return
     try:
         uid = str(int(context.args[0])); amount = int(context.args[1])
         user = get_user(int(context.args[0]))
-        if user.get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно."); return
+        if user.get("tokens", 0) < amount: return
         users = load_users(); users[uid]["tokens"] = users[uid].get("tokens", 0) - amount
         users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount; save_users(users)
-        await update.message.reply_text(f"✅ Снято {amount} NBT у {context.args[0]}")
+        await update.message.reply_text(f"✅ -{amount} 💮")
     except: pass
 
 async def admin_resetuser(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -775,7 +828,7 @@ async def admin_resetuser(update: Update, context: ContextTypes.DEFAULT_TYPE):
             users[uid]["requests_today"] = 0; users[uid]["extra_requests"] = 0
             users[uid]["image_requests_today"] = 0; users[uid]["extra_image_requests"] = 0
             users[uid]["warnings"] = 0; users[uid]["muted_until"] = None; users[uid]["banned"] = False
-            save_users(users); await update.message.reply_text(f"✅ Сброшен.")
+            save_users(users); await update.message.reply_text("✅ Сброшен")
     except: pass
 
 async def admin_setpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -787,7 +840,7 @@ async def admin_setpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
             existing = users[uid].get("premium_until")
             base_time = datetime.fromisoformat(existing) if existing and datetime.now() < datetime.fromisoformat(existing) else datetime.now()
             users[uid]["premium_until"] = (base_time + timedelta(days=days)).isoformat()
-            save_users(users); await update.message.reply_text(f"✅ Премиум на {days} дн.")
+            save_users(users); await update.message.reply_text(f"✅ Премиум {days}д")
     except: pass
 
 async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -795,29 +848,24 @@ async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args: return
     try:
         user_id = int(context.args[0]); user = get_user(user_id)
-        joined = datetime.fromisoformat(user.get("joined", "")).strftime("%d.%m.%Y %H:%M")
         username = user.get("username") or "Не указан"
-        await update.message.reply_text(
-            f"👤 @{username}\n💰 {user.get('tokens', 0)} NBT\n"
-            f"💬 {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}\n"
-            f"⚠️ {user.get('warnings', 0)}/5\n🚫 {'Да' if user.get('banned') else 'Нет'}"
-        )
+        await update.message.reply_text(f"👤 @{username}\n💰 {user.get('tokens', 0)} 💮\n⚠️ {user.get('warnings', 0)}/5")
     except: pass
 
 async def admin_top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users()
     by_tokens = sorted(users.items(), key=lambda x: x[1].get("tokens", 0), reverse=True)[:10]
-    text = "🏆 ТОП ПО NBT\n\n"
+    text = "🏆 ТОП 💮\n\n"
     for i, (uid, data) in enumerate(by_tokens, 1):
         name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
-        text += f"{i}. {name} — {data.get('tokens', 0)} NBT\n"
+        text += f"{i}. {name} — {data.get('tokens', 0)} 💮\n"
     await update.message.reply_text(text)
 
 async def admin_cleardiscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     save_discounts({"last_update": datetime.now().strftime("%Y-%m-%d")})
-    await update.message.reply_text("✅ Скидки очищены.")
+    await update.message.reply_text("✅ Скидки очищены")
 
 async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -828,16 +876,16 @@ async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     promos = load_promos()
-    if not promos: await update.message.reply_text("Нет промокодов."); return
+    if not promos: return
     text = "🎟 Промокоды:\n\n"
-    for code, data in promos.items(): text += f"{code}: {data['amount']} NBT\n"
+    for code, data in promos.items(): text += f"{code}: {data['amount']} 💮\n"
     await update.message.reply_text(text)
 
 async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args: return
     promos = load_promos(); code = context.args[0].upper()
-    if code in promos: del promos[code]; save_promos(promos); await update.message.reply_text(f"✅ Удалён")
+    if code in promos: del promos[code]; save_promos(promos)
 
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -847,8 +895,8 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📊 Статистика\n👥 {len(users)}\n"
         f"💬 {sum(u.get('total_requests', 0) for u in users.values())}\n"
         f"🎨 {sum(u.get('total_images', 0) for u in users.values())}\n"
-        f"💰 В обороте: {rate_data.get('total_supply', 0):,} NBT\n"
-        f"💱 Курс: ${rate_data.get('rate', 0.01):.6f}"
+        f"💮 В обороте: {rate_data.get('total_supply', 0):,} NBT\n"
+        f"💱 Курс: ${rate_data.get('rate', 0.01):.8f}"
     )
 
 async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -878,8 +926,7 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         if user.get("last_request"): last = datetime.fromisoformat(user["last_request"]).strftime("%d.%m.%Y в %H:%M")
         current_model = "💬 NeBlock AI V2" if user.get("current_model") == "text" else "🎨 NeBlock Images V2"
         premium = "💎 Активен" if is_premium(user_id) else "Не активен"
-        rate_data = get_token_rate()
-        rate = rate_data.get("rate", 0.01)
+        rate_data = get_token_rate(); rate = rate_data.get("rate", 0.01)
         usd_value = user.get("tokens", 0) * rate
         
         def fmt(until_str):
@@ -894,8 +941,8 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(
             f"👤 Профиль V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
             f"🆔 {user_id}\n📅 {joined}\n🔮 {current_model}\n💎 Премиум: {premium}\n\n"
-            f"💰 Баланс: {user.get('tokens', 0)} NBT (~${usd_value:.2f} USD)\n"
-            f"💱 Курс: 1 NBT = ${rate:.6f}\n"
+            f"💰 Баланс: {user.get('tokens', 0)} 💮 (~${usd_value:.2f})\n"
+            f"💮 Курс: 1 NBT = ${rate:.8f}\n"
             f"💎 Заработано: {user.get('earned_tokens', 0)} | 💸 Потрачено: {user.get('spent_tokens', 0)}\n\n"
             f"💬 ЛС: {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)} | {fmt(user.get('unlimited_until'))}\n"
             f"🎨 Фото: {user.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + user.get('extra_image_requests', 0)} | {fmt(user.get('image_unlimited_until'))}\n"
@@ -904,11 +951,11 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             reply_markup=main_menu()
         )
         return True
-    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} NBT\n💱 /tokenrate — курс", reply_markup=shop_keyboard("private")); return True
-    if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок\n💎 {get_tokens(user_id)} NBT\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день\n👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу", reply_markup=earn_keyboard()); return True
+    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} 💮\n💮 /tokenrate — курс", reply_markup=shop_keyboard("private")); return True
+    if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок\n💎 {get_tokens(user_id)} 💮\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день\n👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу", reply_markup=earn_keyboard()); return True
     if text == "📚 FAQ": await update.message.reply_text(FAQ_TEXT); return True
     if text == "🎫 Скидки": await discounts_cmd(update, context); return True
-    if text == "💱 Курс NBT": await tokenrate_cmd(update, context); return True
+    if text == "💮 Курс NBT": await tokenrate_cmd(update, context); return True
     return False
 
 async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -916,21 +963,25 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     shop_items = get_shop_items()
     
     if data == "none": return
-    if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n💰 {get_tokens(user_id)} NBT", reply_markup=main_menu())
-    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💱 Курс NBT\n🎫 Скидки", reply_markup=back_button())
-    elif data == "models": await query.edit_message_text(f"🧠 МОДЕЛИ\n\n💬 NeBlock AI V2\n🎨 NeBlock Images V2\n\n💱 /tokenrate — курс NBT", reply_markup=back_button())
+    if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n💰 {get_tokens(user_id)} 💮", reply_markup=main_menu())
+    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💮 NBT\n🎫 Скидки", reply_markup=back_button())
+    elif data == "models": await query.edit_message_text(f"🧠 МОДЕЛИ\n\n💬 NeBlock AI V2\n🎨 NeBlock Images V2\n\n💮 /tokenrate — курс NBT", reply_markup=back_button())
     elif data == "tokenrate":
         rate_data = get_token_rate()
         rate = rate_data.get("rate", 0.01)
         supply = rate_data.get("total_supply", 0)
+        market_cap = rate_data.get("market_cap", 0)
+        change_24h = rate_data.get("change_24h", 0)
+        trend = rate_data.get("trend", "📊 Стабильно")
         await query.edit_message_text(
-            f"💱 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n"
-            f"💰 1 NBT = ${rate:.6f}\n"
-            f"📊 В обороте: {supply:,} NBT\n"
-            f"🔄 Обновление: ежедневно в 00:00 МСК\n\n"
+            f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n"
+            f"💰 1 NBT = ${rate:.8f}\n{trend} {change_24h:+.2f}%\n"
+            f"💎 Капитализация: ${market_cap:,.2f}\n"
+            f"🪙 В обороте: {supply:,} NBT\n\n"
             f"📋 Цены:\n"
-            f"📝 +5 запросов: {shop_items.get('extra5', {}).get('price', '?')} NBT\n"
-            f"⭐ Премиум день: {shop_items.get('premium_day', {}).get('price', '?')} NBT",
+            f"📝 +5 запросов: {shop_items.get('extra5', {}).get('price', '?')} 💮\n"
+            f"⭐ Премиум день: {shop_items.get('premium_day', {}).get('price', '?')} 💮\n\n"
+            f"💡 /tokenrate — подробнее",
             reply_markup=back_button()
         )
     elif data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button())
@@ -945,14 +996,14 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 if disc.get("type") == "legendary":
                     text += f"🌟 {item['icon']} {item['name']}\n💫 БЕСПЛАТНО!\n\n"
                 else:
-                    text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n🔥 -{disc['percent']}% = {disc['new_price']} NBT\n\n"
+                    text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n🔥 -{disc['percent']}% = {disc['new_price']} 💮\n\n"
         await query.edit_message_text(text, reply_markup=back_button())
-    elif data == "premium_info": await query.edit_message_text(f"💎 Премиум\n\nЛС: {shop_items.get('premium_day', {}).get('price', '?')}/{shop_items.get('premium_week', {}).get('price', '?')}/{shop_items.get('premium_forever', {}).get('price', '?')} NBT", reply_markup=back_button())
+    elif data == "premium_info": await query.edit_message_text(f"💎 Премиум\n\nЛС: {shop_items.get('premium_day', {}).get('price', '?')}/{shop_items.get('premium_week', {}).get('price', '?')}/{shop_items.get('premium_forever', {}).get('price', '?')} 💮", reply_markup=back_button())
     elif data == "stats":
         user = get_user(user_id)
-        await query.edit_message_text(f"📊 Статистика\n💬 {user.get('requests_today', 0)}\n🎨 {user.get('image_requests_today', 0)}\n💰 {user.get('tokens', 0)} NBT", reply_markup=back_button())
-    elif data == "shop": await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} NBT", reply_markup=shop_keyboard("private"))
-    elif data == "earn": await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)} NBT", reply_markup=earn_keyboard())
+        await query.edit_message_text(f"📊 Статистика\n💬 {user.get('requests_today', 0)}\n🎨 {user.get('image_requests_today', 0)}\n💰 {user.get('tokens', 0)} 💮", reply_markup=back_button())
+    elif data == "shop": await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("private"))
+    elif data == "earn": await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)} 💮", reply_markup=earn_keyboard())
     elif data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
     elif data == "faq": await query.edit_message_text(FAQ_TEXT, reply_markup=back_button())
     elif data == "daily_bonus":
@@ -964,17 +1015,17 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
             users[uid]["daily_bonus_streak"] = users[uid].get("daily_bonus_streak", 0) + 1 if users[uid].get("last_bonus_date") == yesterday else 1
             users[uid]["last_bonus_date"] = today; save_users(users); add_tokens(user_id, bonus)
-            await query.answer(f"🎉 +{bonus} NBT!", show_alert=True)
-            await query.edit_message_text(f"🎁 +{bonus} NBT\n💰 {get_tokens(user_id)}", reply_markup=back_button())
+            await query.answer(f"🎉 +{bonus} 💮!", show_alert=True)
+            await query.edit_message_text(f"🎁 +{bonus} 💮\n💰 {get_tokens(user_id)} 💮", reply_markup=back_button())
     elif data == "ref_link":
         user = get_user(user_id); bot_username = (await context.bot.get_me()).username
-        await query.edit_message_text(f"👥 https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n💰 +{REFERRAL_BONUS} NBT тебе\n🎁 +{INVITED_BONUS} NBT другу", reply_markup=back_button())
+        await query.edit_message_text(f"👥 https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n💰 +{REFERRAL_BONUS} 💮 тебе\n🎁 +{INVITED_BONUS} 💮 другу", reply_markup=back_button())
     elif data.startswith("confirm_"):
         item_id = data.replace("confirm_", ""); item = shop_items.get(item_id)
         if not item: return
         price, percent, disc_info = get_discounted_price(item_id)
         tokens = get_tokens(user_id)
-        if tokens < price: await query.answer(f"❌ Недостаточно!", show_alert=True); return
+        if tokens < price: await query.answer("❌ Недостаточно 💮!", show_alert=True); return
         remove_tokens(user_id, price); users = load_users(); uid = str(user_id)
         actions = {"extra5": ("extra_requests", 5), "extra10": ("extra_requests", 10), "extra50": ("extra_requests", 50), "image1": ("extra_image_requests", 1), "image5": ("extra_image_requests", 5), "image20": ("extra_image_requests", 20), "chat_extra10": ("extra_chat_requests", 10), "chat_extra50": ("extra_chat_requests", 50), "chat_image5": ("extra_chat_image_requests", 5), "chat_image20": ("extra_chat_image_requests", 20)}
         time_actions = {"unlimited_1h": ("unlimited_until", 1), "unlimited_24h": ("unlimited_until", 24), "unlimited_7d": ("unlimited_until", 168), "image_unlimited_1h": ("image_unlimited_until", 1), "chat_unlimited_1h": ("chat_unlimited_until", 1), "chat_unlimited_24h": ("chat_unlimited_until", 24)}
@@ -988,10 +1039,10 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             for cid, cdata in chats.items():
                 if isinstance(cdata, dict) and str(user_id) in cdata.get("owners", []): chats[cid]["premium_until"] = (datetime.now() + timedelta(hours=hours_map[item_id])).isoformat(); save_chats(chats); break
         save_users(users)
-        disc_text = f"\n🎫 Скидка -{percent}%" if percent > 0 and not (disc_info and disc_info.get("type") == "legendary") else ""
+        disc_text = f"\n🎫 -{percent}%" if percent > 0 else ""
         if disc_info and disc_info.get("type") == "legendary": disc_text = "\n🌟 ЛЕГЕНДАРНАЯ СКИДКА!"
         await query.answer(f"✅ {item['name']}!", show_alert=True)
-        await query.edit_message_text(f"✅ {item['name']}{disc_text}\n💰 Потрачено: {price} NBT\n💎 Остаток: {get_tokens(user_id)} NBT", reply_markup=back_button())
+        await query.edit_message_text(f"✅ {item['name']}{disc_text}\n💰 Потрачено: {price} 💮\n💎 Остаток: {get_tokens(user_id)} 💮", reply_markup=back_button())
     elif data.startswith("buy_"):
         item_id = data.replace("buy_", ""); item = shop_items.get(item_id)
         if not item: return
@@ -1002,8 +1053,8 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             if disc_info.get("type") == "legendary":
                 disc_text = "\n\n🌟 ЛЕГЕНДАРНАЯ СКИДКА 100%!\n💫 БЕСПЛАТНО!"
             else:
-                disc_text = f"\n\n{disc_info.get('color', '🟢')} Скидка -{percent}%\n💵 Было: {disc_info['original']} → 🔥 Стало: {price} NBT"
-        await query.edit_message_text(f"🛒 {item['icon']} {item['name']}\n📝 {item['desc']}\n⚠️ {item.get('warning', '')}{disc_text}\n\n💎 Баланс: {tokens} NBT\n{can}", reply_markup=confirm_keyboard(item_id))
+                disc_text = f"\n\n{disc_info.get('color', '🟢')} -{percent}%\n💵 {disc_info['original']} → 🔥 {price} 💮"
+        await query.edit_message_text(f"🛒 {item['icon']} {item['name']}\n📝 {item['desc']}\n⚠️ {item.get('warning', '')}{disc_text}\n\n💎 Баланс: {tokens} 💮\n{can}", reply_markup=confirm_keyboard(item_id))
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤔 Неизвестная команда.\n/start — меню.")
@@ -1055,7 +1106,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     
     user = get_user(user_id)
-    if context.user_data.get("waiting_promo"): context.user_data["waiting_promo"] = False; success, result = use_promo(user_id, text); await update.message.reply_text(f"🎟 +{result} NBT!\n💎 {get_tokens(user_id)}" if success else f"❌ {result}"); return
+    if context.user_data.get("waiting_promo"): context.user_data["waiting_promo"] = False; success, result = use_promo(user_id, text); await update.message.reply_text(f"🎟 +{result} 💮!" if success else f"❌ {result}"); return
     
     if is_image_request or (chat_type == "private" and (user.get("current_model") == "image" or user.get("waiting_for_image"))):
         if chat_type == "private":
@@ -1065,11 +1116,11 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             rem = image_remaining(user_id, chat_type, chat_id)
             await update.message.reply_text(f"🚫 Лимит фото!\n📊 Осталось: {rem}", reply_to_message_id=update.message.message_id if chat_type != "private" else None, reply_markup=limit_reached_keyboard() if chat_type == "private" else None); return
         
-        msg = await update.message.reply_text("🎨 NeBlock Images V2 генерирует...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
+        msg = await update.message.reply_text("🎨 Генерирую...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
         try:
             image_bytes, error = await generate_image(text)
             if image_bytes: add_image_request(user_id, chat_type); await msg.delete(); rem = image_remaining(user_id, chat_type, chat_id); await update.message.reply_photo(photo=image_bytes, caption=f"🎨 NeBlock Images V2\n📝 {text[:200]}\n📊 Осталось: {rem}", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
-            else: await msg.edit_text(f"❌ Ошибка")
+            else: await msg.edit_text("❌ Ошибка")
         except:
             try: await msg.delete()
             except: pass
@@ -1080,7 +1131,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         rem = remaining(user_id, chat_type, chat_id)
         await update.message.reply_text(f"🚫 Лимит!\n📊 Осталось: {rem}", reply_markup=limit_reached_keyboard() if chat_type == "private" else None, reply_to_message_id=update.message.message_id if chat_type != "private" else None); return
     
-    msg = await update.message.reply_text("💬 NeBlock AI V2 генерирует...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
+    msg = await update.message.reply_text("💬 Генерирую...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
     try:
         response = client.responses.create(prompt={"id": PROMPT_ID}, input=text); answer = response.output_text
         add_request(user_id, chat_type); await msg.delete()
