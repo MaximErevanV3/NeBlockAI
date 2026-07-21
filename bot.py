@@ -1,8 +1,8 @@
 import openai
 import base64
 import asyncio
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, LabeledPrice
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler, PreCheckoutQueryHandler
 import logging
 import os
 import json
@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V2.3 - Конфигурация
+# 🧠 NeBlock AI V2.5 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -35,7 +35,15 @@ DAILY_BONUS_MIN = 5
 DAILY_BONUS_MAX = 15
 REFERRAL_BONUS = 25
 INVITED_BONUS = 10
-BOT_VERSION = "2.3"
+BOT_VERSION = "2.5"
+
+# Товары доступные для покупки за звёзды (цены в звёздах)
+STAR_ITEMS = {
+    "stars_extra10": {"name": "+10 запросов", "stars": 50, "icon": "📝", "desc": "10 текстовых запросов за звёзды Telegram"},
+    "stars_extra50": {"name": "+50 запросов", "stars": 200, "icon": "📝", "desc": "50 текстовых запросов за звёзды Telegram"},
+    "stars_image5": {"name": "5 генераций фото", "stars": 150, "icon": "🎨", "desc": "5 генераций фото за звёзды Telegram"},
+    "stars_premium_day": {"name": "Премиум ЛС 1 день", "stars": 500, "icon": "⭐", "desc": "Премиум на 24 часа за звёзды"},
+}
 
 AI_DISCLAIMER = "\n\n━━━━━━━━━━━━━━━━\n⚠️ ИИ может ошибаться. Только для справки."
 
@@ -43,44 +51,64 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
+Версия 2.5 (21.07.2026)
+• Покупки за Telegram Stars ⭐
+• Легендарная скидка 100% (шанс 0.5%)
+• Исправлен баг с фото в чатах
+• Улучшенная информация о скидках
+
+Версия 2.4 (21.07.2026)
+• Точное время обновления скидок
+• Расширенная статистика скидок
+
 Версия 2.3 (21.07.2026)
-• Улучшенная система скидок
-• Специальные акции и флеш-скидки
-• Таймер до обновления скидок
-• Разные типы скидок
-
-Версия 2.2 (21.07.2026)
-• Динамический магазин (ЛС/Чат)
-• Система случайных скидок
-
-Версия 2.1 (21.07.2026)
-• Лог обновлений
-• Обработка неизвестных команд
+• 5 типов скидок
+• Флеш-скидки на 24 часа
 
 Версия 2.0 (15.07.2026)
 • Две модели V2
 • Премиум и магазин
 """
 
-UNKNOWN_COMMAND_RESPONSES = [
-    "🤔 Неизвестная команда. Используй /start или кнопки внизу.",
-    "❓ Я не знаю такую команду. Напиши /start чтобы увидеть возможности.",
-    "🔍 Команда не найдена. Попробуй /help или /start.",
-    "📋 Доступные команды: /start, /shop, /faq, /upgrade, /chatowner, /chatshop, /changelog, /discounts",
-]
+DISCOUNT_TYPES = {
+    "regular": {"name": "Обычная скидка", "min": 5, "max": 25, "color": "🟢", "chance": 40, "icon": "🏷️", "desc": "Стандартная скидка на товары"},
+    "super": {"name": "Супер-скидка", "min": 30, "max": 50, "color": "🔴", "chance": 20, "icon": "🔥", "desc": "Повышенная скидка на популярные товары"},
+    "flash": {"name": "Флеш-скидка", "min": 40, "max": 70, "color": "⚡", "chance": 8, "icon": "⏰", "desc": "Редкая скидка на 24 часа"},
+    "bundle": {"name": "Скидка на набор", "min": 15, "max": 35, "color": "📦", "chance": 12, "icon": "🎁", "desc": "Скидка на большие пакеты запросов"},
+    "premium_discount": {"name": "Премиум-скидка", "min": 10, "max": 30, "color": "👑", "chance": 5, "icon": "💎", "desc": "Скидка на Премиум-режимы"},
+    "legendary": {"name": "ЛЕГЕНДАРНАЯ СКИДКА", "min": 100, "max": 100, "color": "🌟", "chance": 0.5, "icon": "💫", "desc": "Скидка 100%! Товар бесплатно! Шанс 0.5%"},
+}
 
-BLOCKED_WORDS = [
-    r'\b(?:взлом|взломать|хак(?:ер|нуть)?|hack(?:er|ing)?|crack|warez|кряк|keygen|фишинг|phishing|ddos|ддос)\b',
-    r'\b(?:наркотик|drugs|наркота|спайс|соль|героин|кокаин|метамфетамин|амфетамин|марихуан|каннабис)\b',
-    r'\b(?:оружие|weapon|gun|бомба|bomb|взрывчатка|explosive|пистолет|автомат|граната)\b',
-    r'\b(?:дет[иь] порно|child porn|педофил|pedo|инцест|incest)\b',
-    r'\b(?:уби[йт]|убью|kill|murder|зака[зж]|hitman|киллер|пыт[кч]|torture)\b',
-    r'\b(?:террор|terror|теракт|ИГИЛ|ISIS|джихад|jihad|смертник|шахид)\b',
-    r'\b(?:суицид|suicide|самоубий|повес[иь])\b',
-]
-COMPILED_BLOCKED = [re.compile(w, re.IGNORECASE) for w in BLOCKED_WORDS]
-SEVERE_PATTERNS = [r'\b(?:дет[иь] порно|child porn|педофил|pedo|террор|terror|ИГИЛ|ISIS|уби[йт]|kill|суицид|suicide)\b']
-COMPILED_SEVERE = [re.compile(w, re.IGNORECASE) for w in SEVERE_PATTERNS]
+FAQ_TEXT = f"""
+📚 ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ
+━━━━━━━━━━━━━━━━━━━━
+
+❓ Что такое NeBlock AI?
+Платформа с ИИ-моделями V2 в Telegram.
+
+❓ Как работают скидки?
+• 🏷️ Обычные (5-25%)
+• 🔥 Супер (30-50%)
+• ⚡ Флеш (40-70%)
+• 🎁 Наборы (15-35%)
+• 💎 Премиум (10-30%)
+• 🌟 ЛЕГЕНДАРНАЯ (100%! Шанс 0.5%)
+
+❓ Можно купить за Telegram Stars?
+Да! Некоторые товары доступны за ⭐ Звёзды Telegram.
+Выберите товар со звёздами в магазине.
+
+❓ Как купить за звёзды?
+Нажмите на товар со значком ⭐ и подтвердите платёж.
+
+❓ Бот работает в группах?
+Да! @имя_бота вопрос или нарисуй описание.
+Просто отправка сообщения не активирует бота.
+
+❓ Какие лимиты?
+• ЛС: {DAILY_LIMIT} текстовых + {IMAGE_DAILY_LIMIT} фото/день
+• Чаты: {CHAT_DAILY_LIMIT} текстовых + {CHAT_IMAGE_LIMIT} фото/день
+"""
 
 SHOP_ITEMS = {
     "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "5 текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
@@ -107,62 +135,12 @@ SHOP_ITEMS = {
     "chat_premium_forever": {"name": "Премиум чат навсегда", "price": 3500, "icon": "👑", "category": "chat_premium", "desc": "Безлимит навсегда.", "warning": "⚠️ Владелец. Бессрочно.", "location": "chat"},
 }
 
-# Типы скидок
-DISCOUNT_TYPES = {
-    "regular": {"name": "Обычная скидка", "min": 5, "max": 25, "color": "🟢", "chance": 50},
-    "super": {"name": "Супер-скидка", "min": 30, "max": 50, "color": "🔴", "chance": 20},
-    "flash": {"name": "Флеш-скидка", "min": 40, "max": 70, "color": "⚡", "chance": 10},
-    "bundle": {"name": "Скидка на набор", "min": 15, "max": 35, "color": "📦", "chance": 15},
-    "premium_discount": {"name": "Премиум-скидка", "min": 10, "max": 30, "color": "👑", "chance": 5},
-}
-
-FAQ_TEXT = f"""
-📚 ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ
-━━━━━━━━━━━━━━━━━━━━
-
-❓ Что такое NeBlock AI?
-Платформа с ИИ-моделями V2 в Telegram.
-
-❓ Как работают скидки?
-• Обычные скидки 🟢 — 5-25% на случайные товары
-• Супер-скидки 🔴 — 30-50% на популярные товары
-• Флеш-скидки ⚡ — 40-70% (редкие, на 24 часа)
-• Наборы 📦 — скидки на большие пакеты
-• Премиум-скидки 👑 — скидки на Премиум
-
-Скидки обновляются каждые 2 дня в 00:00 МСК.
-Активные скидки: /discounts
-
-❓ Бот работает в группах?
-Да! @имя_бота вопрос или нарисуй описание.
-
-❓ Какие лимиты?
-• ЛС: {DAILY_LIMIT} текстовых + {IMAGE_DAILY_LIMIT} фото/день
-• Чаты: {CHAT_DAILY_LIMIT} текстовых + {CHAT_IMAGE_LIMIT} фото/день
-"""
-
-MODELS_INFO = f"""
-🧠 МОДЕЛИ NeBlock AI V{BOT_VERSION}
-━━━━━━━━━━━━━━━━━━━━
-
-💬 NeBlock AI V2 — текст
-🎨 NeBlock Images V2 — фото
-
-💎 Премиум ЛС: 200/1000/2500
-💎 Премиум Чат: 300/1500/3500
-
-🎫 Скидки обновляются каждые 2 дня!
-/discounts — все активные скидки
-"""
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 logger = logging.getLogger("NeBlockAI")
 
 client = openai.OpenAI(
-    api_key=YANDEX_API_KEY,
-    base_url="https://ai.api.cloud.yandex.net/v1",
-    project=YANDEX_FOLDER,
-    timeout=60.0,
+    api_key=YANDEX_API_KEY, base_url="https://ai.api.cloud.yandex.net/v1",
+    project=YANDEX_FOLDER, timeout=60.0,
 )
 
 def load_json(filename):
@@ -183,74 +161,66 @@ def load_discounts(): return load_json(DISCOUNTS_FILE)
 def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
 
 def generate_discounts():
-    """Улучшенная генерация скидок с разными типами"""
+    """Генерация скидок с легендарной"""
     all_items = list(SHOP_ITEMS.keys())
-    discounts = {}
+    discounts = {"generated_at": datetime.now().isoformat()}
     used_items = set()
     
-    # Выбираем случайные типы скидок с учётом шанса
+    # Проверяем легендарную скидку (0.5%)
+    legendary_roll = random.uniform(0, 100)
+    if legendary_roll < DISCOUNT_TYPES["legendary"]["chance"]:
+        item_id = random.choice(all_items)
+        original = SHOP_ITEMS[item_id]["price"]
+        discounts[item_id] = {
+            "percent": 100, "original": original, "new_price": 0,
+            "type": "legendary", "type_name": "ЛЕГЕНДАРНАЯ СКИДКА",
+            "color": "🌟", "icon": "💫", "expires": (datetime.now() + timedelta(hours=1)).isoformat(),
+            "special": True
+        }
+        used_items.add(item_id)
+        logger.info(f"🌟 ЛЕГЕНДАРНАЯ СКИДКА выпала на {item_id}!")
+    
     available_types = []
     for dtype, dconfig in DISCOUNT_TYPES.items():
-        if random.randint(1, 100) <= dconfig["chance"]:
-            available_types.append(dtype)
+        if dtype == "legendary": continue
+        if random.randint(1, 100) <= dconfig["chance"]: available_types.append(dtype)
+    if not available_types: available_types = ["regular"]
     
-    if not available_types:
-        available_types = ["regular"]
-    
-    # Генерируем 3-5 скидок
     num_discounts = random.randint(3, 5)
     
     for _ in range(num_discounts):
         if len(used_items) >= len(all_items): break
-        
         disc_type = random.choice(available_types)
         dconfig = DISCOUNT_TYPES[disc_type]
-        
-        # Выбираем товар для скидки
         available_items = [item for item in all_items if item not in used_items]
         if not available_items: break
-        
         item_id = random.choice(available_items)
         used_items.add(item_id)
-        
         percent = random.randint(dconfig["min"], dconfig["max"])
         original = SHOP_ITEMS[item_id]["price"]
         new_price = max(1, int(original * (1 - percent / 100)))
-        
-        # Для флеш-скидок устанавливаем короткий срок
         expires = None
-        if disc_type == "flash":
-            expires = (datetime.now() + timedelta(hours=24)).isoformat()
-        
+        if disc_type == "flash": expires = (datetime.now() + timedelta(hours=24)).isoformat()
         discounts[item_id] = {
-            "percent": percent,
-            "original": original,
-            "new_price": new_price,
-            "type": disc_type,
-            "type_name": dconfig["name"],
-            "color": dconfig["color"],
-            "expires": expires,
+            "percent": percent, "original": original, "new_price": new_price,
+            "type": disc_type, "type_name": dconfig["name"], "color": dconfig["color"],
+            "icon": dconfig["icon"], "expires": expires,
         }
     
     return discounts
 
 def get_discounts():
-    """Получает актуальные скидки, обновляет каждые 2 дня"""
     discounts = load_discounts()
     last_update = discounts.get("last_update", "")
     today = datetime.now().strftime("%Y-%m-%d")
     
-    # Удаляем истекшие флеш-скидки
     if discounts:
         to_delete = []
         for item_id, disc in discounts.items():
-            if item_id == "last_update": continue
-            if disc.get("expires") and datetime.now() > datetime.fromisoformat(disc["expires"]):
-                to_delete.append(item_id)
-        for item_id in to_delete:
-            del discounts[item_id]
-        if to_delete:
-            save_discounts(discounts)
+            if item_id in ["last_update", "generated_at"]: continue
+            if disc.get("expires") and datetime.now() > datetime.fromisoformat(disc["expires"]): to_delete.append(item_id)
+        for item_id in to_delete: del discounts[item_id]
+        if to_delete: save_discounts(discounts)
     
     if last_update != today:
         last_date = datetime.fromisoformat(last_update) if last_update else datetime.now() - timedelta(days=3)
@@ -267,10 +237,16 @@ def get_discounts():
     
     return discounts
 
+def get_next_update_time():
+    discounts = load_discounts()
+    last_update = discounts.get("last_update", "")
+    if last_update:
+        return datetime.fromisoformat(last_update) + timedelta(days=2)
+    return datetime.now() + timedelta(days=2)
+
 def get_discounted_price(item_id):
-    """Получает цену со скидкой и информацию о скидке"""
     discounts = get_discounts()
-    if item_id in discounts and item_id != "last_update":
+    if item_id in discounts and item_id not in ["last_update", "generated_at"]:
         disc = discounts[item_id]
         if disc.get("expires") and datetime.now() > datetime.fromisoformat(disc["expires"]):
             return SHOP_ITEMS[item_id]["price"], 0, None
@@ -436,6 +412,19 @@ def moderate_content(text):
         if pattern.search(text): return False, "normal", "Запрещённый контент"
     return True, None, None
 
+COMPILED_BLOCKED = [re.compile(w, re.IGNORECASE) for w in [
+    r'\b(?:взлом|хак(?:ер|нуть)?|hack|crack|warez|кряк|keygen)\b',
+    r'\b(?:наркотик|drugs|наркота|спайс|героин|кокаин)\b',
+    r'\b(?:оружие|weapon|gun|бомба|bomb|взрывчатка|пистолет|автомат)\b',
+    r'\b(?:дет[иь] порно|child porn|педофил|pedo|инцест)\b',
+    r'\b(?:уби[йт]|убью|kill|murder|зака[зж]|hitman|киллер)\b',
+    r'\b(?:террор|terror|теракт|ИГИЛ|ISIS|джихад)\b',
+    r'\b(?:суицид|suicide|самоубий|повес[иь])\b',
+]]
+COMPILED_SEVERE = [re.compile(w, re.IGNORECASE) for w in [
+    r'\b(?:дет[иь] порно|child porn|педофил|pedo|террор|terror|ИГИЛ|ISIS|уби[йт]|kill|суицид|suicide)\b'
+]]
+
 def is_user_muted(user_id):
     user = get_user(user_id)
     if user.get("banned"): return True
@@ -475,62 +464,56 @@ def main_reply_keyboard():
         [KeyboardButton("💬 NeBlock AI V2"), KeyboardButton("🎨 NeBlock Images V2")],
         [KeyboardButton("👤 Профиль"), KeyboardButton("🛒 Магазин")],
         [KeyboardButton("💰 Заработать"), KeyboardButton("📚 FAQ")],
-        [KeyboardButton("🎫 Скидки"), KeyboardButton("📋 Изменения")],
+        [KeyboardButton("🎫 Скидки"), KeyboardButton("⭐ Звёзды")],
     ], resize_keyboard=True)
 
 def main_menu():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("ℹ️ О боте", callback_data="about"), InlineKeyboardButton("📊 Статистика", callback_data="stats")],
         [InlineKeyboardButton("🧠 Модели", callback_data="models"), InlineKeyboardButton("💎 Премиум", callback_data="premium_info")],
-        [InlineKeyboardButton("🎫 Скидки", callback_data="discounts_info"), InlineKeyboardButton("📋 Обновления", callback_data="changelog")],
+        [InlineKeyboardButton("🎫 Скидки", callback_data="discounts_info"), InlineKeyboardButton("⭐ Звёзды", callback_data="stars_info")],
     ])
 
 def back_button(): return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
 
 def shop_keyboard(location="private"):
-    """Динамический магазин с информацией о скидках"""
     keyboard = []
     discounts = get_discounts()
-    
     cats = {
-        "private": [("📝 Текстовые запросы", "text"), ("🎨 Генерация фото", "image"), ("⭐ Премиум ЛС", "premium")],
+        "private": [("📝 Текстовые запросы", "text"), ("🎨 Генерация фото", "image"), ("⭐ Премиум ЛС", "premium"), ("⭐ Звёзды Telegram", "stars")],
         "chat": [("👥 Запросы в чатах", "chat"), ("🖼️ Фото в чатах", "chat_image"), ("⭐ Премиум Чат", "chat_premium")],
     }
     
-    # Баннер скидок
-    active_discounts = {k: v for k, v in discounts.items() if k != "last_update"}
+    active_discounts = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
     if active_discounts:
+        legendary = any(d.get("type") == "legendary" for d in active_discounts.values())
         flash_count = sum(1 for d in active_discounts.values() if d.get("type") == "flash")
-        super_count = sum(1 for d in active_discounts.values() if d.get("type") == "super")
-        banner_text = "🎫 АКТИВНЫЕ СКИДКИ"
-        if flash_count > 0: banner_text += f" ⚡{flash_count}"
-        if super_count > 0: banner_text += f" 🔴{super_count}"
-        banner_text += " 🎫"
-        keyboard.append([InlineKeyboardButton(banner_text, callback_data="discounts_info")])
+        banner = "🌟 ЛЕГЕНДАРНАЯ СКИДКА! 🌟" if legendary else f"🎫 Скидки ⚡{flash_count}" if flash_count > 0 else "🎫 Скидки"
+        keyboard.append([InlineKeyboardButton(banner, callback_data="discounts_info")])
     
     for label, cat in cats.get(location, cats["private"]):
+        if cat == "stars":
+            keyboard.append([InlineKeyboardButton("── ⭐ Товары за Звёзды ──", callback_data="none")])
+            for item_id, item in STAR_ITEMS.items():
+                keyboard.append([InlineKeyboardButton(f"{item['icon']} {item['name']} — ⭐{item['stars']}", callback_data=f"stars_{item_id}")])
+            continue
+        
         items_in_cat = False
         for item_id, item in SHOP_ITEMS.items():
             if item["category"] == cat and item.get("location") == location:
                 if not items_in_cat:
                     keyboard.append([InlineKeyboardButton(f"── {label} ──", callback_data="none")])
                     items_in_cat = True
-                
                 price, percent, disc_info = get_discounted_price(item_id)
-                
-                # Форматирование цены со скидкой
                 if percent > 0 and disc_info:
-                    color = disc_info.get("color", "🟢")
-                    type_name = disc_info.get("type_name", "Скидка")
-                    original_text = f"~~{item['price']}~~"
-                    price_text = f"{color} {price} токенов ({original_text}) -{percent}%"
+                    if disc_info.get("type") == "legendary":
+                        price_text = f"🌟 БЕСПЛАТНО! (было {item['price']}) -100%"
+                    else:
+                        color = disc_info.get("color", "🟢")
+                        price_text = f"{color} {price} токенов (было {item['price']}) -{percent}%"
                 else:
                     price_text = f"{price} токенов"
-                
-                keyboard.append([InlineKeyboardButton(
-                    f"{item['icon']} {item['name']} — {price_text}",
-                    callback_data=f"buy_{item_id}"
-                )])
+                keyboard.append([InlineKeyboardButton(f"{item['icon']} {item['name']} — {price_text}", callback_data=f"buy_{item_id}")])
     
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
     return InlineKeyboardMarkup(keyboard)
@@ -542,7 +525,7 @@ def earn_keyboard():
     return InlineKeyboardMarkup([[InlineKeyboardButton("🎁 Ежедневный бонус", callback_data="daily_bonus"), InlineKeyboardButton("👥 Реферальная ссылка", callback_data="ref_link")], [InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
 
 def limit_reached_keyboard():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("🛒 Купить запросы", callback_data="shop"), InlineKeyboardButton("💰 Заработать", callback_data="earn")], [InlineKeyboardButton("💎 Премиум", callback_data="premium_info")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🛒 Купить запросы", callback_data="shop"), InlineKeyboardButton("💰 Заработать", callback_data="earn")], [InlineKeyboardButton("💎 Премиум", callback_data="premium_info"), InlineKeyboardButton("⭐ Звёзды", callback_data="stars_info")]])
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; user = get_user(user_id); chat_type = update.effective_chat.type
@@ -560,64 +543,96 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION} в чате!\n💬 @{context.bot.username} вопрос\n🎨 @{context.bot.username} нарисуй описание\n💎 Премиум: {chat_premium}\n👑 /chatowner | 🛒 /chatshop")
         return
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
-    
-    # Информация о скидках в приветствии
     discounts = get_discounts()
-    active = {k: v for k, v in discounts.items() if k != "last_update"}
-    discount_text = ""
-    if active:
-        discount_text = f"\n🎫 Активных скидок: {len(active)} | /discounts"
-    
-    await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n💎 Премиум ЛС: {premium}{discount_text}\n\n💰 Баланс: {user.get('tokens', 0)} NeBlock Tokens\n\n👇 Выбери модель:", reply_markup=main_reply_keyboard())
+    active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
+    legendary = any(d.get("type") == "legendary" for d in active.values())
+    discount_text = "\n🌟 ЛЕГЕНДАРНАЯ СКИДКА АКТИВНА! 🌟" if legendary else (f"\n🎫 Скидок: {len(active)}" if active else "")
+    await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n💎 Премиум ЛС: {premium}{discount_text}\n\n💰 Баланс: {user.get('tokens', 0)} NeBlock Tokens\n⭐ Покупки за Звёзды!\n\n👇 Выбери модель:", reply_markup=main_reply_keyboard())
 
 async def discounts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показывает все активные скидки"""
     discounts = get_discounts()
-    active = {k: v for k, v in discounts.items() if k != "last_update"}
+    active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
+    next_update = get_next_update_time()
+    generated_at = discounts.get("generated_at", "")
+    
+    text = "🎫 СИСТЕМА СКИДОК\n━━━━━━━━━━━━━━━━\n\n"
+    
+    if generated_at:
+        gen_time = datetime.fromisoformat(generated_at)
+        text += f"🕐 Сгенерированы: {gen_time.strftime('%d.%m.%Y в %H:%M МСК')}\n"
+    text += f"🔄 Обновление: {next_update.strftime('%d.%m.%Y в %H:%M МСК')}\n"
+    remaining_time = next_update - datetime.now()
+    if remaining_time.total_seconds() > 0:
+        days = remaining_time.days; hours = remaining_time.seconds // 3600; minutes = (remaining_time.seconds % 3600) // 60
+        text += f"⏳ Через: "
+        if days > 0: text += f"{days}д "
+        text += f"{hours}ч {minutes}мин\n"
+    
+    text += "\n📊 Типы скидок:\n"
+    for dtype, dconfig in DISCOUNT_TYPES.items():
+        text += f"{dconfig.get('icon', '')} {dconfig['name']}: {dconfig['min']}-{dconfig['max']}% (шанс {dconfig['chance']}%)\n"
+    
+    text += "\n━━━━━━━━━━━━━━━━\n\n"
     
     if not active:
-        await update.message.reply_text("🎫 Скидок пока нет.\n\n🔄 Обновление каждые 2 дня в 00:00 МСК.\nСледующее обновление: скоро!")
-        return
-    
-    text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
-    
-    # Сортируем по размеру скидки
-    sorted_discounts = sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True)
-    
-    for item_id, disc in sorted_discounts:
-        item = SHOP_ITEMS.get(item_id)
-        if not item: continue
+        text += "Нет активных скидок.\n"
+    else:
+        legendary = any(d.get("type") == "legendary" for d in active.values())
+        if legendary: text += "🌟 ВНИМАНИЕ! ЛЕГЕНДАРНАЯ СКИДКА АКТИВНА! 🌟\n\n"
         
-        color = disc.get("color", "🟢")
-        type_name = disc.get("type_name", "Скидка")
+        text += f"Активных скидок: {len(active)}\n"
+        avg_discount = sum(d["percent"] for d in active.values()) / len(active)
+        max_discount = max(d["percent"] for d in active.values())
+        text += f"📊 Средняя: {avg_discount:.0f}% | Макс: {max_discount}%\n\n"
         
-        text += f"{color} {type_name}: -{disc['percent']}%\n"
-        text += f"{item['icon']} {item['name']}\n"
-        text += f"💵 Обычная цена: {disc['original']} токенов\n"
-        text += f"🔥 Цена со скидкой: {disc['new_price']} токенов\n"
-        text += f"💰 Экономия: {disc['original'] - disc['new_price']} токенов\n"
+        sorted_discounts = sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True)
         
-        if disc.get("expires"):
-            expires = datetime.fromisoformat(disc["expires"])
-            remaining = expires - datetime.now()
-            hours = remaining.seconds // 3600
-            text += f"⏰ Истекает через: {hours}ч\n"
-        
-        text += "\n"
+        for item_id, disc in sorted_discounts:
+            item = SHOP_ITEMS.get(item_id)
+            if not item: continue
+            color = disc.get("color", "🟢"); icon = disc.get("icon", "🏷️"); type_name = disc.get("type_name", "Скидка")
+            text += f"{color} {icon} {type_name}: -{disc['percent']}%\n"
+            text += f"📦 {item['icon']} {item['name']}\n"
+            text += f"💵 Было: {disc['original']} → 🔥 Стало: {disc['new_price']} токенов\n"
+            text += f"💰 Экономия: {disc['original'] - disc['new_price']} токенов\n"
+            if disc.get("expires"):
+                expires = datetime.fromisoformat(disc["expires"]); remaining = expires - datetime.now()
+                if remaining.total_seconds() > 0:
+                    hours = remaining.seconds // 3600; minutes = (remaining.seconds % 3600) // 60
+                    text += f"⏰ Истекает через: {hours}ч {minutes}мин\n"
+            if disc.get("special"): text += "🌟 Это легендарная скидка! Товар БЕСПЛАТНО!\n"
+            text += "\n"
     
-    # Таймер до обновления
-    last_update = discounts.get("last_update", "")
-    if last_update:
-        last_date = datetime.fromisoformat(last_update)
-        next_update = last_date + timedelta(days=2)
-        remaining = next_update - datetime.now()
-        days = remaining.days
-        hours = remaining.seconds // 3600
-        text += f"━━━━━━━━━━━━━━━━\n🔄 Следующее обновление через: {days}д {hours}ч\n"
-    
-    text += "🛒 Купить со скидкой: /shop"
-    
+    text += "━━━━━━━━━━━━━━━━\n🛒 /shop — купить со скидкой"
     await update.message.reply_text(text)
+
+async def stars_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = (
+        "⭐ ПОКУПКИ ЗА ЗВЁЗДЫ TELEGRAM\n━━━━━━━━━━━━━━━━\n\n"
+        "Теперь вы можете покупать товары не только за NeBlock Tokens, но и за Звёзды Telegram!\n\n"
+        "📋 Доступные товары:\n"
+    )
+    for item_id, item in STAR_ITEMS.items():
+        text += f"{item['icon']} {item['name']} — ⭐{item['stars']} звёзд\n"
+        text += f"   📝 {item['desc']}\n\n"
+    
+    text += (
+        "💡 Как купить:\n"
+        "1. Нажмите на товар в магазине\n"
+        "2. Подтвердите оплату звёздами\n"
+        "3. Товар сразу активируется!\n\n"
+        "🛒 Доступно в /shop"
+    )
+    await update.message.reply_text(text)
+
+async def stars_shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показывает товары за звёзды"""
+    text = "⭐ Магазин за Звёзды\n━━━━━━━━━━━━━━━━\n\nВыберите товар:\n"
+    keyboard = []
+    for item_id, item in STAR_ITEMS.items():
+        keyboard.append([InlineKeyboardButton(f"{item['icon']} {item['name']} — ⭐{item['stars']}", callback_data=f"stars_{item_id}")])
+    keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
+    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(CHANGELOG)
@@ -639,7 +654,7 @@ async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat_type not in ["group", "supergroup"]: await update.message.reply_text("Только для чатов."); return
     chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
     if not is_chat_owner(chat_id, user_id): await update.message.reply_text("❌ Только владелец."); return
-    await update.message.reply_text(f"🛒 Магазин чата\n👑 Вы владелец\n💰 {get_tokens(user_id)} токенов\n🎫 /discounts — скидки!", reply_markup=shop_keyboard("chat"))
+    await update.message.reply_text(f"🛒 Магазин чата\n👑 Вы владелец\n💰 {get_tokens(user_id)} токенов", reply_markup=shop_keyboard("chat"))
 
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -670,22 +685,50 @@ async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users()
-    await update.message.reply_text(f"📊 Статистика\n👥 {len(users)}\n💬 {sum(u.get('total_requests', 0) for u in users.values())}\n🎨 {sum(u.get('total_images', 0) for u in users.values())}\n⚠️ Забанено: {sum(1 for u in users.values() if u.get('banned'))}\n💰 {sum(u.get('tokens', 0) for u in users.values())}")
+    await update.message.reply_text(f"📊 Статистика\n👥 {len(users)}\n💬 {sum(u.get('total_requests', 0) for u in users.values())}\n🎨 {sum(u.get('total_images', 0) for u in users.values())}\n💰 {sum(u.get('tokens', 0) for u in users.values())}")
 
 async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     new_discounts = generate_discounts()
     new_discounts["last_update"] = datetime.now().strftime("%Y-%m-%d")
     save_discounts(new_discounts)
-    
     text = "🎫 Скидки обновлены!\n\n"
     for item_id, disc in new_discounts.items():
-        if item_id != "last_update":
+        if item_id not in ["last_update", "generated_at"]:
             item = SHOP_ITEMS.get(item_id)
-            if item:
-                text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}: -{disc['percent']}% = {disc['new_price']} токенов\n"
-    
+            if item: text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}: -{disc['percent']}% = {disc['new_price']} токенов\n"
     await update.message.reply_text(text)
+
+async def precheckout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Подтверждение платежа звёздами"""
+    query = update.pre_checkout_query
+    await query.answer(ok=True)
+
+async def successful_payment_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработка успешного платежа звёздами"""
+    payment = update.message.successful_payment
+    user_id = update.effective_user.id
+    payload = payment.invoice_payload  # Формат: stars_itemid
+    
+    if payload.startswith("stars_"):
+        item_id = payload.replace("stars_", "")
+        item = STAR_ITEMS.get(item_id)
+        if item:
+            if item_id == "stars_extra10": add_extra_requests(user_id, 10)
+            elif item_id == "stars_extra50": add_extra_requests(user_id, 50)
+            elif item_id == "stars_image5": add_extra_image_requests(user_id, 5)
+            elif item_id == "stars_premium_day":
+                users = load_users(); users[str(user_id)]["premium_until"] = (datetime.now() + timedelta(hours=24)).isoformat(); save_users(users)
+            
+            await update.message.reply_text(f"✅ Оплата прошла успешно!\n{item['icon']} {item['name']} активирован!\nСпасибо за покупку! ⭐")
+
+def add_extra_requests(user_id, amount):
+    users = load_users(); uid = str(user_id)
+    if uid in users: users[uid]["extra_requests"] = users[uid].get("extra_requests", 0) + amount; save_users(users)
+
+def add_extra_image_requests(user_id, amount):
+    users = load_users(); uid = str(user_id)
+    if uid in users: users[uid]["extra_image_requests"] = users[uid].get("extra_image_requests", 0) + amount; save_users(users)
 
 async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text; user_id = update.effective_user.id
@@ -718,10 +761,11 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             f"🎨 Чаты фото: {user.get('chat_image_requests_today', 0)}/{CHAT_IMAGE_LIMIT + user.get('extra_chat_image_requests', 0)} | {fmt(user.get('chat_image_unlimited_until'))}\n\n"
             f"📈 Всего: {user.get('total_requests', 0)} текст, {user.get('total_images', 0)} фото\n🛡 {user.get('warnings', 0)}/5\n👥 Рефералов: {user.get('referrals', 0)}\n🕐 {last}", reply_markup=main_menu())
         return True
-    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n🎫 /discounts — скидки!", reply_markup=shop_keyboard("private")); return True
+    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n⭐ Товары за звёзды!", reply_markup=shop_keyboard("private")); return True
     if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок\n💎 {get_tokens(user_id)}\n\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день\n👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу", reply_markup=earn_keyboard()); return True
     if text == "📚 FAQ": await update.message.reply_text(FAQ_TEXT); return True
     if text == "🎫 Скидки": await discounts_cmd(update, context); return True
+    if text == "⭐ Звёзды": await stars_info_cmd(update, context); return True
     if text == "📋 Изменения": await update.message.reply_text(CHANGELOG); return True
     return False
 
@@ -729,30 +773,50 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     query = update.callback_query; await query.answer(); user_id = query.from_user.id; data = query.data
     if data == "none": return
     if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n💰 {get_tokens(user_id)} токенов", reply_markup=main_menu())
-    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💎 Премиум\n🎫 Скидки 5 типов", reply_markup=back_button())
-    elif data == "models": await query.edit_message_text(MODELS_INFO, reply_markup=back_button())
+    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💎 Премиум\n⭐ Звёзды\n🎫 Скидки", reply_markup=back_button())
+    elif data == "models": await query.edit_message_text(f"🧠 МОДЕЛИ\n\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n\n💎 Премиум ЛС: 200/1000/2500\n💎 Премиум Чат: 300/1500/3500\n⭐ Товары за звёзды!", reply_markup=back_button())
     elif data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button())
+    elif data == "stars_info":
+        text = "⭐ ЗВЁЗДЫ TELEGRAM\n━━━━━━━━━━━━━━━━\n\n"
+        text += "Покупайте товары за Звёзды Telegram!\n\n"
+        for item_id, item in STAR_ITEMS.items():
+            text += f"{item['icon']} {item['name']} — ⭐{item['stars']}\n"
+        text += "\n🛒 Доступно в /shop"
+        await query.edit_message_text(text, reply_markup=back_button())
     elif data == "discounts_info":
         discounts = get_discounts()
-        active = {k: v for k, v in discounts.items() if k != "last_update"}
-        if not active: await query.edit_message_text("🎫 Скидок пока нет.\nОбновление каждые 2 дня.", reply_markup=back_button())
+        active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
+        next_update = get_next_update_time()
+        generated_at = discounts.get("generated_at", "")
+        text = "🎫 СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
+        if generated_at:
+            gen_time = datetime.fromisoformat(generated_at)
+            text += f"🕐 Созданы: {gen_time.strftime('%d.%m.%Y %H:%M')}\n"
+        text += f"🔄 Обновление: {next_update.strftime('%d.%m.%Y %H:%M')}\n"
+        remaining_time = next_update - datetime.now()
+        if remaining_time.total_seconds() > 0:
+            days = remaining_time.days; hours = remaining_time.seconds // 3600; minutes = (remaining_time.seconds % 3600) // 60
+            text += f"⏳ Через: {days}д {hours}ч {minutes}мин\n\n"
+        
+        legendary = any(d.get("type") == "legendary" for d in active.values())
+        if legendary: text += "🌟 ЛЕГЕНДАРНАЯ СКИДКА АКТИВНА! 🌟\n\n"
+        
+        if not active: text += "Нет активных скидок."
         else:
-            text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
             for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
                 item = SHOP_ITEMS.get(item_id)
                 if not item: continue
-                text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n🔥 -{disc['percent']}% = {disc['new_price']} токенов\n\n"
-            last_update = discounts.get("last_update", "")
-            if last_update:
-                last_date = datetime.fromisoformat(last_update); next_update = last_date + timedelta(days=2)
-                remaining = next_update - datetime.now()
-                text += f"🔄 Обновление через: {remaining.days}д {remaining.seconds // 3600}ч"
-            await query.edit_message_text(text, reply_markup=back_button())
-    elif data == "premium_info": await query.edit_message_text("💎 Премиум\n\nЛС: 200/1000/2500\nЧат: 300/1500/3500\n\n🎫 Бывают скидки на Премиум!", reply_markup=back_button())
+                color = disc.get("color", "🟢")
+                if disc.get("type") == "legendary":
+                    text += f"🌟 {item['icon']} {item['name']}\n💫 БЕСПЛАТНО! (было {disc['original']})\n⏰ Истекает через 1 час\n\n"
+                else:
+                    text += f"{color} {item['icon']} {item['name']}\n🔥 -{disc['percent']}% = {disc['new_price']} токенов\n\n"
+        await query.edit_message_text(text, reply_markup=back_button())
+    elif data == "premium_info": await query.edit_message_text("💎 Премиум\n\nЛС: 200/1000/2500\nЧат: 300/1500/3500\n⭐ Или купите за звёзды!", reply_markup=back_button())
     elif data == "stats":
         user = get_user(user_id)
         await query.edit_message_text(f"📊 Статистика\n\n💬 ЛС: {user.get('requests_today', 0)}\n👥 Чаты: {user.get('chat_requests_today', 0)}\n🎨 Фото: {user.get('image_requests_today', 0)}\n💎 Премиум: {'Да' if is_premium(user_id) else 'Нет'}", reply_markup=back_button())
-    elif data == "shop": await query.edit_message_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n🎫 /discounts — скидки!", reply_markup=shop_keyboard("private"))
+    elif data == "shop": await query.edit_message_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n⭐ Товары за звёзды!", reply_markup=shop_keyboard("private"))
     elif data == "earn": await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)}", reply_markup=earn_keyboard())
     elif data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
     elif data == "faq": await query.edit_message_text(FAQ_TEXT, reply_markup=back_button())
@@ -770,12 +834,28 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     elif data == "ref_link":
         user = get_user(user_id); bot_username = (await context.bot.get_me()).username
         await query.edit_message_text(f"👥 https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n💰 +{REFERRAL_BONUS} тебе\n🎁 +{INVITED_BONUS} другу", reply_markup=back_button())
+    elif data.startswith("stars_"):
+        # Покупка за звёзды
+        item_id = data.replace("stars_", "")
+        item = STAR_ITEMS.get(item_id)
+        if not item: return
+        
+        await context.bot.send_invoice(
+            chat_id=user_id,
+            title=f"NeBlock AI - {item['name']}",
+            description=item['desc'],
+            payload=f"stars_{item_id}",
+            provider_token="",  # Для звёзд не нужен
+            currency="XTR",
+            prices=[LabeledPrice(label=item['name'], amount=item['stars'])],
+            start_parameter="stars",
+        )
     elif data.startswith("confirm_"):
         item_id = data.replace("confirm_", ""); item = SHOP_ITEMS.get(item_id)
         if not item: return
         price, percent, disc_info = get_discounted_price(item_id)
         tokens = get_tokens(user_id)
-        if tokens < price: await query.answer(f"❌ Недостаточно!\nНужно {price}, у вас {tokens}", show_alert=True); return
+        if tokens < price: await query.answer(f"❌ Недостаточно!", show_alert=True); return
         remove_tokens(user_id, price); users = load_users(); uid = str(user_id)
         actions = {"extra5": ("extra_requests", 5), "extra10": ("extra_requests", 10), "extra50": ("extra_requests", 50), "image1": ("extra_image_requests", 1), "image5": ("extra_image_requests", 5), "image20": ("extra_image_requests", 20), "chat_extra10": ("extra_chat_requests", 10), "chat_extra50": ("extra_chat_requests", 50), "chat_image5": ("extra_chat_image_requests", 5), "chat_image20": ("extra_chat_image_requests", 20)}
         time_actions = {"unlimited_1h": ("unlimited_until", 1), "unlimited_24h": ("unlimited_until", 24), "unlimited_7d": ("unlimited_until", 168), "image_unlimited_1h": ("image_unlimited_until", 1), "chat_unlimited_1h": ("chat_unlimited_until", 1), "chat_unlimited_24h": ("chat_unlimited_until", 24)}
@@ -791,7 +871,8 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         save_users(users)
         disc_text = ""
         if percent > 0 and disc_info:
-            disc_text = f"\n🎫 {disc_info.get('type_name', 'Скидка')}: -{percent}% (экономия {item['price'] - price} токенов)"
+            if disc_info.get("type") == "legendary": disc_text = "\n🌟 ЛЕГЕНДАРНАЯ СКИДКА! Товар получен БЕСПЛАТНО!"
+            else: disc_text = f"\n🎫 {disc_info.get('type_name', 'Скидка')}: -{percent}%"
         await query.answer(f"✅ {item['name']}!", show_alert=True)
         await query.edit_message_text(f"✅ {item['name']}{disc_text}\n💰 Потрачено: {price}\n💎 Остаток: {get_tokens(user_id)}", reply_markup=back_button())
     elif data.startswith("buy_"):
@@ -799,20 +880,21 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         if not item: return
         price, percent, disc_info = get_discounted_price(item_id)
         tokens = get_tokens(user_id); can = "✅ Хватает" if tokens >= price else "❌ Не хватает"
-        
         disc_text = ""
         if percent > 0 and disc_info:
-            color = disc_info.get("color", "🟢")
-            type_name = disc_info.get("type_name", "Скидка")
-            disc_text = f"\n\n{color} {type_name}: -{percent}%\n💵 Обычная цена: {item['price']} токенов\n🔥 Цена со скидкой: {price} токенов\n💰 Экономия: {item['price'] - price} токенов"
-        
-        await query.edit_message_text(
-            f"🛒 {item['icon']} {item['name']}\n\n📝 {item['desc']}\n📋 {item.get('usage', '')}\n⚠️ {item.get('warning', '')}{disc_text}\n\n💎 Ваш баланс: {tokens} токенов\n{can}\n\nПодтвердите покупку:",
-            reply_markup=confirm_keyboard(item_id)
-        )
+            if disc_info.get("type") == "legendary":
+                disc_text = "\n\n🌟 ЛЕГЕНДАРНАЯ СКИДКА 100%!\n💫 Товар БЕСПЛАТНО! Шанс 0.5%\n⏰ Действует 1 час!"
+            else:
+                color = disc_info.get("color", "🟢"); type_name = disc_info.get("type_name", "Скидка")
+                disc_text = f"\n\n{color} {type_name}: -{percent}%\n💵 Было: {item['price']} → 🔥 Стало: {price}\n💰 Экономия: {item['price'] - price} токенов"
+        await query.edit_message_text(f"🛒 {item['icon']} {item['name']}\n\n📝 {item['desc']}\n⚠️ {item.get('warning', '')}{disc_text}\n\n💎 Баланс: {tokens}\n{can}\n\nПодтвердите:", reply_markup=confirm_keyboard(item_id))
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(random.choice(UNKNOWN_COMMAND_RESPONSES))
+    await update.message.reply_text(random.choice([
+        "🤔 Неизвестная команда. /start — главное меню.",
+        "❓ Команда не найдена. /help или /start.",
+        "📋 Доступно: /start, /shop, /faq, /discounts, /changelog",
+    ]))
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip() if update.message.text else ""
@@ -826,28 +908,55 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat_type == "private":
         if await reply_button_handler(update, context): return
     
+    # ИСПРАВЛЕНИЕ БАГА: В чатах бот реагирует только на @упоминание или ключевые слова
     is_image_request = False
+    should_respond = False
+    
     if chat_type in ["group", "supergroup"]:
         mention = f"@{bot_username}"
-        if mention not in text:
-            keywords = ["бот ", "нейробот ", "нейросеть ", "ai ", "AI ", "нарисуй "]
-            for kw in keywords:
-                if text.lower().startswith(kw.lower()): text = text[len(kw):].strip()
-                if kw == "нарисуй ": is_image_request = True; break
-            else: return
-        else:
+        text_lower = text.lower()
+        
+        # Проверяем упоминание
+        if mention in text:
             text = text.replace(mention, "").strip()
-            if text.lower().startswith("нарисуй"): text = text[7:].strip(); is_image_request = True
-        if not text: await update.message.reply_text(f"🧠 NeBlock AI V2!\n💬 @{bot_username} вопрос\n🎨 @{bot_username} нарисуй описание", reply_to_message_id=update.message.message_id); return
+            should_respond = True
+        
+        # Проверяем ключевые слова
+        if not should_respond:
+            keywords = ["бот ", "нейробот ", "нейросеть ", "ai ", "нарисуй "]
+            for kw in keywords:
+                if text_lower.startswith(kw):
+                    text = text[len(kw):].strip()
+                    should_respond = True
+                    break
+        
+        # Если нет причины отвечать - игнорируем сообщение
+        if not should_respond:
+            return
+        
+        # Проверяем запрос на генерацию фото
+        if text_lower.startswith("нарисуй"):
+            text = text[7:].strip()
+            is_image_request = True
+        
+        if not text:
+            await update.message.reply_text(
+                f"🧠 NeBlock AI V2!\n💬 @{bot_username} вопрос\n🎨 @{bot_username} нарисуй описание",
+                reply_to_message_id=update.message.message_id
+            )
+            return
     
     user = get_user(user_id)
     if context.user_data.get("waiting_promo"): context.user_data["waiting_promo"] = False; success, result = use_promo(user_id, text); await update.message.reply_text(f"🎟 +{result}!\n💎 {get_tokens(user_id)}" if success else f"❌ {result}"); return
     
-    if is_image_request or user.get("current_model") == "image" or user.get("waiting_for_image"):
-        users = load_users(); users[str(user_id)]["waiting_for_image"] = False; save_users(users)
+    if is_image_request or (chat_type == "private" and (user.get("current_model") == "image" or user.get("waiting_for_image"))):
+        if chat_type == "private":
+            users = load_users(); users[str(user_id)]["waiting_for_image"] = False; save_users(users)
+        
         if not can_image_request(user_id, chat_type, chat_id):
             rem = image_remaining(user_id, chat_type, chat_id)
             await update.message.reply_text(f"🚫 Лимит фото!\n📊 Осталось: {rem}", reply_to_message_id=update.message.message_id if chat_type != "private" else None, reply_markup=limit_reached_keyboard() if chat_type == "private" else None); return
+        
         msg = await update.message.reply_text("🎨 NeBlock Images V2 генерирует...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
         try:
             image_bytes, error = await generate_image(text)
@@ -884,16 +993,20 @@ def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("discounts", discounts_cmd))
+    app.add_handler(CommandHandler("stars", stars_info_cmd))
+    app.add_handler(CommandHandler("starsshop", stars_shop_cmd))
     app.add_handler(CommandHandler("changelog", changelog_cmd))
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
-    app.add_handler(CommandHandler("shop", lambda u, c: u.message.reply_text("🛒 Магазин (ЛС)", reply_markup=shop_keyboard("private"))))
+    app.add_handler(CommandHandler("shop", lambda u, c: u.message.reply_text("🛒 Магазин", reply_markup=shop_keyboard("private"))))
     app.add_handler(CommandHandler("give", admin_give))
     app.add_handler(CommandHandler("createpromo", admin_create_promo))
     app.add_handler(CommandHandler("promos", admin_promos))
     app.add_handler(CommandHandler("deletepromo", admin_delete_promo))
     app.add_handler(CommandHandler("stats", admin_stats))
     app.add_handler(CommandHandler("forcediscounts", admin_forcediscounts))
+    app.add_handler(PreCheckoutQueryHandler(precheckout_handler))
+    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
     app.add_handler(CallbackQueryHandler(inline_button_handler))
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
