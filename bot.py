@@ -158,7 +158,7 @@ def generate_discounts():
             "percent": 100, "original": original, "new_price": 0,
             "type": "legendary", "type_name": "ЛЕГЕНДАРНАЯ СКИДКА",
             "color": "🌟", "icon": "💫",
-            "expires": (datetime.now() + timedelta(hours=3)).isoformat(),  # 3 часа
+            "expires": (datetime.now() + timedelta(hours=3)).isoformat(),
             "special": True
         }
         used_items.add(item_id)
@@ -239,7 +239,8 @@ def get_discounted_price(item_id):
 def get_user(user_id):
     users = load_users(); uid = str(user_id)
     defaults = {
-        "joined": datetime.now().isoformat(), "requests_today": 0, "extra_requests": 0,
+        "joined": datetime.now().isoformat(), "username": None,
+        "requests_today": 0, "extra_requests": 0,
         "image_requests_today": 0, "extra_image_requests": 0,
         "chat_requests_today": 0, "extra_chat_requests": 0,
         "chat_image_requests_today": 0, "extra_chat_image_requests": 0,
@@ -506,6 +507,13 @@ def limit_reached_keyboard():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; user = get_user(user_id); chat_type = update.effective_chat.type
+    
+    # Сохраняем username
+    username = update.effective_user.username
+    if username:
+        users = load_users(); uid = str(user_id)
+        if uid in users: users[uid]["username"] = username; save_users(users)
+    
     if context.args and context.args[0].startswith("ref_"):
         ref_code = context.args[0].replace("ref_", ""); users = load_users(); uid = str(user_id)
         for u_id, u_data in users.items():
@@ -550,20 +558,16 @@ async def discounts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     text += "\n━━━━━━━━━━━━━━━━\n\n"
     
-    if not active:
-        text += "Нет активных скидок.\n"
+    if not active: text += "Нет активных скидок.\n"
     else:
         legendary = any(d.get("type") == "legendary" for d in active.values())
         if legendary: text += "🌟 ВНИМАНИЕ! ЛЕГЕНДАРНАЯ СКИДКА АКТИВНА! (3 часа) 🌟\n\n"
-        
         text += f"Активных скидок: {len(active)}\n"
         avg_discount = sum(d["percent"] for d in active.values()) / len(active)
         max_discount = max(d["percent"] for d in active.values())
         text += f"📊 Средняя: {avg_discount:.0f}% | Макс: {max_discount}%\n\n"
         
-        sorted_discounts = sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True)
-        
-        for item_id, disc in sorted_discounts:
+        for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
             item = SHOP_ITEMS.get(item_id)
             if not item: continue
             color = disc.get("color", "🟢"); icon = disc.get("icon", "🏷️"); type_name = disc.get("type_name", "Скидка")
@@ -605,7 +609,7 @@ async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🛒 Магазин чата\n👑 Вы владелец\n💰 {get_tokens(user_id)} токенов", reply_markup=shop_keyboard("chat"))
 
 # ═══════════════════════════════════════════
-# 🔧 АДМИН КОМАНДЫ (расширенные)
+# 🔧 АДМИН КОМАНДЫ
 # ═══════════════════════════════════════════
 
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -615,119 +619,97 @@ async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except: await update.message.reply_text("❌ Ошибка")
 
 async def admin_take(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Снять токены у пользователя"""
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args or len(context.args) < 2: await update.message.reply_text("/take ID КОЛИЧЕСТВО"); return
     try:
         uid = str(int(context.args[0])); amount = int(context.args[1])
         user = get_user(int(context.args[0]))
-        if user.get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно токенов у пользователя."); return
-        users = load_users()
-        users[uid]["tokens"] = users[uid].get("tokens", 0) - amount
-        users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount
-        save_users(users)
-        await update.message.reply_text(f"✅ Снято {amount} токенов у пользователя {context.args[0]}")
+        if user.get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно токенов."); return
+        users = load_users(); users[uid]["tokens"] = users[uid].get("tokens", 0) - amount
+        users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount; save_users(users)
+        await update.message.reply_text(f"✅ Снято {amount} токенов у {context.args[0]}")
     except: await update.message.reply_text("❌ Ошибка")
 
 async def admin_resetuser(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Сбросить пользователя (обнулить лимиты, предупреждения, блокировку)"""
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args: await update.message.reply_text("/resetuser ID"); return
     try:
-        uid = str(int(context.args[0]))
-        users = load_users()
+        uid = str(int(context.args[0])); users = load_users()
         if uid in users:
-            users[uid]["requests_today"] = 0
-            users[uid]["extra_requests"] = 0
-            users[uid]["image_requests_today"] = 0
-            users[uid]["extra_image_requests"] = 0
-            users[uid]["warnings"] = 0
-            users[uid]["muted_until"] = None
-            users[uid]["banned"] = False
-            save_users(users)
-            await update.message.reply_text(f"✅ Пользователь {context.args[0]} сброшен.")
-        else: await update.message.reply_text("❌ Пользователь не найден.")
+            users[uid]["requests_today"] = 0; users[uid]["extra_requests"] = 0
+            users[uid]["image_requests_today"] = 0; users[uid]["extra_image_requests"] = 0
+            users[uid]["warnings"] = 0; users[uid]["muted_until"] = None; users[uid]["banned"] = False
+            save_users(users); await update.message.reply_text(f"✅ Пользователь {context.args[0]} сброшен.")
+        else: await update.message.reply_text("❌ Не найден.")
     except: await update.message.reply_text("❌ Ошибка")
 
 async def admin_setpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Выдать/продлить Премиум пользователю"""
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args or len(context.args) < 2: await update.message.reply_text("/setpremium ID ДНИ"); return
     try:
-        uid = str(int(context.args[0])); days = int(context.args[1])
-        users = load_users()
+        uid = str(int(context.args[0])); days = int(context.args[1]); users = load_users()
         if uid in users:
             existing = users[uid].get("premium_until")
-            if existing and datetime.now() < datetime.fromisoformat(existing):
-                base_time = datetime.fromisoformat(existing)
-            else:
-                base_time = datetime.now()
+            base_time = datetime.fromisoformat(existing) if existing and datetime.now() < datetime.fromisoformat(existing) else datetime.now()
             users[uid]["premium_until"] = (base_time + timedelta(days=days)).isoformat()
-            save_users(users)
-            await update.message.reply_text(f"✅ Премиум на {days} дней выдан пользователю {context.args[0]}")
-        else: await update.message.reply_text("❌ Пользователь не найден.")
+            save_users(users); await update.message.reply_text(f"✅ Премиум на {days} дн. выдан {context.args[0]}")
+        else: await update.message.reply_text("❌ Не найден.")
     except: await update.message.reply_text("❌ Ошибка")
 
 async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Информация о пользователе"""
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args: await update.message.reply_text("/userinfo ID"); return
     try:
-        user_id = int(context.args[0])
-        user = get_user(user_id)
+        user_id = int(context.args[0]); user = get_user(user_id)
         joined = datetime.fromisoformat(user.get("joined", "")).strftime("%d.%m.%Y %H:%M")
         last = "Никогда"
         if user.get("last_request"): last = datetime.fromisoformat(user["last_request"]).strftime("%d.%m.%Y %H:%M")
-        premium = "💎 Активен" if is_premium(user_id) else "Не активен"
-        banned = "Да" if user.get("banned") else "Нет"
-        
+        username = user.get("username") or "Не указан"
         await update.message.reply_text(
-            f"👤 Информация о пользователе {user_id}\n━━━━━━━━━━━━━━━━\n"
-            f"📅 Регистрация: {joined}\n🕐 Активность: {last}\n"
+            f"👤 Инфо: {user_id}\n━━━━━━━━━━━━━━━━\n"
+            f"📛 @{username}\n📅 Регистрация: {joined}\n🕐 Активность: {last}\n"
             f"💰 Токенов: {user.get('tokens', 0)}\n💎 Заработано: {user.get('earned_tokens', 0)}\n💸 Потрачено: {user.get('spent_tokens', 0)}\n"
-            f"💎 Премиум: {premium}\n⚠️ Предупреждений: {user.get('warnings', 0)}/5\n🚫 Забанен: {banned}\n"
+            f"💎 Премиум: {'Да' if is_premium(user_id) else 'Нет'}\n⚠️ Предупреждений: {user.get('warnings', 0)}/5\n🚫 Забанен: {'Да' if user.get('banned') else 'Нет'}\n"
             f"💬 ЛС сегодня: {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)}\n"
             f"👥 Чаты сегодня: {user.get('chat_requests_today', 0)}/{CHAT_DAILY_LIMIT + user.get('extra_chat_requests', 0)}\n"
-            f"📈 Всего запросов: {user.get('total_requests', 0)}\n🎨 Всего фото: {user.get('total_images', 0)}\n"
-            f"👥 Рефералов: {user.get('referrals', 0)}"
+            f"📈 Всего: {user.get('total_requests', 0)}\n🎨 Фото: {user.get('total_images', 0)}\n👥 Рефералов: {user.get('referrals', 0)}"
         )
     except: await update.message.reply_text("❌ Ошибка")
 
 async def admin_top(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Топ пользователей по запросам/токенам"""
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users()
     by_requests = sorted(users.items(), key=lambda x: x[1].get("total_requests", 0), reverse=True)[:10]
     by_tokens = sorted(users.items(), key=lambda x: x[1].get("tokens", 0), reverse=True)[:10]
     
-    text = "🏆 ТОП ПОЛЬЗОВАТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\n"
-    text += "💬 По запросам:\n"
+    text = "🏆 ТОП ПОЛЬЗОВАТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\n💬 По запросам:\n"
     for i, (uid, data) in enumerate(by_requests, 1):
-        text += f"{i}. ID:{uid} — {data.get('total_requests', 0)} запросов\n"
+        name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
+        text += f"{i}. {name} — {data.get('total_requests', 0)} запр.\n"
     text += "\n💰 По токенам:\n"
     for i, (uid, data) in enumerate(by_tokens, 1):
-        text += f"{i}. ID:{uid} — {data.get('tokens', 0)} токенов\n"
+        name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
+        text += f"{i}. {name} — {data.get('tokens', 0)} ток.\n"
     
     await update.message.reply_text(text)
 
 async def admin_cleardiscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Очистить все скидки"""
     if update.effective_user.id not in ADMIN_IDS: return
     save_discounts({"last_update": datetime.now().strftime("%Y-%m-%d")})
-    await update.message.reply_text("✅ Все скидки очищены. Новые сгенерируются при следующем обращении.")
+    await update.message.reply_text("✅ Скидки очищены.")
 
 async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: await update.message.reply_text("/createpromo КОД КОЛИЧЕСТВО [МАКС_ИСП]"); return
+    if not context.args or len(context.args) < 2: await update.message.reply_text("/createpromo КОД КОЛИЧЕСТВО [МАКС]"); return
     create_promo(context.args[0].upper(), int(context.args[1]), int(context.args[2]) if len(context.args) > 2 else 0)
-    await update.message.reply_text(f"✅ Промокод {context.args[0].upper()} создан! Награда: {context.args[1]} токенов")
+    await update.message.reply_text(f"✅ Промокод {context.args[0].upper()} создан!")
 
 async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     promos = load_promos()
     if not promos: await update.message.reply_text("Нет промокодов."); return
     text = "🎟 Промокоды:\n\n"
-    for code, data in promos.items(): text += f"{code}: {data['amount']} токенов | {len(data['used_by'])}/{data['max_uses'] if data['max_uses'] > 0 else '∞'} исп.\n"
+    for code, data in promos.items(): text += f"{code}: {data['amount']} ток. | {len(data['used_by'])}/{data['max_uses'] if data['max_uses'] > 0 else '∞'}\n"
     await update.message.reply_text(text)
 
 async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -759,11 +741,18 @@ async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYP
     for item_id, disc in new_discounts.items():
         if item_id not in ["last_update", "generated_at"]:
             item = SHOP_ITEMS.get(item_id)
-            if item: text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}: -{disc['percent']}% = {disc['new_price']} токенов\n"
+            if item: text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}: -{disc['percent']}% = {disc['new_price']} т.\n"
     await update.message.reply_text(text)
 
 async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text; user_id = update.effective_user.id
+    
+    # Сохраняем username
+    username = update.effective_user.username
+    if username:
+        users = load_users(); uid = str(user_id)
+        if uid in users: users[uid]["username"] = username; save_users(users)
+    
     if text == "💬 NeBlock AI V2":
         users = load_users(); users[str(user_id)]["current_model"] = "text"; users[str(user_id)]["waiting_for_image"] = False; save_users(users)
         await update.message.reply_text(f"💬 NeBlock AI V2\n📊 Осталось: {remaining(user_id)}"); return True
@@ -902,6 +891,12 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; chat_type = update.effective_chat.type; chat_id = update.effective_chat.id
     bot_username = context.bot.username
     
+    # Сохраняем username
+    username = update.effective_user.username
+    if username:
+        users = load_users(); uid = str(user_id)
+        if uid in users: users[uid]["username"] = username; save_users(users)
+    
     if is_user_muted(user_id): await update.message.reply_text("🚫 Заблокированы."); return
     is_clean, severity, reason = moderate_content(text)
     if not is_clean: muted, warn = warn_user(user_id, severity); await update.message.reply_text(f"⚠️ {reason}\n{warn}"); return
@@ -993,7 +988,6 @@ def main():
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
     app.add_handler(CommandHandler("shop", lambda u, c: u.message.reply_text("🛒 Магазин", reply_markup=shop_keyboard("private"))))
-    # Админ команды
     app.add_handler(CommandHandler("give", admin_give))
     app.add_handler(CommandHandler("take", admin_take))
     app.add_handler(CommandHandler("resetuser", admin_resetuser))
