@@ -12,7 +12,7 @@ import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V2.7 - Конфигурация
+# 🧠 NeBlock AI V2.8 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -38,7 +38,7 @@ DAILY_BONUS_MIN = 5
 DAILY_BONUS_MAX = 15
 REFERRAL_BONUS = 25
 INVITED_BONUS = 10
-BOT_VERSION = "2.7"
+BOT_VERSION = "2.8"
 
 BASE_PRICES_USD = {
     "extra5": 10, "extra10": 18, "extra50": 80,
@@ -58,49 +58,243 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
+Версия 2.8 (21.07.2026)
+• Расширенная информация во всех разделах
+• Детальная токеномика с графиками
+• Улучшенные описания товаров
+• Расширенный FAQ
+
 Версия 2.7 (21.07.2026)
-• Улучшенный динамический курс 💮
+• Улучшенный курс 💮
 • История курса за 7 дней
 • Рыночная капитализация
-• Индекс волатильности
-• Тренд курса (рост/падение)
-
-Версия 2.6 (21.07.2026)
-• Динамический курс токена
-• Цены в NBT
-• Токеномика
 
 Версия 2.0 (15.07.2026)
 • Две модели V2
 • Премиум и магазин
 """
 
+DISCOUNT_TYPES = {
+    "regular": {"name": "Обычная скидка", "min": 5, "max": 25, "color": "🟢", "chance": 40, "icon": "🏷️", "desc": "Стандартная скидка на случайные товары. Появляется чаще всего."},
+    "super": {"name": "Супер-скидка", "min": 30, "max": 50, "color": "🔴", "chance": 20, "icon": "🔥", "desc": "Повышенная скидка на популярные товары. Выгодное предложение!"},
+    "flash": {"name": "Флеш-скидка", "min": 40, "max": 70, "color": "⚡", "chance": 8, "icon": "⏰", "desc": "Редкая скидка, действует 24 часа. Успей купить!"},
+    "bundle": {"name": "Скидка на набор", "min": 15, "max": 35, "color": "📦", "chance": 12, "icon": "🎁", "desc": "Скидка на большие пакеты запросов. Экономия при оптовой покупке."},
+    "premium_discount": {"name": "Премиум-скидка", "min": 10, "max": 30, "color": "👑", "chance": 5, "icon": "💎", "desc": "Скидка на Премиум-режимы. Редкая возможность сэкономить на Премиуме."},
+    "legendary": {"name": "ЛЕГЕНДАРНАЯ СКИДКА", "min": 100, "max": 100, "color": "🌟", "chance": 0.5, "icon": "💫", "desc": "Скидка 100%! Товар полностью бесплатно! Шанс выпадения всего 0.5%. Действует 3 часа."},
+}
+
 FAQ_TEXT = f"""
 📚 ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ
 ━━━━━━━━━━━━━━━━━━━━
 
+❓ Что такое NeBlock AI?
+Платформа с двумя ИИ-моделями в Telegram:
+• NeBlock AI V2 — текстовая модель для ответов на вопросы, помощи с кодом, объяснения тем, переводов и многого другого. Качество ответов улучшено на 40%, скорость генерации увеличена в 2 раза, контекст диалога расширен до 8000 токенов.
+• NeBlock Images V2 — модель для генерации изображений по текстовому описанию. Качество изображений повышено на 50%, добавлена поддержка разных художественных стилей, улучшена детализация мелких объектов, скорость генерации до 15 секунд.
+
+❓ Как пользоваться ботом?
+В личных сообщениях: просто напиши вопрос или используй кнопки внизу.
+В чатах и группах: @имя_бота вопрос или @имя_бота нарисуй описание.
+Также работают ключевые слова: бот, нейробот, нейросеть, AI, нарисуй.
+
+❓ Какие лимиты и почему они нужны?
+Лимиты установлены чтобы обеспечить стабильную работу нейросети для всех пользователей:
+• ЛС: {DAILY_LIMIT} текстовых вопросов + {IMAGE_DAILY_LIMIT} генераций фото в день
+• Чаты: {CHAT_DAILY_LIMIT} вопросов + {CHAT_IMAGE_LIMIT} фото для всех участников
+Лимиты сбрасываются каждый день в 00:00 МСК.
+Дополнительные запросы и генерации, купленные в магазине, также сгорают при сбросе.
+Безлимиты и Премиум действуют точное указанное время и не зависят от ежедневного сброса.
+
 ❓ Что такое 💮 NeBlock Token (NBT)?
-Внутренняя валюта платформы с динамическим курсом.
-Курс обновляется раз в сутки и зависит от:
-• Количества токенов в обороте
-• Активности пользователей
-• Рыночной волатильности
+NBT — внутренняя валюта платформы с динамическим курсом. Токены нужны для покупок в Магазине.
+Курс NBT обновляется раз в сутки в 00:00 МСК и зависит от:
+• Количества токенов в обороте (чем больше — тем выше курс)
+• Активности пользователей (чем активнее — тем выше курс)
+• Количества потраченных токенов (сжигание повышает курс)
+• Рыночной волатильности (случайные колебания ±10%)
+• Исторической волатильности за последние 30 дней
+Токены нельзя купить за реальные деньги — только заработать.
 
-❓ Где посмотреть курс?
-💮 /tokenrate — текущий курс, капитализация, история
+❓ Как заработать 💮 NBT?
+• Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} 💮 каждый день (нажмите кнопку Заработать)
+• Реферальная программа: +{REFERRAL_BONUS} 💮 тебе за приглашённого друга, +{INVITED_BONUS} 💮 другу
+• Стартовый бонус: {START_BONUS} 💮 при первом запуске бота
+• Промокоды от администратора (следите за новостями!)
+• Специальные акции и раздачи
 
-❓ Какие лимиты?
-• ЛС: {DAILY_LIMIT} текстовых + {IMAGE_DAILY_LIMIT} фото/день
-• Чаты: {CHAT_DAILY_LIMIT} текстовых + {CHAT_IMAGE_LIMIT} фото/день
+❓ Как работают скидки?
+Скидки обновляются автоматически каждые 2 дня в 9:00 МСК.
+Типы скидок (от частых к редким):
+• 🏷️ Обычная (5-25%) — стандартная скидка, шанс 40%
+• 🔥 Супер (30-50%) — повышенная скидка, шанс 20%
+• 🎁 Набор (15-35%) — скидка на большие пакеты, шанс 12%
+• ⚡ Флеш (40-70%) — редкая скидка на 24 часа, шанс 8%
+• 💎 Премиум (10-30%) — скидка на Премиум, шанс 5%
+• 🌟 ЛЕГЕНДАРНАЯ (100%) — товар бесплатно! Шанс 0.5%, действует 3 часа
+Скидки применяются автоматически при просмотре магазина. Цена со скидкой отображается сразу.
+
+❓ Что такое Премиум?
+Премиум полностью отключает все лимиты на выбранный срок:
+• Премиум ЛС — безлимит в личных сообщениях (текст + фото)
+• Премиум Чат — безлимит для всех участников чата (текст + фото)
+Доступен на 1 день, 7 дней или навсегда (единоразовая покупка).
+Премиум не зависит от ежедневного сброса лимитов.
+
+❓ Кто может покупать для чата?
+Только владелец чата. Используйте /chatowner чтобы узнать владельца.
+Владелец покупает запросы через /chatshop, и они применяются ко всем участникам.
+Покупки для чата сгорают в 00:00 МСК вместе с обычными лимитами.
+
+❓ Где посмотреть курс 💮 NBT?
+Используйте кнопку "💮 Курс NBT" или команду /tokenrate.
+Там отображается: текущий курс, рыночная капитализация, токены в обороте,
+факторы влияющие на курс, история за 7 дней и примеры цен на товары.
+
+❓ Где посмотреть историю версий?
+/changelog — полная история всех обновлений и изменений.
+
+❓ Что делать если бот не отвечает?
+• Проверьте соединение с интернетом
+• Попробуйте команду /start для перезапуска
+• Подождите пару минут (возможна высокая нагрузка)
+• Напишите администратору
 """
 
-DISCOUNT_TYPES = {
-    "regular": {"name": "Обычная скидка", "min": 5, "max": 25, "color": "🟢", "chance": 40, "icon": "🏷️"},
-    "super": {"name": "Супер-скидка", "min": 30, "max": 50, "color": "🔴", "chance": 20, "icon": "🔥"},
-    "flash": {"name": "Флеш-скидка", "min": 40, "max": 70, "color": "⚡", "chance": 8, "icon": "⏰"},
-    "bundle": {"name": "Скидка на набор", "min": 15, "max": 35, "color": "📦", "chance": 12, "icon": "🎁"},
-    "premium_discount": {"name": "Премиум-скидка", "min": 10, "max": 30, "color": "👑", "chance": 5, "icon": "💎"},
-    "legendary": {"name": "ЛЕГЕНДАРНАЯ СКИДКА", "min": 100, "max": 100, "color": "🌟", "chance": 0.5, "icon": "💫"},
+MODELS_INFO = f"""
+🧠 МОДЕЛИ NeBlock AI V{BOT_VERSION}
+━━━━━━━━━━━━━━━━━━━━
+
+💬 NeBlock AI V2 — ТЕКСТОВАЯ МОДЕЛЬ
+Назначение: ответы на вопросы, написание кода, объяснение тем, переводы, помощь с учёбой.
+Характеристики:
+• Качество ответов улучшено на 40%
+• Скорость генерации увеличена в 2 раза
+• Контекст диалога до 8000 токенов
+• Поддержка многошаговых инструкций
+• Улучшенное понимание сложных запросов
+• Автоматическое определение языка
+
+🎨 NeBlock Images V2 — ГЕНЕРАЦИЯ ФОТО
+Назначение: создание изображений по текстовому описанию.
+Характеристики:
+• Качество изображений повышено на 50%
+• Поддержка разных художественных стилей
+• Улучшенная детализация мелких объектов
+• Скорость генерации до 15 секунд
+• Размер изображения: 1024x1024 пикселей
+• Улучшенное понимание сложных описаний
+
+👥 ПОДДЕРЖКА ЧАТОВ
+Бот работает в группах и супергруппах.
+Активация: @имя_бота вопрос или ключевые слова (бот, нейробот, AI, нарисуй).
+Лимиты для чатов: {CHAT_DAILY_LIMIT} текстовых + {CHAT_IMAGE_LIMIT} фото в день.
+Владелец чата может покупать дополнительные запросы для всех участников.
+
+💎 ПРЕМИУМ
+Полностью отключает все лимиты на выбранный срок.
+• Премиум ЛС: безлимит текста и фото в личных сообщениях
+• Премиум Чат: безлимит для всех участников чата
+Сроки: 1 день, 7 дней, навсегда.
+
+💮 ТОКЕНОМИКА NBT
+• Динамический курс обновляется ежедневно в 00:00 МСК
+• Курс зависит от спроса, предложения и активности
+• Рыночная капитализация рассчитывается автоматически
+• История курса сохраняется за 30 дней
+• /tokenrate — подробная информация о курсе
+
+🎫 СКИДКИ
+• 6 типов скидок с разными шансами выпадения
+• Обновление каждые 2 дня в 9:00 МСК
+• Автоматическое применение в магазине
+• /discounts — активные скидки
+
+📊 ЛИМИТЫ
+• ЛС: {DAILY_LIMIT} текстовых + {IMAGE_DAILY_LIMIT} фото/день
+• Чаты: {CHAT_DAILY_LIMIT} текстовых + {CHAT_IMAGE_LIMIT} фото/день
+• Сброс каждый день в 00:00 МСК
+• Можно увеличить покупками в Магазине
+"""
+
+SHOP_DESCRIPTION = f"""
+🛒 МАГАЗИН NeBlock AI V{BOT_VERSION}
+━━━━━━━━━━━━━━━━━━━━
+
+💡 В магазине можно купить дополнительные запросы, безлимиты и Премиум за 💮 NeBlock Tokens.
+Цены динамические и зависят от текущего курса NBT.
+Все покупки применяются мгновенно после подтверждения.
+
+📝 ТЕКСТОВЫЕ ЗАПРОСЫ (ЛС)
+Увеличивают дневной лимит текстовых вопросов в личных сообщениях.
+• +5 запросов — добавит 5 вопросов к лимиту
+• +10 запросов — добавит 10 вопросов (выгоднее на 2 токена!)
+• +50 запросов — добавит 50 вопросов (экономия 20 токенов!)
+• Безлимит 1ч — неограниченные вопросы на 1 час
+• Безлимит 24ч — неограниченные вопросы на 24 часа
+• Безлимит 7д — неограниченные вопросы на 7 дней
+
+⚠️ Дополнительные запросы сгорают каждый день в 00:00 МСК.
+Безлимиты действуют точное указанное время и не сгорают при сбросе.
+
+🎨 ГЕНЕРАЦИЯ ФОТО (ЛС)
+Увеличивают дневной лимит генерации изображений в ЛС.
+• 1 генерация — создаст 1 изображение
+• 5 генераций — создаст 5 изображений (выгоднее на 15 токенов!)
+• 20 генераций — создаст 20 изображений (экономия 100 токенов!)
+• Безлимит фото 1ч — неограниченные фото на 1 час
+
+⚠️ Дополнительные генерации сгорают в 00:00 МСК.
+
+⭐ ПРЕМИУМ ЛС
+Полностью отключает все лимиты в личных сообщениях.
+• 1 день — безлимит текста и фото на 24 часа
+• 7 дней — безлимит текста и фото на неделю
+• Навсегда — безлимит навсегда (единоразовая покупка)
+
+👥 ЧАТЫ И ГРУППЫ
+Товары для всех участников чата. Покупает только владелец чата.
+• +10 запросов — добавит 10 вопросов для всех участников
+• +50 запросов — добавит 50 вопросов (экономия 15 токенов!)
+• Безлимит 1ч — неограниченные вопросы для всех на 1 час
+• Безлимит 24ч — неограниченные вопросы для всех на 24 часа
+• 5 фото — добавит 5 генераций фото для всех
+• 20 фото — добавит 20 генераций (экономия 20 токенов!)
+
+⭐ ПРЕМИУМ ЧАТ
+Безлимит для всех участников чата. Покупает владелец.
+• 1 день — безлимит текста и фото для всех на 24 часа
+• 7 дней — безлимит для всех на неделю
+• Навсегда — безлимит навсегда
+
+💮 КУРС NBT
+• Курс обновляется ежедневно в 00:00 МСК
+• Цены в магазине меняются вместе с курсом
+• /tokenrate — текущий курс и токеномика
+"""
+
+SHOP_ITEMS_BASE = {
+    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "Добавляет 5 текстовых запросов к дневному лимиту.", "warning": "⚠️ Доп запросы сгорают в 00:00 МСК. Не переносятся на следующий день.", "location": "private", "usage": "Используйте в личных сообщениях с ботом. Просто напишите вопрос — бот ответит."},
+    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "category": "text", "desc": "Добавляет 10 текстовых запросов. Выгоднее чем +5.", "warning": "⚠️ Доп запросы сгорают в 00:00 МСК.", "location": "private", "usage": "Используйте в ЛС с ботом. Подходит для активного использования."},
+    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "Добавляет 50 запросов. Экономия 20 токенов по сравнению с покупкой 5 раз по 10!", "warning": "⚠️ Доп запросы сгорают в 00:00 МСК.", "location": "private", "usage": "Идеально для интенсивного использования бота в течение дня."},
+    "unlimited_1h": {"name": "Безлимит текст 1ч", "price": 30, "icon": "♾️", "category": "text", "desc": "Неограниченные текстовые запросы на 1 час с момента покупки.", "warning": "⚠️ Действует ровно 1 час. Не зависит от ежедневного сброса.", "location": "private", "usage": "Все запросы не учитываются в лимите пока активен безлимит."},
+    "unlimited_24h": {"name": "Безлимит текст 24ч", "price": 100, "icon": "♾️", "category": "text", "desc": "Неограниченные текстовые запросы на 24 часа.", "warning": "⚠️ Действует ровно 24 часа. Не зависит от ежедневного сброса.", "location": "private", "usage": "Все запросы не учитываются в лимите."},
+    "unlimited_7d": {"name": "Безлимит текст 7д", "price": 500, "icon": "♾️", "category": "text", "desc": "Неограниченные текстовые запросы на 7 дней.", "warning": "⚠️ Действует ровно 7 дней. Не зависит от ежедневного сброса.", "location": "private", "usage": "Неделя без ограничений на текстовые запросы."},
+    "image1": {"name": "1 генерация фото", "price": 15, "icon": "🎨", "category": "image", "desc": "Добавляет 1 генерацию изображения к дневному лимиту.", "warning": "⚠️ Генерации сгорают в 00:00 МСК.", "location": "private", "usage": "Активируйте модель Images V2 и опишите что нарисовать."},
+    "image5": {"name": "5 генераций фото", "price": 60, "icon": "🎨", "category": "image", "desc": "Добавляет 5 генераций. Выгоднее чем покупать по 1.", "warning": "⚠️ Генерации сгорают в 00:00 МСК.", "location": "private", "usage": "Создайте до 5 уникальных изображений."},
+    "image20": {"name": "20 генераций фото", "price": 200, "icon": "🎨", "category": "image", "desc": "Добавляет 20 генераций. Экономия 100 токенов!", "warning": "⚠️ Генерации сгорают в 00:00 МСК.", "location": "private", "usage": "Для творческих проектов и экспериментов с изображениями."},
+    "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "category": "image", "desc": "Неограниченная генерация изображений на 1 час.", "warning": "⚠️ Действует ровно 1 час.", "location": "private", "usage": "Все генерации фото не учитываются в лимите."},
+    "premium_day": {"name": "Премиум ЛС 1 день", "price": 200, "icon": "⭐", "category": "premium", "desc": "Полный безлимит текста и фото в ЛС на 24 часа.", "warning": "⚠️ Действует ровно 24 часа. Только ЛС.", "location": "private", "usage": "Отключает все лимиты: текст и фото без ограничений."},
+    "premium_week": {"name": "Премиум ЛС 7 дней", "price": 1000, "icon": "⭐", "category": "premium", "desc": "Полный безлимит текста и фото в ЛС на 7 дней.", "warning": "⚠️ Действует ровно 7 дней. Только ЛС.", "location": "private", "usage": "Неделя полной свободы: безлимит текста и фото."},
+    "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "category": "premium", "desc": "Навсегда отключает все лимиты в ЛС. Единоразовая покупка.", "warning": "⚠️ Только ЛС. Не требует продления.", "location": "private", "usage": "Текст и фото без ограничений навсегда. Самая выгодная покупка!"},
+    "chat_extra10": {"name": "+10 запросов в чатах", "price": 15, "icon": "👥", "category": "chat", "desc": "Добавляет 10 запросов для всех участников чата.", "warning": "⚠️ Сгорают в 00:00 МСК. Только владелец чата.", "location": "chat", "usage": "Все участники получают +10 запросов. Покупает владелец через /chatshop."},
+    "chat_extra50": {"name": "+50 запросов в чатах", "price": 60, "icon": "👥", "category": "chat", "desc": "Добавляет 50 запросов для всех. Экономия 15 токенов!", "warning": "⚠️ Сгорают в 00:00 МСК. Только владелец чата.", "location": "chat", "usage": "Все участники получают +50 запросов."},
+    "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 40, "icon": "♾️", "category": "chat", "desc": "Неограниченные запросы для всех на 1 час.", "warning": "⚠️ Действует 1 час. Только владелец чата.", "location": "chat", "usage": "Все участники могут задавать вопросы без ограничений."},
+    "chat_unlimited_24h": {"name": "Безлимит чат 24ч", "price": 150, "icon": "♾️", "category": "chat", "desc": "Неограниченные запросы для всех на 24 часа.", "warning": "⚠️ Действует 24 часа. Только владелец чата.", "location": "chat", "usage": "Сутки безлимита для всего чата."},
+    "chat_image5": {"name": "5 фото в чатах", "price": 50, "icon": "🖼️", "category": "chat_image", "desc": "Добавляет 5 генераций фото для всех участников.", "warning": "⚠️ Сгорают в 00:00 МСК. Только владелец чата.", "location": "chat", "usage": "Все участники получают +5 генераций фото."},
+    "chat_image20": {"name": "20 фото в чатах", "price": 180, "icon": "🖼️", "category": "chat_image", "desc": "Добавляет 20 генераций для всех. Экономия 20 токенов!", "warning": "⚠️ Сгорают в 00:00 МСК. Только владелец чата.", "location": "chat", "usage": "Все участники получают +20 генераций фото."},
+    "chat_premium_day": {"name": "Премиум чат 1 день", "price": 300, "icon": "⭐", "category": "chat_premium", "desc": "Безлимит текста и фото для всех на 24 часа.", "warning": "⚠️ 24 часа. Только владелец чата.", "location": "chat", "usage": "Все участники получают полный безлимит."},
+    "chat_premium_week": {"name": "Премиум чат 7 дней", "price": 1500, "icon": "⭐", "category": "chat_premium", "desc": "Безлимит текста и фото для всех на 7 дней.", "warning": "⚠️ 7 дней. Только владелец чата.", "location": "chat", "usage": "Неделя безлимита для всех участников чата."},
+    "chat_premium_forever": {"name": "Премиум чат навсегда", "price": 3500, "icon": "👑", "category": "chat_premium", "desc": "Навсегда отключает лимиты для всех. Единоразовая покупка.", "warning": "⚠️ Только владелец чата. Бессрочно.", "location": "chat", "usage": "Все участники навсегда получают безлимит."},
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -110,10 +304,6 @@ client = openai.OpenAI(
     api_key=YANDEX_API_KEY, base_url="https://ai.api.cloud.yandex.net/v1",
     project=YANDEX_FOLDER, timeout=60.0,
 )
-
-# ═══════════════════════════════════════════
-# 💮 УЛУЧШЕННЫЙ ДИНАМИЧЕСКИЙ КУРС ТОКЕНА
-# ═══════════════════════════════════════════
 
 def load_json(filename):
     if os.path.exists(filename):
@@ -125,9 +315,14 @@ def save_json(filename, data):
 
 def load_users(): return load_json(DATA_FILE)
 def save_users(users): save_json(DATA_FILE, users)
+def load_promos(): return load_json(PROMO_FILE)
+def save_promos(promos): save_json(PROMO_FILE, promos)
+def load_chats(): return load_json(CHATS_FILE)
+def save_chats(chats): save_json(CHATS_FILE, chats)
+def load_discounts(): return load_json(DISCOUNTS_FILE)
+def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
 
 def get_token_rate():
-    """Улучшенный курс токена с историей и рыночными метриками"""
     rate_data = load_json(TOKEN_RATE_FILE)
     history = load_json(TOKEN_HISTORY_FILE)
     today = datetime.now().strftime("%Y-%m-%d")
@@ -140,30 +335,25 @@ def get_token_rate():
         active_users = sum(1 for u in users.values() if u.get("requests_today", 0) > 0)
         total_users = len(users)
         
-        # 1. Базовый курс
         base_rate = 0.01
         
-        # 2. Фактор предложения (дефляция)
         if total_tokens > 0:
             supply_factor = max(0.3, min(3.0, 15000 / max(total_tokens, 500)))
         else:
             supply_factor = 1.0
         
-        # 3. Фактор активности (чем активнее — тем выше курс)
         if total_users > 0:
             activity_ratio = active_users / max(total_users, 1)
             activity_factor = 0.7 + (activity_ratio * 0.6)
         else:
             activity_factor = 1.0
         
-        # 4. Коэффициент сжигания (чем больше потрачено — тем выше курс)
         if total_earned > 0:
             burn_ratio = total_spent / max(total_earned, 1)
             burn_factor = 0.8 + (burn_ratio * 0.4)
         else:
             burn_factor = 1.0
         
-        # 5. Волатильность на основе истории
         volatility = 1.0
         if history:
             rates = [h.get("rate", base_rate) for h in history.values() if h.get("rate")]
@@ -172,61 +362,37 @@ def get_token_rate():
                 std_dev = math.sqrt(sum((r - avg_rate) ** 2 for r in rates) / len(rates))
                 volatility = 1.0 + (std_dev / max(avg_rate, 0.0001)) * 0.5
         
-        # 6. Случайный рыночный шум ±10%
         market_noise = random.uniform(0.90, 1.10)
         
-        # 7. Итоговый курс
         rate = round(base_rate * supply_factor * activity_factor * burn_factor * volatility * market_noise, 8)
         rate = max(0.0001, min(1.0, rate))
         
-        # 8. Рыночная капитализация
         market_cap = round(total_tokens * rate, 2)
         
-        # 9. Изменение за 24 часа
         yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
         yesterday_rate = history.get(yesterday, {}).get("rate", rate)
         change_24h = round(((rate - yesterday_rate) / max(yesterday_rate, 0.0001)) * 100, 2)
         
-        # 10. Тренд
-        if change_24h > 0.5:
-            trend = "📈 Рост"
-        elif change_24h < -0.5:
-            trend = "📉 Падение"
-        else:
-            trend = "📊 Стабильно"
+        if change_24h > 0.5: trend = "📈 Рост"
+        elif change_24h < -0.5: trend = "📉 Падение"
+        else: trend = "📊 Стабильно"
         
         rate_data = {
-            "date": today,
-            "rate": rate,
-            "total_supply": total_tokens,
-            "total_earned": total_earned,
-            "total_spent": total_spent,
-            "market_cap": market_cap,
-            "change_24h": change_24h,
-            "trend": trend,
-            "active_users": active_users,
-            "total_users": total_users,
-            "supply_factor": round(supply_factor, 4),
-            "activity_factor": round(activity_factor, 4),
-            "burn_factor": round(burn_factor, 4),
-            "volatility_index": round(volatility, 4),
+            "date": today, "rate": rate,
+            "total_supply": total_tokens, "total_earned": total_earned, "total_spent": total_spent,
+            "market_cap": market_cap, "change_24h": change_24h, "trend": trend,
+            "active_users": active_users, "total_users": total_users,
+            "supply_factor": round(supply_factor, 4), "activity_factor": round(activity_factor, 4),
+            "burn_factor": round(burn_factor, 4), "volatility_index": round(volatility, 4),
             "updated_at": datetime.now().isoformat(),
         }
         save_json(TOKEN_RATE_FILE, rate_data)
         
-        # Сохраняем в историю
-        history[today] = {
-            "rate": rate,
-            "supply": total_tokens,
-            "market_cap": market_cap,
-            "change_24h": change_24h,
-        }
-        # Оставляем только последние 30 дней
-        if len(history) > 30:
-            history = dict(sorted(history.items())[-30:])
+        history[today] = {"rate": rate, "supply": total_tokens, "market_cap": market_cap, "change_24h": change_24h}
+        if len(history) > 30: history = dict(sorted(history.items())[-30:])
         save_json(TOKEN_HISTORY_FILE, history)
         
-        logger.info(f"💮 Курс обновлён: 1 NBT = ${rate:.8f} | Кап: ${market_cap:.2f} | Изм: {change_24h:+.2f}%")
+        logger.info(f"💮 Курс: ${rate:.8f} | Кап: ${market_cap:.2f} | Изм: {change_24h:+.2f}%")
     
     return rate_data
 
@@ -234,8 +400,7 @@ def get_item_price(item_id):
     rate_data = get_token_rate()
     rate = rate_data.get("rate", 0.01)
     base_usd = BASE_PRICES_USD.get(item_id, 10)
-    token_price = max(1, int(base_usd / 100 / rate))
-    return token_price
+    return max(1, int(base_usd / 100 / rate))
 
 def get_shop_items():
     items = {}
@@ -243,38 +408,6 @@ def get_shop_items():
         dynamic_price = get_item_price(item_id)
         items[item_id] = {**item, "price": dynamic_price}
     return items
-
-SHOP_ITEMS_BASE = {
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "5 текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "category": "text", "desc": "10 текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
-    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "50 запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
-    "unlimited_1h": {"name": "Безлимит текст 1ч", "price": 30, "icon": "♾️", "category": "text", "desc": "Безлимит на 1 час.", "warning": "⚠️ Действует 1 час.", "location": "private"},
-    "unlimited_24h": {"name": "Безлимит текст 24ч", "price": 100, "icon": "♾️", "category": "text", "desc": "Безлимит на 24 часа.", "warning": "⚠️ Действует 24 часа.", "location": "private"},
-    "unlimited_7d": {"name": "Безлимит текст 7д", "price": 500, "icon": "♾️", "category": "text", "desc": "Безлимит на 7 дней.", "warning": "⚠️ Действует 7 дней.", "location": "private"},
-    "image1": {"name": "1 генерация фото", "price": 15, "icon": "🎨", "category": "image", "desc": "1 генерация.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
-    "image5": {"name": "5 генераций фото", "price": 60, "icon": "🎨", "category": "image", "desc": "5 генераций.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
-    "image20": {"name": "20 генераций фото", "price": 200, "icon": "🎨", "category": "image", "desc": "20 генераций.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
-    "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "category": "image", "desc": "Безлимит фото на 1 час.", "warning": "⚠️ Действует 1 час.", "location": "private"},
-    "premium_day": {"name": "Премиум ЛС 1 день", "price": 200, "icon": "⭐", "category": "premium", "desc": "Безлимит на 24ч.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private"},
-    "premium_week": {"name": "Премиум ЛС 7 дней", "price": 1000, "icon": "⭐", "category": "premium", "desc": "Безлимит на 7 дней.", "warning": "⚠️ 7 дней. Только ЛС.", "location": "private"},
-    "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "category": "premium", "desc": "Безлимит навсегда.", "warning": "⚠️ Только ЛС. Бессрочно.", "location": "private"},
-    "chat_extra10": {"name": "+10 запросов в чатах", "price": 15, "icon": "👥", "category": "chat", "desc": "10 запросов для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
-    "chat_extra50": {"name": "+50 запросов в чатах", "price": 60, "icon": "👥", "category": "chat", "desc": "50 запросов для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
-    "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 40, "icon": "♾️", "category": "chat", "desc": "Безлимит для всех на 1ч.", "warning": "⚠️ 1 час. Владелец.", "location": "chat"},
-    "chat_unlimited_24h": {"name": "Безлимит чат 24ч", "price": 150, "icon": "♾️", "category": "chat", "desc": "Безлимит для всех на 24ч.", "warning": "⚠️ 24 часа. Владелец.", "location": "chat"},
-    "chat_image5": {"name": "5 фото в чатах", "price": 50, "icon": "🖼️", "category": "chat_image", "desc": "5 фото для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
-    "chat_image20": {"name": "20 фото в чатах", "price": 180, "icon": "🖼️", "category": "chat_image", "desc": "20 фото для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
-    "chat_premium_day": {"name": "Премиум чат 1 день", "price": 300, "icon": "⭐", "category": "chat_premium", "desc": "Безлимит для всех на 24ч.", "warning": "⚠️ 24 часа. Владелец.", "location": "chat"},
-    "chat_premium_week": {"name": "Премиум чат 7 дней", "price": 1500, "icon": "⭐", "category": "chat_premium", "desc": "Безлимит для всех на 7д.", "warning": "⚠️ 7 дней. Владелец.", "location": "chat"},
-    "chat_premium_forever": {"name": "Премиум чат навсегда", "price": 3500, "icon": "👑", "category": "chat_premium", "desc": "Безлимит навсегда.", "warning": "⚠️ Владелец. Бессрочно.", "location": "chat"},
-}
-
-def load_promos(): return load_json(PROMO_FILE)
-def save_promos(promos): save_json(PROMO_FILE, promos)
-def load_chats(): return load_json(CHATS_FILE)
-def save_chats(chats): save_json(CHATS_FILE, chats)
-def load_discounts(): return load_json(DISCOUNTS_FILE)
-def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
 
 def generate_discounts():
     all_items = list(SHOP_ITEMS_BASE.keys())
@@ -289,8 +422,7 @@ def generate_discounts():
             "percent": 100, "original": original, "new_price": 0,
             "type": "legendary", "type_name": "ЛЕГЕНДАРНАЯ СКИДКА",
             "color": "🌟", "icon": "💫",
-            "expires": (datetime.now() + timedelta(hours=3)).isoformat(),
-            "special": True
+            "expires": (datetime.now() + timedelta(hours=3)).isoformat(), "special": True
         }
         used_items.add(item_id)
     
@@ -667,7 +799,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if chat_type in ["group", "supergroup"]:
         chat_premium = "💎 Активен" if is_chat_premium(update.effective_chat.id) else "Не активен"
-        await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION} в чате!\n💬 @{context.bot.username} вопрос\n🎨 @{context.bot.username} нарисуй описание\n💎 Премиум: {chat_premium}\n👑 /chatowner | 🛒 /chatshop")
+        await update.message.reply_text(
+            f"🧠 NeBlock AI V{BOT_VERSION} в чате!\n━━━━━━━━━━━━━━━━━━━━\n"
+            f"💬 @{context.bot.username} вопрос — текстовый ответ\n"
+            f"🎨 @{context.bot.username} нарисуй описание — генерация фото\n"
+            f"💎 Премиум: {chat_premium}\n"
+            f"👑 /chatowner — владельцы | 🛒 /chatshop — магазин\n"
+            f"📊 Лимиты: {CHAT_DAILY_LIMIT} текст + {CHAT_IMAGE_LIMIT} фото/день"
+        )
         return
     
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
@@ -677,9 +816,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(
         f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n"
-        f"💎 Премиум ЛС: {premium}\n\n"
-        f"💰 Баланс: {user.get('tokens', 0)} 💮\n"
+        f"💬 NeBlock AI V2 — текстовая модель\n"
+        f"   • Качество +40%, скорость x2, контекст 8к токенов\n\n"
+        f"🎨 NeBlock Images V2 — генерация фото\n"
+        f"   • Качество +50%, стили, скорость до 15 сек\n\n"
+        f"💎 Премиум ЛС: {premium}\n"
+        f"💰 Баланс: {user.get('tokens', 0)} 💮 (~${user.get('tokens', 0) * rate:.2f})\n"
         f"💮 1 NBT = ${rate:.8f} {trend}\n"
         f"📊 Лимиты: {DAILY_LIMIT} вопр. + {IMAGE_DAILY_LIMIT} фото/день\n\n"
         f"👇 Выбери модель:",
@@ -705,11 +847,7 @@ async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     burn_factor = rate_data.get("burn_factor", 1.0)
     volatility_index = rate_data.get("volatility_index", 1.0)
     updated = rate_data.get("updated_at", "")
-    
-    if updated:
-        updated_time = datetime.fromisoformat(updated).strftime("%d.%m.%Y %H:%M МСК")
-    else:
-        updated_time = "Неизвестно"
+    updated_time = datetime.fromisoformat(updated).strftime("%d.%m.%Y %H:%M МСК") if updated else "Нет данных"
     
     change_emoji = "📈" if change_24h > 0 else "📉" if change_24h < 0 else "📊"
     
@@ -717,44 +855,45 @@ async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💮 КУРС NeBlock Token (NBT)\n━━━━━━━━━━━━━━━━\n\n"
         f"💰 1 NBT = ${rate:.8f} USD\n"
         f"{trend} Изменение за 24ч: {change_24h:+.2f}% {change_emoji}\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"📊 РЫНОЧНЫЕ ДАННЫЕ\n"
-        f"💎 Рыночная капитализация: ${market_cap:,.2f}\n"
-        f"🪙 Токенов в обороте: {supply:,} NBT\n"
+        f"━━━━━━━━━━━━━━━━\n📊 РЫНОЧНЫЕ ДАННЫЕ\n━━━━━━━━━━━━━━━━\n"
+        f"💎 Капитализация: ${market_cap:,.2f} USD\n"
+        f"🪙 В обороте: {supply:,} NBT\n"
         f"💸 Заработано всего: {earned:,} NBT\n"
-        f"🔥 Потрачено всего: {spent:,} NBT\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"📈 ФАКТОРЫ КУРСА\n"
-        f"📊 Фактор предложения: {supply_factor}\n"
-        f"👥 Фактор активности: {activity_factor}\n"
-        f"🔥 Фактор сжигания: {burn_factor}\n"
-        f"📉 Индекс волатильности: {volatility_index}\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"👥 Пользователей: {total_users} (активных: {active_users})\n"
-        f"🕐 Обновлён: {updated_time}\n"
-        f"🔄 Следующее обновление: завтра в 00:00 МСК\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"📋 ПРИМЕРЫ ЦЕН:\n"
+        f"🔥 Потрачено всего: {spent:,} NBT\n"
+        f"📊 Соотношение потрачено/заработано: {(spent/max(earned,1)*100):.1f}%\n\n"
+        f"━━━━━━━━━━━━━━━━\n📈 ФАКТОРЫ КУРСА\n━━━━━━━━━━━━━━━━\n"
+        f"📊 Предложение: {supply_factor} (чем больше токенов — тем выше)\n"
+        f"👥 Активность: {activity_factor} (чем активнее — тем выше)\n"
+        f"🔥 Сжигание: {burn_factor} (чем больше тратят — тем выше)\n"
+        f"📉 Волатильность: {volatility_index} (историческая)\n\n"
+        f"━━━━━━━━━━━━━━━━\n👥 ПОЛЬЗОВАТЕЛИ\n━━━━━━━━━━━━━━━━\n"
+        f"👥 Всего: {total_users}\n📈 Активных сегодня: {active_users}\n"
+        f"📊 Активность: {(active_users/max(total_users,1)*100):.1f}%\n\n"
+        f"━━━━━━━━━━━━━━━━\n🕐 ВРЕМЯ\n━━━━━━━━━━━━━━━━\n"
+        f"🕐 Обновлён: {updated_time}\n🔄 Следующее: завтра 00:00 МСК\n\n"
+        f"━━━━━━━━━━━━━━━━\n📋 ПРИМЕРЫ ЦЕН\n━━━━━━━━━━━━━━━━\n"
         f"📝 +5 запросов: {shop_items.get('extra5', {}).get('price', '?')} 💮\n"
         f"🎨 1 фото: {shop_items.get('image1', {}).get('price', '?')} 💮\n"
         f"⭐ Премиум день: {shop_items.get('premium_day', {}).get('price', '?')} 💮\n"
         f"👑 Премиум навсегда: {shop_items.get('premium_forever', {}).get('price', '?')} 💮\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"💡 Чем больше токенов в обороте — тем выше курс.\n"
-        f"💡 Чем активнее пользователи — тем выше курс.\n"
-        f"💡 Чем больше тратят — тем выше курс.\n"
-        f"💡 Курс обновляется ежедневно в 00:00 МСК."
+        f"━━━━━━━━━━━━━━━━\n💡 ПРИНЦИП РАБОТЫ\n━━━━━━━━━━━━━━━━\n"
+        f"• Чем больше токенов в обороте — тем выше курс (дефляция)\n"
+        f"• Чем активнее пользователи — тем выше курс\n"
+        f"• Чем больше тратят — тем выше курс (сжигание)\n"
+        f"• Курс обновляется ежедневно в 00:00 МСК\n"
+        f"• Цены в магазине зависят от курса\n"
+        f"• Историческая волатильность влияет на стабильность"
     )
     
-    # Добавляем историю если есть
     if len(history) > 1:
-        text += "\n\n📈 ИСТОРИЯ КУРСА (7 дней)\n━━━━━━━━━━━━━━━━\n"
+        text += "\n\n━━━━━━━━━━━━━━━━\n📈 ИСТОРИЯ (7 дней)\n━━━━━━━━━━━━━━━━\n"
         history_items = sorted(history.items())[-7:]
         for date, hdata in history_items:
             hrate = hdata.get("rate", 0)
             hchange = hdata.get("change_24h", 0)
+            hcap = hdata.get("market_cap", 0)
             change_str = f"{hchange:+.2f}%" if hchange != 0 else "0%"
-            text += f"{date}: ${hrate:.8f} ({change_str})\n"
+            text += f"{date}: ${hrate:.8f} ({change_str}) | Кап: ${hcap:,.0f}\n"
     
     await update.message.reply_text(text)
 
@@ -779,9 +918,7 @@ async def discounts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(text)
 
-async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(CHANGELOG)
-
+async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE): await update.message.reply_text(CHANGELOG)
 async def chatowner_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.effective_chat.type
     if chat_type not in ["group", "supergroup"]: return
@@ -816,7 +953,6 @@ async def admin_take(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user.get("tokens", 0) < amount: return
         users = load_users(); users[uid]["tokens"] = users[uid].get("tokens", 0) - amount
         users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount; save_users(users)
-        await update.message.reply_text(f"✅ -{amount} 💮")
     except: pass
 
 async def admin_resetuser(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -828,7 +964,7 @@ async def admin_resetuser(update: Update, context: ContextTypes.DEFAULT_TYPE):
             users[uid]["requests_today"] = 0; users[uid]["extra_requests"] = 0
             users[uid]["image_requests_today"] = 0; users[uid]["extra_image_requests"] = 0
             users[uid]["warnings"] = 0; users[uid]["muted_until"] = None; users[uid]["banned"] = False
-            save_users(users); await update.message.reply_text("✅ Сброшен")
+            save_users(users)
     except: pass
 
 async def admin_setpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -840,7 +976,7 @@ async def admin_setpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
             existing = users[uid].get("premium_until")
             base_time = datetime.fromisoformat(existing) if existing and datetime.now() < datetime.fromisoformat(existing) else datetime.now()
             users[uid]["premium_until"] = (base_time + timedelta(days=days)).isoformat()
-            save_users(users); await update.message.reply_text(f"✅ Премиум {days}д")
+            save_users(users)
     except: pass
 
 async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -865,13 +1001,11 @@ async def admin_top(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def admin_cleardiscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     save_discounts({"last_update": datetime.now().strftime("%Y-%m-%d")})
-    await update.message.reply_text("✅ Скидки очищены")
 
 async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args or len(context.args) < 2: return
     create_promo(context.args[0].upper(), int(context.args[1]), int(context.args[2]) if len(context.args) > 2 else 0)
-    await update.message.reply_text(f"✅ Промокод {context.args[0].upper()} создан!")
 
 async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -889,11 +1023,9 @@ async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    users = load_users()
-    rate_data = get_token_rate()
+    users = load_users(); rate_data = get_token_rate()
     await update.message.reply_text(
-        f"📊 Статистика\n👥 {len(users)}\n"
-        f"💬 {sum(u.get('total_requests', 0) for u in users.values())}\n"
+        f"📊 Статистика\n👥 {len(users)}\n💬 {sum(u.get('total_requests', 0) for u in users.values())}\n"
         f"🎨 {sum(u.get('total_images', 0) for u in users.values())}\n"
         f"💮 В обороте: {rate_data.get('total_supply', 0):,} NBT\n"
         f"💱 Курс: ${rate_data.get('rate', 0.01):.8f}"
@@ -904,7 +1036,6 @@ async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYP
     new_discounts = generate_discounts()
     new_discounts["last_update"] = datetime.now().strftime("%Y-%m-%d")
     save_discounts(new_discounts)
-    await update.message.reply_text("✅ Скидки обновлены!")
 
 async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text; user_id = update.effective_user.id
@@ -916,18 +1047,17 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if text == "💬 NeBlock AI V2":
         users = load_users(); users[str(user_id)]["current_model"] = "text"; users[str(user_id)]["waiting_for_image"] = False; save_users(users)
-        await update.message.reply_text(f"💬 NeBlock AI V2\n📊 Осталось: {remaining(user_id)}"); return True
+        await update.message.reply_text(f"💬 NeBlock AI V2\n━━━━━━━━━━━━━━━━\nКачество +40%, скорость x2\nКонтекст до 8к токенов\n\n📊 Осталось: {remaining(user_id)}"); return True
     if text == "🎨 NeBlock Images V2":
         users = load_users(); users[str(user_id)]["current_model"] = "image"; users[str(user_id)]["waiting_for_image"] = True; save_users(users)
-        await update.message.reply_text(f"🎨 NeBlock Images V2\n📊 Осталось: {image_remaining(user_id)}"); return True
+        await update.message.reply_text(f"🎨 NeBlock Images V2\n━━━━━━━━━━━━━━━━\nКачество +50%, стили\nСкорость до 15 секунд\n\n📊 Осталось: {image_remaining(user_id)}"); return True
     if text == "👤 Профиль":
         user = get_user(user_id); joined = datetime.fromisoformat(user.get("joined", "")).strftime("%d.%m.%Y")
         last = "Никогда"
         if user.get("last_request"): last = datetime.fromisoformat(user["last_request"]).strftime("%d.%m.%Y в %H:%M")
         current_model = "💬 NeBlock AI V2" if user.get("current_model") == "text" else "🎨 NeBlock Images V2"
         premium = "💎 Активен" if is_premium(user_id) else "Не активен"
-        rate_data = get_token_rate(); rate = rate_data.get("rate", 0.01)
-        usd_value = user.get("tokens", 0) * rate
+        rate_data = get_token_rate(); rate = rate_data.get("rate", 0.01); usd_value = user.get("tokens", 0) * rate
         
         def fmt(until_str):
             if not until_str: return "Не активен"
@@ -940,19 +1070,24 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         
         await update.message.reply_text(
             f"👤 Профиль V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"🆔 {user_id}\n📅 {joined}\n🔮 {current_model}\n💎 Премиум: {premium}\n\n"
+            f"🆔 {user_id}\n📅 Регистрация: {joined}\n🔮 Модель: {current_model}\n💎 Премиум: {premium}\n\n"
             f"💰 Баланс: {user.get('tokens', 0)} 💮 (~${usd_value:.2f})\n"
             f"💮 Курс: 1 NBT = ${rate:.8f}\n"
-            f"💎 Заработано: {user.get('earned_tokens', 0)} | 💸 Потрачено: {user.get('spent_tokens', 0)}\n\n"
+            f"💎 Заработано: {user.get('earned_tokens', 0)} 💮\n"
+            f"💸 Потрачено: {user.get('spent_tokens', 0)} 💮\n"
+            f"🔥 Серия бонусов: {user.get('daily_bonus_streak', 0)} дн.\n\n"
             f"💬 ЛС: {user.get('requests_today', 0)}/{DAILY_LIMIT + user.get('extra_requests', 0)} | {fmt(user.get('unlimited_until'))}\n"
             f"🎨 Фото: {user.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + user.get('extra_image_requests', 0)} | {fmt(user.get('image_unlimited_until'))}\n"
             f"👥 Чаты: {user.get('chat_requests_today', 0)}/{CHAT_DAILY_LIMIT + user.get('extra_chat_requests', 0)} | {fmt(user.get('chat_unlimited_until'))}\n"
-            f"🛡 {user.get('warnings', 0)}/5 | 👥 {user.get('referrals', 0)}\n🕐 {last}",
+            f"🎨 Чат-фото: {user.get('chat_image_requests_today', 0)}/{CHAT_IMAGE_LIMIT + user.get('extra_chat_image_requests', 0)} | {fmt(user.get('chat_image_unlimited_until'))}\n\n"
+            f"📈 Всего: {user.get('total_requests', 0)} текст | {user.get('total_images', 0)} фото\n"
+            f"🛡 Предупреждений: {user.get('warnings', 0)}/5\n"
+            f"👥 Рефералов: {user.get('referrals', 0)}\n🕐 Активность: {last}",
             reply_markup=main_menu()
         )
         return True
-    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} 💮\n💮 /tokenrate — курс", reply_markup=shop_keyboard("private")); return True
-    if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок\n💎 {get_tokens(user_id)} 💮\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день\n👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу", reply_markup=earn_keyboard()); return True
+    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} 💮\n💮 /tokenrate — курс\n📋 /shopdesc — все товары", reply_markup=shop_keyboard("private")); return True
+    if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок 💮\n━━━━━━━━━━━━━━━━\n💎 Баланс: {get_tokens(user_id)} 💮\n\n🎁 Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} 💮/день\n👥 Рефералы: +{REFERRAL_BONUS} 💮 тебе, +{INVITED_BONUS} 💮 другу\n🎯 Старт: {START_BONUS} 💮\n🎟 Промокоды\n\n💡 Заходите каждый день за бонусом!", reply_markup=earn_keyboard()); return True
     if text == "📚 FAQ": await update.message.reply_text(FAQ_TEXT); return True
     if text == "🎫 Скидки": await discounts_cmd(update, context); return True
     if text == "💮 Курс NBT": await tokenrate_cmd(update, context); return True
@@ -964,22 +1099,19 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     
     if data == "none": return
     if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n💰 {get_tokens(user_id)} 💮", reply_markup=main_menu())
-    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💮 NBT\n🎫 Скидки", reply_markup=back_button())
-    elif data == "models": await query.edit_message_text(f"🧠 МОДЕЛИ\n\n💬 NeBlock AI V2\n🎨 NeBlock Images V2\n\n💮 /tokenrate — курс NBT", reply_markup=back_button())
+    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💮 NBT\n🎫 Скидки\n\n📋 /shopdesc — товары\n📋 /changelog — история", reply_markup=back_button())
+    elif data == "models": await query.edit_message_text(MODELS_INFO, reply_markup=back_button())
     elif data == "tokenrate":
         rate_data = get_token_rate()
-        rate = rate_data.get("rate", 0.01)
-        supply = rate_data.get("total_supply", 0)
-        market_cap = rate_data.get("market_cap", 0)
-        change_24h = rate_data.get("change_24h", 0)
+        rate = rate_data.get("rate", 0.01); supply = rate_data.get("total_supply", 0)
+        market_cap = rate_data.get("market_cap", 0); change_24h = rate_data.get("change_24h", 0)
         trend = rate_data.get("trend", "📊 Стабильно")
         await query.edit_message_text(
             f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n"
             f"💰 1 NBT = ${rate:.8f}\n{trend} {change_24h:+.2f}%\n"
             f"💎 Капитализация: ${market_cap:,.2f}\n"
             f"🪙 В обороте: {supply:,} NBT\n\n"
-            f"📋 Цены:\n"
-            f"📝 +5 запросов: {shop_items.get('extra5', {}).get('price', '?')} 💮\n"
+            f"📋 Цены:\n📝 +5 запросов: {shop_items.get('extra5', {}).get('price', '?')} 💮\n"
             f"⭐ Премиум день: {shop_items.get('premium_day', {}).get('price', '?')} 💮\n\n"
             f"💡 /tokenrate — подробнее",
             reply_markup=back_button()
@@ -998,10 +1130,34 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 else:
                     text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n🔥 -{disc['percent']}% = {disc['new_price']} 💮\n\n"
         await query.edit_message_text(text, reply_markup=back_button())
-    elif data == "premium_info": await query.edit_message_text(f"💎 Премиум\n\nЛС: {shop_items.get('premium_day', {}).get('price', '?')}/{shop_items.get('premium_week', {}).get('price', '?')}/{shop_items.get('premium_forever', {}).get('price', '?')} 💮", reply_markup=back_button())
+    elif data == "premium_info":
+        rate_data = get_token_rate(); rate = rate_data.get("rate", 0.01)
+        pd = shop_items.get('premium_day', {}).get('price', '?')
+        pw = shop_items.get('premium_week', {}).get('price', '?')
+        pf = shop_items.get('premium_forever', {}).get('price', '?')
+        await query.edit_message_text(
+            f"💎 ПРЕМИУМ\n━━━━━━━━━━━━━━━━\n\n"
+            f"Полностью отключает все лимиты.\n\n"
+            f"💎 Премиум ЛС:\n• 1 день — {pd} 💮 (~${pd * rate:.2f})\n"
+            f"• 7 дней — {pw} 💮 (~${pw * rate:.2f})\n"
+            f"• Навсегда — {pf} 💮 (~${pf * rate:.2f})\n\n"
+            f"💎 Премиум Чат: для всех участников\n"
+            f"• 1 день / 7 дней / Навсегда\n\n"
+            f"🎫 Бывают скидки на Премиум!\n💡 Навсегда — самая выгодная покупка.",
+            reply_markup=back_button()
+        )
     elif data == "stats":
         user = get_user(user_id)
-        await query.edit_message_text(f"📊 Статистика\n💬 {user.get('requests_today', 0)}\n🎨 {user.get('image_requests_today', 0)}\n💰 {user.get('tokens', 0)} 💮", reply_markup=back_button())
+        await query.edit_message_text(
+            f"📊 Статистика\n━━━━━━━━━━━━━━━━\n\n"
+            f"💬 Текстовых сегодня: {user.get('requests_today', 0)}\n"
+            f"🎨 Генераций сегодня: {user.get('image_requests_today', 0)}\n"
+            f"👥 В чатах сегодня: {user.get('chat_requests_today', 0)}\n"
+            f"💰 Баланс: {user.get('tokens', 0)} 💮\n"
+            f"💎 Премиум: {'Да' if is_premium(user_id) else 'Нет'}\n"
+            f"🔥 Серия бонусов: {user.get('daily_bonus_streak', 0)} дн.",
+            reply_markup=back_button()
+        )
     elif data == "shop": await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("private"))
     elif data == "earn": await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)} 💮", reply_markup=earn_keyboard())
     elif data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
@@ -1016,7 +1172,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             users[uid]["daily_bonus_streak"] = users[uid].get("daily_bonus_streak", 0) + 1 if users[uid].get("last_bonus_date") == yesterday else 1
             users[uid]["last_bonus_date"] = today; save_users(users); add_tokens(user_id, bonus)
             await query.answer(f"🎉 +{bonus} 💮!", show_alert=True)
-            await query.edit_message_text(f"🎁 +{bonus} 💮\n💰 {get_tokens(user_id)} 💮", reply_markup=back_button())
+            await query.edit_message_text(f"🎁 +{bonus} 💮\n💰 {get_tokens(user_id)} 💮\n🔥 Серия: {users[uid]['daily_bonus_streak']} дн.", reply_markup=back_button())
     elif data == "ref_link":
         user = get_user(user_id); bot_username = (await context.bot.get_me()).username
         await query.edit_message_text(f"👥 https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n💰 +{REFERRAL_BONUS} 💮 тебе\n🎁 +{INVITED_BONUS} 💮 другу", reply_markup=back_button())
@@ -1054,10 +1210,15 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 disc_text = "\n\n🌟 ЛЕГЕНДАРНАЯ СКИДКА 100%!\n💫 БЕСПЛАТНО!"
             else:
                 disc_text = f"\n\n{disc_info.get('color', '🟢')} -{percent}%\n💵 {disc_info['original']} → 🔥 {price} 💮"
-        await query.edit_message_text(f"🛒 {item['icon']} {item['name']}\n📝 {item['desc']}\n⚠️ {item.get('warning', '')}{disc_text}\n\n💎 Баланс: {tokens} 💮\n{can}", reply_markup=confirm_keyboard(item_id))
+        await query.edit_message_text(
+            f"🛒 {item['icon']} {item['name']}\n━━━━━━━━━━━━━━━━\n\n"
+            f"📝 {item['desc']}\n📋 {item.get('usage', '')}\n⚠️ {item.get('warning', '')}{disc_text}\n\n"
+            f"💎 Баланс: {tokens} 💮\n{can}\n\nПодтвердите:",
+            reply_markup=confirm_keyboard(item_id)
+        )
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤔 Неизвестная команда.\n/start — меню.")
+    await update.message.reply_text("🤔 Неизвестная команда.\n/start — меню | /help — помощь")
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip() if update.message.text else ""
@@ -1153,6 +1314,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("tokenrate", tokenrate_cmd))
     app.add_handler(CommandHandler("discounts", discounts_cmd))
+    app.add_handler(CommandHandler("shopdesc", lambda u, c: u.message.reply_text(SHOP_DESCRIPTION)))
     app.add_handler(CommandHandler("changelog", changelog_cmd))
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
