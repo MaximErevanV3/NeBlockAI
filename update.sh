@@ -20,36 +20,40 @@ echo "║   🧠 NeBlock AI V2 Updater      ║"
 echo "╚══════════════════════════════════╝"
 echo -e "${NC}"
 
-# Остановка
 echo -e "${YELLOW}[1/3] Остановка бота...${NC}"
 systemctl stop $SERVICE 2>/dev/null
 sleep 1
 echo -e "${GREEN}✓ Бот остановлен${NC}"
 
-# Обновление из GitHub
 echo -e "${YELLOW}[2/3] Загрузка обновлений V2...${NC}"
 if [ -d "$DIR" ]; then
     cd "$DIR"
     git fetch --all 2>/dev/null
     git reset --hard origin/main 2>/dev/null
-    echo -e "${GREEN}✓ Код обновлён до V2${NC}"
+    echo -e "${GREEN}✓ Код обновлён${NC}"
 else
-    echo -e "${RED}❌ Директория не найдена. Установи бота через install.sh${NC}"
+    echo -e "${RED}❌ Директория не найдена${NC}"
     exit 1
 fi
 
-# Права на файлы
-chmod +x "$DIR"/*.sh 2>/dev/null
+echo -e "${YELLOW}[3/3] Проверка синтаксиса...${NC}"
+python3 -m py_compile "$DIR/bot.py" 2>/dev/null
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Синтаксис OK${NC}"
+else
+    echo -e "${RED}❌ Ошибка в коде!${NC}"
+    python3 -m py_compile "$DIR/bot.py"
+    exit 1
+fi
 
-# Запуск
-echo -e "${YELLOW}[3/3] Запуск бота...${NC}"
+echo -e "${YELLOW}[4/4] Запуск бота...${NC}"
 systemctl start $SERVICE
 sleep 2
 
 if systemctl is-active --quiet $SERVICE; then
-    echo -e "${GREEN}✅ NeBlock AI V2 обновлён и работает!${NC}"
+    echo -e "${GREEN}✅ Бот обновлён и работает!${NC}"
 else
-    echo -e "${RED}❌ Ошибка запуска! Смотри логи:${NC}"
+    echo -e "${RED}❌ Ошибка запуска!${NC}"
     journalctl -u $SERVICE -n 15 --no-pager
 fi
 
