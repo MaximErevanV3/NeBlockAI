@@ -52,49 +52,267 @@ BLOCKED_WORDS = [
 ]
 COMPILED_BLOCKED = [re.compile(w, re.IGNORECASE) for w in BLOCKED_WORDS]
 
-SEVERE_PATTERNS = [
-    r'\b(?:дет[иь] порно|child porn|педофил|pedo|террор|terror|ИГИЛ|ISIS|уби[йт]|kill|суицид|suicide)\b',
-]
-MILD_PATTERNS = [
-    r'\b(?:туп[ой]|дур[ао]|идиот|дебил|лох|чмо)\b',
-]
+SEVERE_PATTERNS = [r'\b(?:дет[иь] порно|child porn|педофил|pedo|террор|terror|ИГИЛ|ISIS|уби[йт]|kill|суицид|suicide)\b']
+MILD_PATTERNS = [r'\b(?:туп[ой]|дур[ао]|идиот|дебил|лох|чмо)\b']
 COMPILED_SEVERE = [re.compile(w, re.IGNORECASE) for w in SEVERE_PATTERNS]
 COMPILED_MILD = [re.compile(w, re.IGNORECASE) for w in MILD_PATTERNS]
 
-# Обновлённый магазин с подробными категориями
 SHOP_ITEMS = {
     # ── Текстовые запросы (ЛС) ──
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "desc": "Добавляет 5 текстовых запросов к дневному лимиту", "category": "text"},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "desc": "Добавляет 10 текстовых запросов к дневному лимиту", "category": "text"},
-    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "desc": "Добавляет 50 текстовых запросов (экономия 20 токенов)", "category": "text"},
-    "unlimited_1h": {"name": "Безлимит текст 1 час", "price": 30, "icon": "♾️", "desc": "Неограниченные текстовые запросы на 1 час", "category": "text"},
-    "unlimited_24h": {"name": "Безлимит текст 24 часа", "price": 100, "icon": "♾️", "desc": "Неограниченные текстовые запросы на 24 часа", "category": "text"},
-    "unlimited_7d": {"name": "Безлимит текст 7 дней", "price": 500, "icon": "♾️", "desc": "Неограниченные текстовые запросы на 7 дней", "category": "text"},
+    "extra5": {
+        "name": "+5 запросов",
+        "price": 10,
+        "icon": "📝",
+        "category": "text",
+        "desc": "Добавляет 5 текстовых запросов к дневному лимиту.",
+        "warning": "⚠️ Доп запросы сгорают в 00:00 МСК. Не переносятся на следующий день.",
+        "usage": "Используйте в ЛС с ботом. Напишите вопрос — бот ответит."
+    },
+    "extra10": {
+        "name": "+10 запросов",
+        "price": 18,
+        "icon": "📝",
+        "category": "text",
+        "desc": "Добавляет 10 текстовых запросов к дневному лимиту. Выгоднее чем +5.",
+        "warning": "⚠️ Доп запросы сгорают в 00:00 МСК. Не переносятся на следующий день.",
+        "usage": "Используйте в ЛС с ботом. Напишите вопрос — бот ответит."
+    },
+    "extra50": {
+        "name": "+50 запросов",
+        "price": 80,
+        "icon": "📝",
+        "category": "text",
+        "desc": "Добавляет 50 текстовых запросов к дневному лимиту. Экономия 20 токенов по сравнению с покупкой 5х10!",
+        "warning": "⚠️ Доп запросы сгорают в 00:00 МСК. Не переносятся на следующий день.",
+        "usage": "Используйте в ЛС с ботом. Напишите вопрос — бот ответит."
+    },
+    "unlimited_1h": {
+        "name": "Безлимит текст 1 час",
+        "price": 30,
+        "icon": "♾️",
+        "category": "text",
+        "desc": "Неограниченные текстовые запросы в течение 1 часа с момента покупки.",
+        "warning": "⚠️ Действует ровно 1 час. По истечении возвращается стандартный лимит.",
+        "usage": "Все текстовые запросы в ЛС не учитываются в лимите пока активен безлимит."
+    },
+    "unlimited_24h": {
+        "name": "Безлимит текст 24 часа",
+        "price": 100,
+        "icon": "♾️",
+        "category": "text",
+        "desc": "Неограниченные текстовые запросы в течение 24 часов с момента покупки.",
+        "warning": "⚠️ Действует ровно 24 часа. По истечении возвращается стандартный лимит.",
+        "usage": "Все текстовые запросы в ЛС не учитываются в лимите пока активен безлимит."
+    },
+    "unlimited_7d": {
+        "name": "Безлимит текст 7 дней",
+        "price": 500,
+        "icon": "♾️",
+        "category": "text",
+        "desc": "Неограниченные текстовые запросы в течение 7 дней с момента покупки.",
+        "warning": "⚠️ Действует ровно 7 дней. По истечении возвращается стандартный лимит.",
+        "usage": "Все текстовые запросы в ЛС не учитываются в лимите пока активен безлимит."
+    },
     
     # ── Генерация фото (ЛС) ──
-    "image1": {"name": "1 генерация фото", "price": 15, "icon": "🎨", "desc": "Создаёт 1 изображение по описанию", "category": "image"},
-    "image5": {"name": "5 генераций фото", "price": 60, "icon": "🎨", "desc": "Создаёт 5 изображений по описанию", "category": "image"},
-    "image20": {"name": "20 генераций фото", "price": 200, "icon": "🎨", "desc": "Создаёт 20 изображений (экономия 100 токенов)", "category": "image"},
-    "image_unlimited_1h": {"name": "Безлимит фото 1 час", "price": 50, "icon": "♾️", "desc": "Неограниченная генерация фото на 1 час", "category": "image"},
-    
-    # ── Чаты и группы ──
-    "chat_extra10": {"name": "+10 запросов в чатах", "price": 15, "icon": "👥", "desc": "Добавляет 10 текстовых запросов для всех участников чата", "category": "chat"},
-    "chat_extra50": {"name": "+50 запросов в чатах", "price": 60, "icon": "👥", "desc": "Добавляет 50 текстовых запросов для всех участников чата (экономия 15 токенов)", "category": "chat"},
-    "chat_unlimited_1h": {"name": "Безлимит чат 1 час", "price": 40, "icon": "♾️", "desc": "Неограниченные запросы для всех участников чата на 1 час", "category": "chat"},
-    "chat_unlimited_24h": {"name": "Безлимит чат 24 часа", "price": 150, "icon": "♾️", "desc": "Неограниченные запросы для всех участников чата на 24 часа", "category": "chat"},
-    "chat_image5": {"name": "5 фото в чатах", "price": 50, "icon": "🖼️", "desc": "Добавляет 5 генераций фото для всех участников чата", "category": "chat_image"},
-    "chat_image20": {"name": "20 фото в чатах", "price": 180, "icon": "🖼️", "desc": "Добавляет 20 генераций фото для всех участников чата (экономия 20 токенов)", "category": "chat_image"},
+    "image1": {
+        "name": "1 генерация фото",
+        "price": 15,
+        "icon": "🎨",
+        "category": "image",
+        "desc": "Добавляет 1 генерацию изображения к дневному лимиту.",
+        "warning": "⚠️ Генерации сгорают в 00:00 МСК. Не переносятся на следующий день.",
+        "usage": "Активируйте модель Images V2 и опишите что нарисовать. Бот создаст изображение."
+    },
+    "image5": {
+        "name": "5 генераций фото",
+        "price": 60,
+        "icon": "🎨",
+        "category": "image",
+        "desc": "Добавляет 5 генераций изображений к дневному лимиту. Выгоднее чем покупка по 1.",
+        "warning": "⚠️ Генерации сгорают в 00:00 МСК. Не переносятся на следующий день.",
+        "usage": "Активируйте модель Images V2 и опишите что нарисовать. Бот создаст изображение."
+    },
+    "image20": {
+        "name": "20 генераций фото",
+        "price": 200,
+        "icon": "🎨",
+        "category": "image",
+        "desc": "Добавляет 20 генераций изображений к дневному лимиту. Экономия 100 токенов!",
+        "warning": "⚠️ Генерации сгорают в 00:00 МСК. Не переносятся на следующий день.",
+        "usage": "Активируйте модель Images V2 и опишите что нарисовать. Бот создаст изображение."
+    },
+    "image_unlimited_1h": {
+        "name": "Безлимит фото 1 час",
+        "price": 50,
+        "icon": "♾️",
+        "category": "image",
+        "desc": "Неограниченная генерация изображений в течение 1 часа с момента покупки.",
+        "warning": "⚠️ Действует ровно 1 час. По истечении возвращается стандартный лимит.",
+        "usage": "Все генерации фото в ЛС не учитываются в лимите пока активен безлимит."
+    },
     
     # ── Премиум (ЛС) ──
-    "premium_day": {"name": "Премиум ЛС 1 день", "price": 200, "icon": "⭐", "desc": "Безлимит текста и фото в личных сообщениях на 24 часа", "category": "premium"},
-    "premium_week": {"name": "Премиум ЛС 7 дней", "price": 1000, "icon": "⭐", "desc": "Безлимит текста и фото в личных сообщениях на 7 дней", "category": "premium"},
-    "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "desc": "Безлимит текста и фото в личных сообщениях навсегда", "category": "premium"},
+    "premium_day": {
+        "name": "Премиум ЛС 1 день",
+        "price": 200,
+        "icon": "⭐",
+        "category": "premium",
+        "desc": "Полный безлимит на текст и фото в личных сообщениях на 24 часа.",
+        "warning": "⚠️ Действует ровно 24 часа. Не распространяется на чаты.",
+        "usage": "Отключает все лимиты в ЛС: текстовые запросы и генерация фото не ограничены."
+    },
+    "premium_week": {
+        "name": "Премиум ЛС 7 дней",
+        "price": 1000,
+        "icon": "⭐",
+        "category": "premium",
+        "desc": "Полный безлимит на текст и фото в личных сообщениях на 7 дней.",
+        "warning": "⚠️ Действует ровно 7 дней. Не распространяется на чаты.",
+        "usage": "Отключает все лимиты в ЛС: текстовые запросы и генерация фото не ограничены."
+    },
+    "premium_forever": {
+        "name": "Премиум ЛС навсегда",
+        "price": 2500,
+        "icon": "👑",
+        "category": "premium",
+        "desc": "Навсегда отключает все лимиты в личных сообщениях. Единоразовая покупка.",
+        "warning": "⚠️ Не распространяется на чаты. Только для личных сообщений.",
+        "usage": "Текстовые запросы и генерация фото в ЛС никогда не ограничены. Не требует продления."
+    },
+    
+    # ── Чаты и группы ──
+    "chat_extra10": {
+        "name": "+10 запросов в чатах",
+        "price": 15,
+        "icon": "👥",
+        "category": "chat",
+        "desc": "Добавляет 10 текстовых запросов для всех участников чата.",
+        "warning": "⚠️ Запросы сгорают в 00:00 МСК. Покупать может только владелец чата.",
+        "usage": "Все участники чата могут задать на 10 вопросов больше. Купить может владелец через /chatshop."
+    },
+    "chat_extra50": {
+        "name": "+50 запросов в чатах",
+        "price": 60,
+        "icon": "👥",
+        "category": "chat",
+        "desc": "Добавляет 50 текстовых запросов для всех участников чата. Экономия 15 токенов!",
+        "warning": "⚠️ Запросы сгорают в 00:00 МСК. Покупать может только владелец чата.",
+        "usage": "Все участники чата могут задать на 50 вопросов больше. Купить может владелец через /chatshop."
+    },
+    "chat_unlimited_1h": {
+        "name": "Безлимит чат 1 час",
+        "price": 40,
+        "icon": "♾️",
+        "category": "chat",
+        "desc": "Неограниченные текстовые запросы для всех участников чата на 1 час.",
+        "warning": "⚠️ Действует ровно 1 час. Покупать может только владелец чата.",
+        "usage": "Все участники чата могут задавать вопросы без ограничений. Купить может владелец через /chatshop."
+    },
+    "chat_unlimited_24h": {
+        "name": "Безлимит чат 24 часа",
+        "price": 150,
+        "icon": "♾️",
+        "category": "chat",
+        "desc": "Неограниченные текстовые запросы для всех участников чата на 24 часа.",
+        "warning": "⚠️ Действует ровно 24 часа. Покупать может только владелец чата.",
+        "usage": "Все участники чата могут задавать вопросы без ограничений. Купить может владелец через /chatshop."
+    },
+    "chat_image5": {
+        "name": "5 фото в чатах",
+        "price": 50,
+        "icon": "🖼️",
+        "category": "chat_image",
+        "desc": "Добавляет 5 генераций фото для всех участников чата.",
+        "warning": "⚠️ Генерации сгорают в 00:00 МСК. Покупать может только владелец чата.",
+        "usage": "Все участники чата могут сгенерировать на 5 фото больше. Купить может владелец через /chatshop."
+    },
+    "chat_image20": {
+        "name": "20 фото в чатах",
+        "price": 180,
+        "icon": "🖼️",
+        "category": "chat_image",
+        "desc": "Добавляет 20 генераций фото для всех участников чата. Экономия 20 токенов!",
+        "warning": "⚠️ Генерации сгорают в 00:00 МСК. Покупать может только владелец чата.",
+        "usage": "Все участники чата могут сгенерировать на 20 фото больше. Купить может владелец через /chatshop."
+    },
     
     # ── Премиум (Чаты) ──
-    "chat_premium_day": {"name": "Премиум чат 1 день", "price": 300, "icon": "⭐", "desc": "Безлимит текста и фото для всех участников чата на 24 часа", "category": "chat_premium"},
-    "chat_premium_week": {"name": "Премиум чат 7 дней", "price": 1500, "icon": "⭐", "desc": "Безлимит текста и фото для всех участников чата на 7 дней", "category": "chat_premium"},
-    "chat_premium_forever": {"name": "Премиум чат навсегда", "price": 3500, "icon": "👑", "desc": "Безлимит текста и фото для всех участников чата навсегда", "category": "chat_premium"},
+    "chat_premium_day": {
+        "name": "Премиум чат 1 день",
+        "price": 300,
+        "icon": "⭐",
+        "category": "chat_premium",
+        "desc": "Полный безлимит на текст и фото для всех участников чата на 24 часа.",
+        "warning": "⚠️ Действует ровно 24 часа. Покупать может только владелец чата.",
+        "usage": "Все участники чата получают безлимит на текст и фото. Купить может владелец через /chatshop."
+    },
+    "chat_premium_week": {
+        "name": "Премиум чат 7 дней",
+        "price": 1500,
+        "icon": "⭐",
+        "category": "chat_premium",
+        "desc": "Полный безлимит на текст и фото для всех участников чата на 7 дней.",
+        "warning": "⚠️ Действует ровно 7 дней. Покупать может только владелец чата.",
+        "usage": "Все участники чата получают безлимит на текст и фото. Купить может владелец через /chatshop."
+    },
+    "chat_premium_forever": {
+        "name": "Премиум чат навсегда",
+        "price": 3500,
+        "icon": "👑",
+        "category": "chat_premium",
+        "desc": "Навсегда отключает все лимиты для всех участников чата. Единоразовая покупка.",
+        "warning": "⚠️ Покупать может только владелец чата. Не требует продления.",
+        "usage": "Все участники чата навсегда получают безлимит на текст и фото. Купить может владелец через /chatshop."
+    },
 }
+
+SHOP_DESCRIPTION = """
+🛒 МАГАЗИН NeBlock AI V2
+━━━━━━━━━━━━━━━━━━━━
+
+Добро пожаловать в магазин! Здесь ты можешь купить дополнительные запросы, безлимиты и премиум-режимы за NeBlock Tokens.
+
+📝 ТЕКСТОВЫЕ ЗАПРОСЫ (ЛС)
+Увеличивают дневной лимит текстовых запросов.
+• +5 запросов — 10 токенов
+• +10 запросов — 18 токенов
+• +50 запросов — 80 токенов
+• Безлимит 1ч — 30 токенов
+• Безлимит 24ч — 100 токенов
+• Безлимит 7д — 500 токенов
+
+⚠️ ВАЖНО: Дополнительные запросы сгорают каждый день в 00:00 МСК. Они не переносятся на следующий день. Рекомендуем покупать только то количество, которое планируете использовать сегодня.
+
+🎨 ГЕНЕРАЦИЯ ФОТО (ЛС)
+Увеличивают дневной лимит генерации изображений.
+• 1 фото — 15 токенов
+• 5 фото — 60 токенов
+• 20 фото — 200 токенов
+• Безлимит фото 1ч — 50 токенов
+
+⚠️ ВАЖНО: Дополнительные генерации сгорают каждый день в 00:00 МСК. Они не переносятся на следующий день.
+
+⭐ ПРЕМИУМ ЛС
+Полностью отключает все лимиты в личных сообщениях.
+• 1 день — 200 токенов
+• 7 дней — 1000 токенов
+• Навсегда — 2500 токенов
+
+👥 ЧАТЫ И ГРУППЫ
+Запросы и генерации для всех участников чата.
+Покупать может только владелец чата через /chatshop.
+
+⚠️ ВАЖНО: Запросы для чатов тоже сгорают в 00:00 МСК.
+
+⭐ ПРЕМИУМ ЧАТ
+Полностью отключает все лимиты для всех участников чата.
+• 1 день — 300 токенов
+• 7 дней — 1500 токенов
+• Навсегда — 3500 токенов
+
+💡 СОВЕТ: Премиум навсегда — самая выгодная покупка при регулярном использовании!
+"""
 
 FAQ_TEXT = f"""
 📚 ЧАСТО ЗАДАВАЕМЫЕ ВОПРОСЫ
@@ -106,26 +324,24 @@ FAQ_TEXT = f"""
 • NeBlock Images V2 — генерация изображений
 
 ❓ Бот работает в группах?
-Да! Добавь бота в чат.
-• @бот вопрос — текст
-• @бот нарисуй описание — фото
+Да! @имя_бота вопрос или нарисуй описание.
 
 ❓ Какие лимиты?
 • ЛС: {DAILY_LIMIT} текстовых + {IMAGE_DAILY_LIMIT} фото в день
 • Чаты: {CHAT_DAILY_LIMIT} текстовых + {CHAT_IMAGE_LIMIT} фото в день
 
-❓ Что такое Премиум?
-Премиум отключает все лимиты.
-• В ЛС: безлимит текста и фото
-• В чатах: безлимит текста и фото для всех участников
+❓ Дополнительные запросы сгорают?
+Да. Все дополнительные запросы и генерации сгорают в 00:00 МСК. Покупайте только то, что планируете использовать сегодня.
 
-❓ Какие бывают Премиумы?
-• На 1 день
-• На 7 дней
-• Навсегда (единоразовая покупка)
+❓ Что даёт Премиум?
+Полностью отключает все лимиты на выбранный срок или навсегда.
+
+❓ Чем отличается Премиум ЛС от Премиум Чата?
+Премиум ЛС — безлимит только для вас в личных сообщениях.
+Премиум Чат — безлимит для всех участников чата.
 
 ❓ Кто покупает запросы для чата?
-Владелец чата. Используй /chatowner в чате.
+Только владелец чата. /chatowner — узнать владельца.
 
 ❓ Как заработать токены?
 • Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов
@@ -133,11 +349,11 @@ FAQ_TEXT = f"""
 • Стартовый бонус: {START_BONUS} токенов
 • Промокоды от админа
 
-❓ Когда сбрасываются лимиты?
-Каждый день в 00:00 по Москве.
+❓ Безлимиты действуют до сброса в 00:00?
+Нет. Безлимиты действуют ровно то время, которое указано при покупке (1ч, 24ч, 7д, навсегда). Они не зависят от ежедневного сброса.
 
-❓ Премиум навсегда сбрасывается?
-Нет. Премиум навсегда действует бессрочно.
+❓ Можно ли вернуть токены за неиспользованные запросы?
+Нет. Все покупки окончательные.
 """
 
 UPGRADE_TEXT = """
@@ -153,11 +369,12 @@ UPGRADE_TEXT = """
 • Разные стили
 • Скорость до 15 сек
 
-💎 Новые Премиумы:
-• Премиум ЛС и Премиум Чат
-• Навсегда за 2500/3500 токенов
+💎 Премиум ЛС и Чат:
+• 1 день / 7 дней / Навсегда
+• Безлимит текста и фото
 
 🛡 Улучшенная модерация
+🛒 Обновлённый магазин
 """
 
 MODELS_INFO = f"""
@@ -171,20 +388,16 @@ MODELS_INFO = f"""
 Генерация фото. Качество +50%, стилизация.
 
 💎 Премиум ЛС:
-Безлимит текста и фото в личных сообщениях.
 • 1 день — 200 токенов
 • 7 дней — 1000 токенов
 • Навсегда — 2500 токенов
 
 💎 Премиум Чат:
-Безлимит текста и фото для всех участников чата.
 • 1 день — 300 токенов
 • 7 дней — 1500 токенов
 • Навсегда — 3500 токенов
 
-👥 В чатах:
-• @бот вопрос — текст
-• @бот нарисуй описание — фото
+👥 В чатах: @бот вопрос / @бот нарисуй
 """
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -265,7 +478,6 @@ def get_user(user_id):
     return users[uid]
 
 def is_premium(user_id):
-    """Проверяет премиум для ЛС"""
     user = get_user(user_id)
     premium = user.get("premium_until")
     if premium:
@@ -275,11 +487,9 @@ def is_premium(user_id):
     return False
 
 def is_chat_premium(chat_id):
-    """Проверяет премиум для чата"""
     chats = load_chats()
     chat_data = chats.get(str(chat_id), {})
-    if isinstance(chat_data, list):
-        return False
+    if isinstance(chat_data, list): return False
     premium = chat_data.get("premium_until")
     if premium:
         try:
@@ -314,7 +524,6 @@ def add_image_request(user_id, chat_type="private"):
 def can_request(user_id, chat_type="private", chat_id=None):
     if chat_type == "private" and is_premium(user_id): return True
     if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return True
-    
     user = get_user(user_id)
     if chat_type == "private" and user.get("unlimited_until"):
         try:
@@ -331,7 +540,6 @@ def can_request(user_id, chat_type="private", chat_id=None):
 def can_image_request(user_id, chat_type="private", chat_id=None):
     if chat_type == "private" and is_premium(user_id): return True
     if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return True
-    
     user = get_user(user_id)
     if chat_type == "private" and user.get("image_unlimited_until"):
         try:
@@ -348,7 +556,6 @@ def can_image_request(user_id, chat_type="private", chat_id=None):
 def remaining(user_id, chat_type="private", chat_id=None):
     if chat_type == "private" and is_premium(user_id): return "премиум"
     if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return "премиум"
-    
     user = get_user(user_id)
     if chat_type == "private" and user.get("unlimited_until"):
         try:
@@ -365,7 +572,6 @@ def remaining(user_id, chat_type="private", chat_id=None):
 def image_remaining(user_id, chat_type="private", chat_id=None):
     if chat_type == "private" and is_premium(user_id): return "премиум"
     if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return "премиум"
-    
     user = get_user(user_id)
     if chat_type == "private" and user.get("image_unlimited_until"):
         try:
@@ -456,8 +662,7 @@ def warn_user(user_id, severity="normal"):
 def is_chat_owner(chat_id, user_id):
     chats = load_chats()
     chat_data = chats.get(str(chat_id), {})
-    if isinstance(chat_data, list):
-        return str(user_id) in chat_data
+    if isinstance(chat_data, list): return str(user_id) in chat_data
     return str(user_id) in chat_data.get("owners", [])
 
 def add_chat_owner(chat_id, user_id):
@@ -568,7 +773,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 users[uid]["referred_by"] = u_id
                 add_tokens(int(u_id), REFERRAL_BONUS)
                 add_tokens(user_id, INVITED_BONUS)
-                users[u_id]["referrals"] = users[u_id].get("referrals", 0) + 1                save_users(users)
+                users[u_id]["referrals"] = users[u_id].get("referrals", 0) + 1
+                save_users(users)
                 try: await context.bot.send_message(int(u_id), f"🎉 Новый реферал!\n💰 +{REFERRAL_BONUS} NeBlock Tokens")
                 except: pass
                 break
@@ -634,10 +840,12 @@ async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👑 Вы владелец чата\n"
         f"💎 Премиум чата: {premium}\n"
         f"💰 Ваш баланс: {get_tokens(user_id)} токенов\n\n"
-        f"Покупки применяются ко всем участникам чата.\n"
-        f"Только владелец может покупать для чата.",
+        f"Покупки применяются ко всем участникам чата.",
         reply_markup=shop_keyboard()
     )
+
+async def shopdesc_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(SHOP_DESCRIPTION)
 
 async def upgrade_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(UPGRADE_TEXT)
@@ -679,7 +887,6 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 Пользователей: {len(users)}\n"
         f"💬 Запросов: {sum(u.get('total_requests', 0) for u in users.values())}\n"
         f"🎨 Изображений: {sum(u.get('total_images', 0) for u in users.values())}\n"
-        f"💎 Премиумов ЛС: {sum(1 for u in users.values() if is_premium(int(k)) for k in [list(users.keys())[0]] if False)}\n"
         f"⚠️ Забанено: {sum(1 for u in users.values() if u.get('banned'))}\n"
         f"💰 Токенов: {sum(u.get('tokens', 0) for u in users.values())}"
     )
@@ -723,7 +930,13 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         return True
     
     if text == "🛒 Магазин":
-        await update.message.reply_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов", reply_markup=shop_keyboard())
+        await update.message.reply_text(
+            f"🛒 Магазин NeBlock AI V2\n━━━━━━━━━━━━━━━━\n"
+            f"💰 Баланс: {get_tokens(user_id)} токенов\n\n"
+            f"Выбери категорию товаров:\n"
+            f"/shopdesc — подробное описание всех товаров",
+            reply_markup=shop_keyboard()
+        )
         return True
     
     if text == "💰 Заработать":
@@ -792,28 +1005,21 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     if data == "menu":
         await query.edit_message_text(f"🧠 NeBlock AI V2\n💰 {get_tokens(user_id)} токенов", reply_markup=main_menu())
     elif data == "about":
-        await query.edit_message_text(
-            "ℹ️ NeBlock AI V2\n━━━━━━━━━━━━━━━━\n\n"
-            "💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n"
-            "👥 Чаты | 💎 Премиум ЛС и Чат\n🛡 Модерация",
-            reply_markup=back_button()
-        )
+        await query.edit_message_text("ℹ️ NeBlock AI V2\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💎 Премиум ЛС и Чат", reply_markup=back_button())
     elif data == "models":
         await query.edit_message_text(MODELS_INFO, reply_markup=back_button())
     elif data == "premium_info":
         await query.edit_message_text(
-            "💎 Премиум NeBlock AI V2\n━━━━━━━━━━━━━━━━\n\n"
-            "Премиум ЛС:\n"
-            "• Безлимит текста и фото в ЛС\n"
+            "💎 Премиум\n━━━━━━━━━━━━━━━━\n\n"
+            "Премиум ЛС: безлимит текста и фото\n"
             "• 1 день — 200 токенов\n"
             "• 7 дней — 1000 токенов\n"
             "• Навсегда — 2500 токенов\n\n"
-            "Премиум Чат:\n"
-            "• Безлимит текста и фото для всех\n"
+            "Премиум Чат: безлимит для всех\n"
             "• 1 день — 300 токенов\n"
             "• 7 дней — 1500 токенов\n"
             "• Навсегда — 3500 токенов\n\n"
-            "Купи в Магазине!",
+            "/shopdesc — все товары подробно",
             reply_markup=back_button()
         )
     elif data == "stats":
@@ -826,7 +1032,12 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             reply_markup=back_button()
         )
     elif data == "shop":
-        await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов", reply_markup=shop_keyboard())
+        await query.edit_message_text(
+            f"🛒 Магазин\n💰 {get_tokens(user_id)} токенов\n\n"
+            f"📝 Текст | 🎨 Фото | ⭐ Премиум | 👥 Чаты\n"
+            f"/shopdesc — подробнее о товарах",
+            reply_markup=shop_keyboard()
+        )
     elif data == "earn":
         await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)}", reply_markup=earn_keyboard())
     elif data == "promo":
@@ -896,7 +1107,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             users[uid]["premium_until"] = (datetime.now() + timedelta(days=36500)).isoformat()
         elif item_id == "chat_premium_day":
             chats = load_chats()
-            # Ищем чат где пользователь владелец
             for cid, cdata in chats.items():
                 if isinstance(cdata, dict) and str(user_id) in cdata.get("owners", []):
                     chats[cid]["premium_until"] = (datetime.now() + timedelta(hours=24)).isoformat()
@@ -921,8 +1131,11 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await query.answer(f"✅ {item['name']} активирован!", show_alert=True)
         await query.edit_message_text(
             f"✅ Покупка успешна!\n━━━━━━━━━━━━━━━━\n"
-            f"{item['icon']} {item['name']}\n📝 {item['desc']}\n"
-            f"💰 Потрачено: {item['price']} токенов\n💎 Остаток: {get_tokens(user_id)}",
+            f"{item['icon']} {item['name']}\n"
+            f"📝 {item['desc']}\n"
+            f"{item.get('warning', '')}\n\n"
+            f"💰 Потрачено: {item['price']} токенов\n"
+            f"💎 Остаток: {get_tokens(user_id)} токенов",
             reply_markup=back_button()
         )
     elif data.startswith("buy_"):
@@ -933,11 +1146,13 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         can = "✅ Достаточно средств" if tokens >= item["price"] else "❌ Недостаточно средств"
         await query.edit_message_text(
             f"🛒 Подтверждение покупки\n━━━━━━━━━━━━━━━━\n\n"
-            f"{item['icon']} {item['name']}\n"
-            f"📝 {item['desc']}\n"
+            f"{item['icon']} {item['name']}\n\n"
+            f"📝 Описание:\n{item['desc']}\n\n"
+            f"📋 Использование:\n{item.get('usage', '')}\n\n"
+            f"{item.get('warning', '')}\n\n"
             f"💰 Цена: {item['price']} токенов\n"
             f"💎 Ваш баланс: {tokens} токенов\n"
-            f"{can}\n\nПодтвердите:",
+            f"{can}\n\nПодтвердите покупку:",
             reply_markup=confirm_keyboard(item_id)
         )
 
@@ -1096,6 +1311,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
+    app.add_handler(CommandHandler("shopdesc", shopdesc_cmd))
     app.add_handler(CommandHandler("upgrade", upgrade_cmd))
     app.add_handler(CommandHandler("shop", lambda u, c: u.message.reply_text("🛒 Магазин", reply_markup=shop_keyboard())))
     app.add_handler(CommandHandler("give", admin_give))
