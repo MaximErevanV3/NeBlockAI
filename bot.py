@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V2.2 - Конфигурация
+# 🧠 NeBlock AI V2.3 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -35,7 +35,7 @@ DAILY_BONUS_MIN = 5
 DAILY_BONUS_MAX = 15
 REFERRAL_BONUS = 25
 INVITED_BONUS = 10
-BOT_VERSION = "2.2"
+BOT_VERSION = "2.3"
 
 AI_DISCLAIMER = "\n\n━━━━━━━━━━━━━━━━\n⚠️ ИИ может ошибаться. Только для справки."
 
@@ -43,11 +43,15 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
+Версия 2.3 (21.07.2026)
+• Улучшенная система скидок
+• Специальные акции и флеш-скидки
+• Таймер до обновления скидок
+• Разные типы скидок
+
 Версия 2.2 (21.07.2026)
 • Динамический магазин (ЛС/Чат)
 • Система случайных скидок
-• Скидки обновляются каждые 2 дня
-• Улучшена навигация
 
 Версия 2.1 (21.07.2026)
 • Лог обновлений
@@ -55,19 +59,14 @@ CHANGELOG = """
 
 Версия 2.0 (15.07.2026)
 • Две модели V2
-• Премиум ЛС и Чат
-• Магазин и токены
-• Рефералы и бонусы
-
-Версия 1.0 (01.07.2026)
-• Первый релиз
+• Премиум и магазин
 """
 
 UNKNOWN_COMMAND_RESPONSES = [
     "🤔 Неизвестная команда. Используй /start или кнопки внизу.",
     "❓ Я не знаю такую команду. Напиши /start чтобы увидеть возможности.",
     "🔍 Команда не найдена. Попробуй /help или /start.",
-    "📋 Доступные команды: /start, /profile, /shop, /faq, /upgrade, /chatowner, /chatshop, /changelog",
+    "📋 Доступные команды: /start, /shop, /faq, /upgrade, /chatowner, /chatshop, /changelog, /discounts",
 ]
 
 BLOCKED_WORDS = [
@@ -78,44 +77,43 @@ BLOCKED_WORDS = [
     r'\b(?:уби[йт]|убью|kill|murder|зака[зж]|hitman|киллер|пыт[кч]|torture)\b',
     r'\b(?:террор|terror|теракт|ИГИЛ|ISIS|джихад|jihad|смертник|шахид)\b',
     r'\b(?:суицид|suicide|самоубий|повес[иь])\b',
-    r'\b(?:расч?изм|racis|наци|nazi|фаши|fascis|ксенофоб|гомофоб|трансфоб)\b',
 ]
 COMPILED_BLOCKED = [re.compile(w, re.IGNORECASE) for w in BLOCKED_WORDS]
 SEVERE_PATTERNS = [r'\b(?:дет[иь] порно|child porn|педофил|pedo|террор|terror|ИГИЛ|ISIS|уби[йт]|kill|суицид|suicide)\b']
 COMPILED_SEVERE = [re.compile(w, re.IGNORECASE) for w in SEVERE_PATTERNS]
 
 SHOP_ITEMS = {
-    # ── Текстовые запросы (ЛС) ──
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "5 текстовых запросов к дневному лимиту.", "warning": "⚠️ Сгорают в 00:00 МСК.", "usage": "В ЛС с ботом.", "location": "private"},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "category": "text", "desc": "10 текстовых запросов. Выгоднее чем +5.", "warning": "⚠️ Сгорают в 00:00 МСК.", "usage": "В ЛС с ботом.", "location": "private"},
-    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "50 запросов. Экономия 20 токенов!", "warning": "⚠️ Сгорают в 00:00 МСК.", "usage": "В ЛС с ботом.", "location": "private"},
-    "unlimited_1h": {"name": "Безлимит текст 1ч", "price": 30, "icon": "♾️", "category": "text", "desc": "Безлимит текстовых запросов на 1 час.", "warning": "⚠️ Действует ровно 1 час.", "usage": "Все запросы без ограничений.", "location": "private"},
-    "unlimited_24h": {"name": "Безлимит текст 24ч", "price": 100, "icon": "♾️", "category": "text", "desc": "Безлимит текстовых запросов на 24 часа.", "warning": "⚠️ Действует ровно 24 часа.", "usage": "Все запросы без ограничений.", "location": "private"},
-    "unlimited_7d": {"name": "Безлимит текст 7д", "price": 500, "icon": "♾️", "category": "text", "desc": "Безлимит текстовых запросов на 7 дней.", "warning": "⚠️ Действует ровно 7 дней.", "usage": "Все запросы без ограничений.", "location": "private"},
-    
-    # ── Генерация фото (ЛС) ──
-    "image1": {"name": "1 генерация фото", "price": 15, "icon": "🎨", "category": "image", "desc": "1 генерация изображения.", "warning": "⚠️ Сгорают в 00:00 МСК.", "usage": "Опишите — бот нарисует.", "location": "private"},
-    "image5": {"name": "5 генераций фото", "price": 60, "icon": "🎨", "category": "image", "desc": "5 генераций. Выгоднее чем по 1.", "warning": "⚠️ Сгорают в 00:00 МСК.", "usage": "Опишите — бот нарисует.", "location": "private"},
-    "image20": {"name": "20 генераций фото", "price": 200, "icon": "🎨", "category": "image", "desc": "20 генераций. Экономия 100 токенов!", "warning": "⚠️ Сгорают в 00:00 МСК.", "usage": "Опишите — бот нарисует.", "location": "private"},
-    "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "category": "image", "desc": "Безлимит генерации фото на 1 час.", "warning": "⚠️ Действует ровно 1 час.", "usage": "Все фото без ограничений.", "location": "private"},
-    
-    # ── Премиум (ЛС) ──
-    "premium_day": {"name": "Премиум ЛС 1 день", "price": 200, "icon": "⭐", "category": "premium", "desc": "Полный безлимит текста и фото на 24 часа.", "warning": "⚠️ Действует 24 часа. Только ЛС.", "usage": "Все лимиты отключены в ЛС.", "location": "private"},
-    "premium_week": {"name": "Премиум ЛС 7 дней", "price": 1000, "icon": "⭐", "category": "premium", "desc": "Полный безлимит текста и фото на 7 дней.", "warning": "⚠️ Действует 7 дней. Только ЛС.", "usage": "Все лимиты отключены в ЛС.", "location": "private"},
-    "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "category": "premium", "desc": "Навсегда отключает все лимиты в ЛС.", "warning": "⚠️ Только ЛС. Не требует продления.", "usage": "Текст и фото без ограничений навсегда.", "location": "private"},
-    
-    # ── Чаты и группы ──
-    "chat_extra10": {"name": "+10 запросов в чатах", "price": 15, "icon": "👥", "category": "chat", "desc": "10 текстовых запросов для всех участников.", "warning": "⚠️ Сгорают в 00:00. Покупает владелец.", "usage": "Все участники получают +10 запросов.", "location": "chat"},
-    "chat_extra50": {"name": "+50 запросов в чатах", "price": 60, "icon": "👥", "category": "chat", "desc": "50 запросов для всех. Экономия 15 токенов!", "warning": "⚠️ Сгорают в 00:00. Покупает владелец.", "usage": "Все участники получают +50 запросов.", "location": "chat"},
-    "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 40, "icon": "♾️", "category": "chat", "desc": "Безлимит для всех участников на 1 час.", "warning": "⚠️ 1 час. Покупает владелец.", "usage": "Все участники без ограничений.", "location": "chat"},
-    "chat_unlimited_24h": {"name": "Безлимит чат 24ч", "price": 150, "icon": "♾️", "category": "chat", "desc": "Безлимит для всех участников на 24 часа.", "warning": "⚠️ 24 часа. Покупает владелец.", "usage": "Все участники без ограничений.", "location": "chat"},
-    "chat_image5": {"name": "5 фото в чатах", "price": 50, "icon": "🖼️", "category": "chat_image", "desc": "5 генераций фото для всех участников.", "warning": "⚠️ Сгорают в 00:00. Покупает владелец.", "usage": "Все участники +5 фото.", "location": "chat"},
-    "chat_image20": {"name": "20 фото в чатах", "price": 180, "icon": "🖼️", "category": "chat_image", "desc": "20 генераций для всех. Экономия 20!", "warning": "⚠️ Сгорают в 00:00. Покупает владелец.", "usage": "Все участники +20 фото.", "location": "chat"},
-    
-    # ── Премиум (Чаты) ──
-    "chat_premium_day": {"name": "Премиум чат 1 день", "price": 300, "icon": "⭐", "category": "chat_premium", "desc": "Полный безлимит для всех на 24 часа.", "warning": "⚠️ 24 часа. Покупает владелец.", "usage": "Все лимиты отключены для всех.", "location": "chat"},
-    "chat_premium_week": {"name": "Премиум чат 7 дней", "price": 1500, "icon": "⭐", "category": "chat_premium", "desc": "Полный безлимит для всех на 7 дней.", "warning": "⚠️ 7 дней. Покупает владелец.", "usage": "Все лимиты отключены для всех.", "location": "chat"},
-    "chat_premium_forever": {"name": "Премиум чат навсегда", "price": 3500, "icon": "👑", "category": "chat_premium", "desc": "Навсегда отключает лимиты для всех.", "warning": "⚠️ Покупает владелец. Бессрочно.", "usage": "Все участники навсегда без лимитов.", "location": "chat"},
+    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "5 текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
+    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "category": "text", "desc": "10 текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
+    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "50 запросов. Экономия 20!", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
+    "unlimited_1h": {"name": "Безлимит текст 1ч", "price": 30, "icon": "♾️", "category": "text", "desc": "Безлимит на 1 час.", "warning": "⚠️ Действует 1 час.", "location": "private"},
+    "unlimited_24h": {"name": "Безлимит текст 24ч", "price": 100, "icon": "♾️", "category": "text", "desc": "Безлимит на 24 часа.", "warning": "⚠️ Действует 24 часа.", "location": "private"},
+    "unlimited_7d": {"name": "Безлимит текст 7д", "price": 500, "icon": "♾️", "category": "text", "desc": "Безлимит на 7 дней.", "warning": "⚠️ Действует 7 дней.", "location": "private"},
+    "image1": {"name": "1 генерация фото", "price": 15, "icon": "🎨", "category": "image", "desc": "1 генерация изображения.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
+    "image5": {"name": "5 генераций фото", "price": 60, "icon": "🎨", "category": "image", "desc": "5 генераций.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
+    "image20": {"name": "20 генераций фото", "price": 200, "icon": "🎨", "category": "image", "desc": "20 генераций. Экономия 100!", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private"},
+    "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "category": "image", "desc": "Безлимит фото на 1 час.", "warning": "⚠️ Действует 1 час.", "location": "private"},
+    "premium_day": {"name": "Премиум ЛС 1 день", "price": 200, "icon": "⭐", "category": "premium", "desc": "Безлимит текста и фото на 24ч.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private"},
+    "premium_week": {"name": "Премиум ЛС 7 дней", "price": 1000, "icon": "⭐", "category": "premium", "desc": "Безлимит текста и фото на 7д.", "warning": "⚠️ 7 дней. Только ЛС.", "location": "private"},
+    "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "category": "premium", "desc": "Безлимит навсегда.", "warning": "⚠️ Только ЛС. Бессрочно.", "location": "private"},
+    "chat_extra10": {"name": "+10 запросов в чатах", "price": 15, "icon": "👥", "category": "chat", "desc": "10 запросов для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
+    "chat_extra50": {"name": "+50 запросов в чатах", "price": 60, "icon": "👥", "category": "chat", "desc": "50 запросов для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
+    "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 40, "icon": "♾️", "category": "chat", "desc": "Безлимит для всех на 1ч.", "warning": "⚠️ 1 час. Владелец.", "location": "chat"},
+    "chat_unlimited_24h": {"name": "Безлимит чат 24ч", "price": 150, "icon": "♾️", "category": "chat", "desc": "Безлимит для всех на 24ч.", "warning": "⚠️ 24 часа. Владелец.", "location": "chat"},
+    "chat_image5": {"name": "5 фото в чатах", "price": 50, "icon": "🖼️", "category": "chat_image", "desc": "5 фото для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
+    "chat_image20": {"name": "20 фото в чатах", "price": 180, "icon": "🖼️", "category": "chat_image", "desc": "20 фото для всех.", "warning": "⚠️ Сгорают в 00:00. Владелец.", "location": "chat"},
+    "chat_premium_day": {"name": "Премиум чат 1 день", "price": 300, "icon": "⭐", "category": "chat_premium", "desc": "Безлимит для всех на 24ч.", "warning": "⚠️ 24 часа. Владелец.", "location": "chat"},
+    "chat_premium_week": {"name": "Премиум чат 7 дней", "price": 1500, "icon": "⭐", "category": "chat_premium", "desc": "Безлимит для всех на 7д.", "warning": "⚠️ 7 дней. Владелец.", "location": "chat"},
+    "chat_premium_forever": {"name": "Премиум чат навсегда", "price": 3500, "icon": "👑", "category": "chat_premium", "desc": "Безлимит навсегда.", "warning": "⚠️ Владелец. Бессрочно.", "location": "chat"},
+}
+
+# Типы скидок
+DISCOUNT_TYPES = {
+    "regular": {"name": "Обычная скидка", "min": 5, "max": 25, "color": "🟢", "chance": 50},
+    "super": {"name": "Супер-скидка", "min": 30, "max": 50, "color": "🔴", "chance": 20},
+    "flash": {"name": "Флеш-скидка", "min": 40, "max": 70, "color": "⚡", "chance": 10},
+    "bundle": {"name": "Скидка на набор", "min": 15, "max": 35, "color": "📦", "chance": 15},
+    "premium_discount": {"name": "Премиум-скидка", "min": 10, "max": 30, "color": "👑", "chance": 5},
 }
 
 FAQ_TEXT = f"""
@@ -125,35 +123,22 @@ FAQ_TEXT = f"""
 ❓ Что такое NeBlock AI?
 Платформа с ИИ-моделями V2 в Telegram.
 
+❓ Как работают скидки?
+• Обычные скидки 🟢 — 5-25% на случайные товары
+• Супер-скидки 🔴 — 30-50% на популярные товары
+• Флеш-скидки ⚡ — 40-70% (редкие, на 24 часа)
+• Наборы 📦 — скидки на большие пакеты
+• Премиум-скидки 👑 — скидки на Премиум
+
+Скидки обновляются каждые 2 дня в 00:00 МСК.
+Активные скидки: /discounts
+
 ❓ Бот работает в группах?
 Да! @имя_бота вопрос или нарисуй описание.
 
 ❓ Какие лимиты?
 • ЛС: {DAILY_LIMIT} текстовых + {IMAGE_DAILY_LIMIT} фото/день
 • Чаты: {CHAT_DAILY_LIMIT} текстовых + {CHAT_IMAGE_LIMIT} фото/день
-
-❓ Что такое динамический магазин?
-Магазин показывает товары в зависимости от того где вы находитесь:
-• В ЛС — товары для личных сообщений
-• В чате — товары для групп (покупает владелец)
-
-❓ Как работают скидки?
-Случайные скидки на 3 товара обновляются каждые 2 дня в 00:00 МСК.
-Скидка может быть от 5% до 30%.
-
-❓ Доп запросы сгорают?
-Да. В 00:00 МСК каждый день.
-
-❓ Что даёт Премиум?
-Полностью отключает все лимиты.
-
-❓ Как заработать токены?
-• Ежедневный бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX} токенов
-• Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу
-• Стартовый бонус: {START_BONUS} токенов
-
-❓ Где посмотреть обновления?
-/changelog — список всех изменений.
 """
 
 MODELS_INFO = f"""
@@ -167,7 +152,7 @@ MODELS_INFO = f"""
 💎 Премиум Чат: 300/1500/3500
 
 🎫 Скидки обновляются каждые 2 дня!
-/changelog — история версий
+/discounts — все активные скидки
 """
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -198,15 +183,55 @@ def load_discounts(): return load_json(DISCOUNTS_FILE)
 def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
 
 def generate_discounts():
-    """Генерирует случайные скидки на 3 товара"""
+    """Улучшенная генерация скидок с разными типами"""
     all_items = list(SHOP_ITEMS.keys())
-    discounted = random.sample(all_items, min(3, len(all_items)))
     discounts = {}
-    for item_id in discounted:
-        percent = random.choice([5, 10, 15, 20, 25, 30])
+    used_items = set()
+    
+    # Выбираем случайные типы скидок с учётом шанса
+    available_types = []
+    for dtype, dconfig in DISCOUNT_TYPES.items():
+        if random.randint(1, 100) <= dconfig["chance"]:
+            available_types.append(dtype)
+    
+    if not available_types:
+        available_types = ["regular"]
+    
+    # Генерируем 3-5 скидок
+    num_discounts = random.randint(3, 5)
+    
+    for _ in range(num_discounts):
+        if len(used_items) >= len(all_items): break
+        
+        disc_type = random.choice(available_types)
+        dconfig = DISCOUNT_TYPES[disc_type]
+        
+        # Выбираем товар для скидки
+        available_items = [item for item in all_items if item not in used_items]
+        if not available_items: break
+        
+        item_id = random.choice(available_items)
+        used_items.add(item_id)
+        
+        percent = random.randint(dconfig["min"], dconfig["max"])
         original = SHOP_ITEMS[item_id]["price"]
         new_price = max(1, int(original * (1 - percent / 100)))
-        discounts[item_id] = {"percent": percent, "original": original, "new_price": new_price}
+        
+        # Для флеш-скидок устанавливаем короткий срок
+        expires = None
+        if disc_type == "flash":
+            expires = (datetime.now() + timedelta(hours=24)).isoformat()
+        
+        discounts[item_id] = {
+            "percent": percent,
+            "original": original,
+            "new_price": new_price,
+            "type": disc_type,
+            "type_name": dconfig["name"],
+            "color": dconfig["color"],
+            "expires": expires,
+        }
+    
     return discounts
 
 def get_discounts():
@@ -214,6 +239,18 @@ def get_discounts():
     discounts = load_discounts()
     last_update = discounts.get("last_update", "")
     today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Удаляем истекшие флеш-скидки
+    if discounts:
+        to_delete = []
+        for item_id, disc in discounts.items():
+            if item_id == "last_update": continue
+            if disc.get("expires") and datetime.now() > datetime.fromisoformat(disc["expires"]):
+                to_delete.append(item_id)
+        for item_id in to_delete:
+            del discounts[item_id]
+        if to_delete:
+            save_discounts(discounts)
     
     if last_update != today:
         last_date = datetime.fromisoformat(last_update) if last_update else datetime.now() - timedelta(days=3)
@@ -231,11 +268,14 @@ def get_discounts():
     return discounts
 
 def get_discounted_price(item_id):
-    """Получает цену со скидкой если есть"""
+    """Получает цену со скидкой и информацию о скидке"""
     discounts = get_discounts()
-    if item_id in discounts:
-        return discounts[item_id]["new_price"], discounts[item_id]["percent"]
-    return SHOP_ITEMS[item_id]["price"], 0
+    if item_id in discounts and item_id != "last_update":
+        disc = discounts[item_id]
+        if disc.get("expires") and datetime.now() > datetime.fromisoformat(disc["expires"]):
+            return SHOP_ITEMS[item_id]["price"], 0, None
+        return disc["new_price"], disc["percent"], disc
+    return SHOP_ITEMS[item_id]["price"], 0, None
 
 def get_user(user_id):
     users = load_users(); uid = str(user_id)
@@ -435,51 +475,40 @@ def main_reply_keyboard():
         [KeyboardButton("💬 NeBlock AI V2"), KeyboardButton("🎨 NeBlock Images V2")],
         [KeyboardButton("👤 Профиль"), KeyboardButton("🛒 Магазин")],
         [KeyboardButton("💰 Заработать"), KeyboardButton("📚 FAQ")],
-        [KeyboardButton("🧠 Модели"), KeyboardButton("📋 Изменения")],
+        [KeyboardButton("🎫 Скидки"), KeyboardButton("📋 Изменения")],
     ], resize_keyboard=True)
 
 def main_menu():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("ℹ️ О боте", callback_data="about"), InlineKeyboardButton("📊 Статистика", callback_data="stats")],
         [InlineKeyboardButton("🧠 Модели", callback_data="models"), InlineKeyboardButton("💎 Премиум", callback_data="premium_info")],
-        [InlineKeyboardButton("🎫 Скидки", callback_data="discounts_info"), InlineKeyboardButton("📋 Лог обновлений", callback_data="changelog")],
+        [InlineKeyboardButton("🎫 Скидки", callback_data="discounts_info"), InlineKeyboardButton("📋 Обновления", callback_data="changelog")],
     ])
 
 def back_button(): return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data="menu")]])
 
 def shop_keyboard(location="private"):
-    """Динамический магазин в зависимости от локации"""
+    """Динамический магазин с информацией о скидках"""
     keyboard = []
     discounts = get_discounts()
     
-    # Категории для ЛС
-    private_cats = [
-        ("📝 Текстовые запросы", "text"),
-        ("🎨 Генерация фото", "image"),
-        ("⭐ Премиум ЛС", "premium"),
-    ]
+    cats = {
+        "private": [("📝 Текстовые запросы", "text"), ("🎨 Генерация фото", "image"), ("⭐ Премиум ЛС", "premium")],
+        "chat": [("👥 Запросы в чатах", "chat"), ("🖼️ Фото в чатах", "chat_image"), ("⭐ Премиум Чат", "chat_premium")],
+    }
     
-    # Категории для чатов
-    chat_cats = [
-        ("👥 Запросы в чатах", "chat"),
-        ("🖼️ Фото в чатах", "chat_image"),
-        ("⭐ Премиум Чат", "chat_premium"),
-    ]
-    
-    cats = private_cats if location == "private" else chat_cats
-    
-    # Инфо о скидках если есть
+    # Баннер скидок
     active_discounts = {k: v for k, v in discounts.items() if k != "last_update"}
     if active_discounts:
-        discount_items = []
-        for item_id, disc in active_discounts.items():
-            item = SHOP_ITEMS.get(item_id)
-            if item and item.get("location") == location:
-                discount_items.append(f"{item['icon']} {item['name']}: -{disc['percent']}%")
-        if discount_items:
-            keyboard.append([InlineKeyboardButton("🎫 АКТИВНЫЕ СКИДКИ! 🎫", callback_data="discounts_info")])
+        flash_count = sum(1 for d in active_discounts.values() if d.get("type") == "flash")
+        super_count = sum(1 for d in active_discounts.values() if d.get("type") == "super")
+        banner_text = "🎫 АКТИВНЫЕ СКИДКИ"
+        if flash_count > 0: banner_text += f" ⚡{flash_count}"
+        if super_count > 0: banner_text += f" 🔴{super_count}"
+        banner_text += " 🎫"
+        keyboard.append([InlineKeyboardButton(banner_text, callback_data="discounts_info")])
     
-    for label, cat in cats:
+    for label, cat in cats.get(location, cats["private"]):
         items_in_cat = False
         for item_id, item in SHOP_ITEMS.items():
             if item["category"] == cat and item.get("location") == location:
@@ -487,10 +516,16 @@ def shop_keyboard(location="private"):
                     keyboard.append([InlineKeyboardButton(f"── {label} ──", callback_data="none")])
                     items_in_cat = True
                 
-                price, percent = get_discounted_price(item_id)
-                price_text = f"{price} токенов"
-                if percent > 0:
-                    price_text = f"🔥 {price} токенов (-{percent}%)"
+                price, percent, disc_info = get_discounted_price(item_id)
+                
+                # Форматирование цены со скидкой
+                if percent > 0 and disc_info:
+                    color = disc_info.get("color", "🟢")
+                    type_name = disc_info.get("type_name", "Скидка")
+                    original_text = f"~~{item['price']}~~"
+                    price_text = f"{color} {price} токенов ({original_text}) -{percent}%"
+                else:
+                    price_text = f"{price} токенов"
                 
                 keyboard.append([InlineKeyboardButton(
                     f"{item['icon']} {item['name']} — {price_text}",
@@ -525,7 +560,64 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION} в чате!\n💬 @{context.bot.username} вопрос\n🎨 @{context.bot.username} нарисуй описание\n💎 Премиум: {chat_premium}\n👑 /chatowner | 🛒 /chatshop")
         return
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
-    await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n💎 Премиум ЛС: {premium}\n🎫 Скидки обновляются каждые 2 дня!\n\n💰 Баланс: {user.get('tokens', 0)} NeBlock Tokens\n\n👇 Выбери модель:", reply_markup=main_reply_keyboard())
+    
+    # Информация о скидках в приветствии
+    discounts = get_discounts()
+    active = {k: v for k, v in discounts.items() if k != "last_update"}
+    discount_text = ""
+    if active:
+        discount_text = f"\n🎫 Активных скидок: {len(active)} | /discounts"
+    
+    await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n💎 Премиум ЛС: {premium}{discount_text}\n\n💰 Баланс: {user.get('tokens', 0)} NeBlock Tokens\n\n👇 Выбери модель:", reply_markup=main_reply_keyboard())
+
+async def discounts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показывает все активные скидки"""
+    discounts = get_discounts()
+    active = {k: v for k, v in discounts.items() if k != "last_update"}
+    
+    if not active:
+        await update.message.reply_text("🎫 Скидок пока нет.\n\n🔄 Обновление каждые 2 дня в 00:00 МСК.\nСледующее обновление: скоро!")
+        return
+    
+    text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
+    
+    # Сортируем по размеру скидки
+    sorted_discounts = sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True)
+    
+    for item_id, disc in sorted_discounts:
+        item = SHOP_ITEMS.get(item_id)
+        if not item: continue
+        
+        color = disc.get("color", "🟢")
+        type_name = disc.get("type_name", "Скидка")
+        
+        text += f"{color} {type_name}: -{disc['percent']}%\n"
+        text += f"{item['icon']} {item['name']}\n"
+        text += f"💵 Обычная цена: {disc['original']} токенов\n"
+        text += f"🔥 Цена со скидкой: {disc['new_price']} токенов\n"
+        text += f"💰 Экономия: {disc['original'] - disc['new_price']} токенов\n"
+        
+        if disc.get("expires"):
+            expires = datetime.fromisoformat(disc["expires"])
+            remaining = expires - datetime.now()
+            hours = remaining.seconds // 3600
+            text += f"⏰ Истекает через: {hours}ч\n"
+        
+        text += "\n"
+    
+    # Таймер до обновления
+    last_update = discounts.get("last_update", "")
+    if last_update:
+        last_date = datetime.fromisoformat(last_update)
+        next_update = last_date + timedelta(days=2)
+        remaining = next_update - datetime.now()
+        days = remaining.days
+        hours = remaining.seconds // 3600
+        text += f"━━━━━━━━━━━━━━━━\n🔄 Следующее обновление через: {days}д {hours}ч\n"
+    
+    text += "🛒 Купить со скидкой: /shop"
+    
+    await update.message.reply_text(text)
 
 async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(CHANGELOG)
@@ -539,7 +631,7 @@ async def chatowner_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     premium = "💎 Активен" if is_chat_premium(chat_id) else "Не активен"
     text = f"👑 Владельцы:\n"
     for i, oid in enumerate(owners, 1): text += f"{i}. ID: {oid}\n"
-    text += f"\n💎 Премиум: {premium}\n/chatshop — магазин для чата"
+    text += f"\n💎 Премиум: {premium}\n/chatshop"
     await update.message.reply_text(text)
 
 async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -547,7 +639,7 @@ async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat_type not in ["group", "supergroup"]: await update.message.reply_text("Только для чатов."); return
     chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
     if not is_chat_owner(chat_id, user_id): await update.message.reply_text("❌ Только владелец."); return
-    await update.message.reply_text(f"🛒 Магазин чата\n👑 Вы владелец\n💰 {get_tokens(user_id)} токенов\n🎫 Скидки обновляются каждые 2 дня!", reply_markup=shop_keyboard("chat"))
+    await update.message.reply_text(f"🛒 Магазин чата\n👑 Вы владелец\n💰 {get_tokens(user_id)} токенов\n🎫 /discounts — скидки!", reply_markup=shop_keyboard("chat"))
 
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -581,7 +673,6 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"📊 Статистика\n👥 {len(users)}\n💬 {sum(u.get('total_requests', 0) for u in users.values())}\n🎨 {sum(u.get('total_images', 0) for u in users.values())}\n⚠️ Забанено: {sum(1 for u in users.values() if u.get('banned'))}\n💰 {sum(u.get('tokens', 0) for u in users.values())}")
 
 async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Принудительно обновляет скидки"""
     if update.effective_user.id not in ADMIN_IDS: return
     new_discounts = generate_discounts()
     new_discounts["last_update"] = datetime.now().strftime("%Y-%m-%d")
@@ -592,7 +683,7 @@ async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYP
         if item_id != "last_update":
             item = SHOP_ITEMS.get(item_id)
             if item:
-                text += f"{item['icon']} {item['name']}: -{disc['percent']}% = {disc['new_price']} токенов\n"
+                text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}: -{disc['percent']}% = {disc['new_price']} токенов\n"
     
     await update.message.reply_text(text)
 
@@ -627,10 +718,10 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             f"🎨 Чаты фото: {user.get('chat_image_requests_today', 0)}/{CHAT_IMAGE_LIMIT + user.get('extra_chat_image_requests', 0)} | {fmt(user.get('chat_image_unlimited_until'))}\n\n"
             f"📈 Всего: {user.get('total_requests', 0)} текст, {user.get('total_images', 0)} фото\n🛡 {user.get('warnings', 0)}/5\n👥 Рефералов: {user.get('referrals', 0)}\n🕐 {last}", reply_markup=main_menu())
         return True
-    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n🎫 Скидки каждые 2 дня!", reply_markup=shop_keyboard("private")); return True
+    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n🎫 /discounts — скидки!", reply_markup=shop_keyboard("private")); return True
     if text == "💰 Заработать": await update.message.reply_text(f"💰 Заработок\n💎 {get_tokens(user_id)}\n\n🎁 Бонус: {DAILY_BONUS_MIN}-{DAILY_BONUS_MAX}/день\n👥 Рефералы: +{REFERRAL_BONUS} тебе, +{INVITED_BONUS} другу", reply_markup=earn_keyboard()); return True
     if text == "📚 FAQ": await update.message.reply_text(FAQ_TEXT); return True
-    if text == "🧠 Модели": await update.message.reply_text(MODELS_INFO); return True
+    if text == "🎫 Скидки": await discounts_cmd(update, context); return True
     if text == "📋 Изменения": await update.message.reply_text(CHANGELOG); return True
     return False
 
@@ -638,30 +729,30 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     query = update.callback_query; await query.answer(); user_id = query.from_user.id; data = query.data
     if data == "none": return
     if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n💰 {get_tokens(user_id)} токенов", reply_markup=main_menu())
-    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💎 Премиум\n🎫 Скидки каждые 2 дня", reply_markup=back_button())
+    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n👥 Чаты\n💎 Премиум\n🎫 Скидки 5 типов", reply_markup=back_button())
     elif data == "models": await query.edit_message_text(MODELS_INFO, reply_markup=back_button())
     elif data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button())
     elif data == "discounts_info":
         discounts = get_discounts()
-        text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
-        has_discounts = False
-        for item_id, disc in discounts.items():
-            if item_id != "last_update":
+        active = {k: v for k, v in discounts.items() if k != "last_update"}
+        if not active: await query.edit_message_text("🎫 Скидок пока нет.\nОбновление каждые 2 дня.", reply_markup=back_button())
+        else:
+            text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
+            for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
                 item = SHOP_ITEMS.get(item_id)
-                if item:
-                    has_discounts = True
-                    text += f"{item['icon']} {item['name']}\n"
-                    text += f"💵 Обычная цена: {disc['original']} токенов\n"
-                    text += f"🔥 Цена со скидкой: {disc['new_price']} токенов (-{disc['percent']}%)\n\n"
-        if not has_discounts:
-            text += "Скидок пока нет. Загляните позже!\nОбновление каждые 2 дня в 00:00 МСК."
-        text += "\n🔄 Скидки обновляются каждые 2 дня.\n❓ Скидки применяются автоматически."
-        await query.edit_message_text(text, reply_markup=back_button())
-    elif data == "premium_info": await query.edit_message_text("💎 Премиум\n\nЛС: 200/1000/2500\nЧат: 300/1500/3500\n\n🎫 Скидки могут быть и на Премиум!", reply_markup=back_button())
+                if not item: continue
+                text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n🔥 -{disc['percent']}% = {disc['new_price']} токенов\n\n"
+            last_update = discounts.get("last_update", "")
+            if last_update:
+                last_date = datetime.fromisoformat(last_update); next_update = last_date + timedelta(days=2)
+                remaining = next_update - datetime.now()
+                text += f"🔄 Обновление через: {remaining.days}д {remaining.seconds // 3600}ч"
+            await query.edit_message_text(text, reply_markup=back_button())
+    elif data == "premium_info": await query.edit_message_text("💎 Премиум\n\nЛС: 200/1000/2500\nЧат: 300/1500/3500\n\n🎫 Бывают скидки на Премиум!", reply_markup=back_button())
     elif data == "stats":
         user = get_user(user_id)
         await query.edit_message_text(f"📊 Статистика\n\n💬 ЛС: {user.get('requests_today', 0)}\n👥 Чаты: {user.get('chat_requests_today', 0)}\n🎨 Фото: {user.get('image_requests_today', 0)}\n💎 Премиум: {'Да' if is_premium(user_id) else 'Нет'}", reply_markup=back_button())
-    elif data == "shop": await query.edit_message_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n🎫 Скидки каждые 2 дня!", reply_markup=shop_keyboard("private"))
+    elif data == "shop": await query.edit_message_text(f"🛒 Магазин (ЛС)\n💰 {get_tokens(user_id)} токенов\n🎫 /discounts — скидки!", reply_markup=shop_keyboard("private"))
     elif data == "earn": await query.edit_message_text(f"💰 Заработок\n💎 {get_tokens(user_id)}", reply_markup=earn_keyboard())
     elif data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
     elif data == "faq": await query.edit_message_text(FAQ_TEXT, reply_markup=back_button())
@@ -682,7 +773,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     elif data.startswith("confirm_"):
         item_id = data.replace("confirm_", ""); item = SHOP_ITEMS.get(item_id)
         if not item: return
-        price, percent = get_discounted_price(item_id)
+        price, percent, disc_info = get_discounted_price(item_id)
         tokens = get_tokens(user_id)
         if tokens < price: await query.answer(f"❌ Недостаточно!\nНужно {price}, у вас {tokens}", show_alert=True); return
         remove_tokens(user_id, price); users = load_users(); uid = str(user_id)
@@ -698,16 +789,27 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             for cid, cdata in chats.items():
                 if isinstance(cdata, dict) and str(user_id) in cdata.get("owners", []): chats[cid]["premium_until"] = (datetime.now() + timedelta(hours=hours_map[item_id])).isoformat(); save_chats(chats); break
         save_users(users)
-        disc_text = f" (скидка {percent}%)" if percent > 0 else ""
+        disc_text = ""
+        if percent > 0 and disc_info:
+            disc_text = f"\n🎫 {disc_info.get('type_name', 'Скидка')}: -{percent}% (экономия {item['price'] - price} токенов)"
         await query.answer(f"✅ {item['name']}!", show_alert=True)
         await query.edit_message_text(f"✅ {item['name']}{disc_text}\n💰 Потрачено: {price}\n💎 Остаток: {get_tokens(user_id)}", reply_markup=back_button())
     elif data.startswith("buy_"):
         item_id = data.replace("buy_", ""); item = SHOP_ITEMS.get(item_id)
         if not item: return
-        price, percent = get_discounted_price(item_id)
+        price, percent, disc_info = get_discounted_price(item_id)
         tokens = get_tokens(user_id); can = "✅ Хватает" if tokens >= price else "❌ Не хватает"
-        disc_text = f"\n🎫 СКИДКА {percent}%! Цена: {price} токенов (было {item['price']})" if percent > 0 else ""
-        await query.edit_message_text(f"🛒 {item['icon']} {item['name']}\n📝 {item['desc']}\n⚠️ {item.get('warning', '')}\n💰 Цена: {price} токенов{disc_text}\n💎 Баланс: {tokens}\n{can}", reply_markup=confirm_keyboard(item_id))
+        
+        disc_text = ""
+        if percent > 0 and disc_info:
+            color = disc_info.get("color", "🟢")
+            type_name = disc_info.get("type_name", "Скидка")
+            disc_text = f"\n\n{color} {type_name}: -{percent}%\n💵 Обычная цена: {item['price']} токенов\n🔥 Цена со скидкой: {price} токенов\n💰 Экономия: {item['price'] - price} токенов"
+        
+        await query.edit_message_text(
+            f"🛒 {item['icon']} {item['name']}\n\n📝 {item['desc']}\n📋 {item.get('usage', '')}\n⚠️ {item.get('warning', '')}{disc_text}\n\n💎 Ваш баланс: {tokens} токенов\n{can}\n\nПодтвердите покупку:",
+            reply_markup=confirm_keyboard(item_id)
+        )
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(random.choice(UNKNOWN_COMMAND_RESPONSES))
@@ -781,6 +883,7 @@ def main():
     print(f"🧠 NeBlock AI V{BOT_VERSION}")
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("discounts", discounts_cmd))
     app.add_handler(CommandHandler("changelog", changelog_cmd))
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
