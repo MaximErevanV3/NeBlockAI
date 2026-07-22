@@ -1,4 +1,4 @@
-import openai
+iimport openai
 import base64
 import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
@@ -12,7 +12,7 @@ import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V4.0 - Конфигурация
+# 🧠 NeBlock AI V4.1 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -50,7 +50,6 @@ MAX_DONATION = 100000
 # 🔥 СИСТЕМА ЕЖЕДНЕВНЫХ НАГРАД (СТРИКИ ДО 30 ДНЕЙ)
 # ═══════════════════════════════════════════
 
-# Базовая награда за каждый день серии (умножается на курс)
 STREAK_BASE_REWARDS = {
     1: {"name": "День 1", "base_min": 5, "base_max": 10, "icon": "🌱", "desc": "Начало пути! Первый день получения бонуса."},
     2: {"name": "День 2", "base_min": 6, "base_max": 12, "icon": "🌿", "desc": "Второй день подряд. Бонус немного увеличивается."},
@@ -84,38 +83,52 @@ STREAK_BASE_REWARDS = {
     30: {"name": "ДЕНЬ 30! 👑✨", "base_min": 75, "base_max": 120, "icon": "👑", "desc": "МЕГА-ДЕНЬ! Максимальная награда + Премиум ЛС на 1 день (единоразово)!", "premium_bonus": True},
 }
 
-# Максимальный день серии (после него награды как в 30-й день)
 MAX_STREAK_DAY = 30
 
 def get_daily_bonus_info():
-    """Возвращает бонусы для всех дней серии"""
+    """Возвращает подробную информацию о всех днях серии"""
     text = "🔥 ЕЖЕДНЕВНЫЕ НАГРАДЫ (СЕРИЯ ДО 30 ДНЕЙ)\n━━━━━━━━━━━━━━━━━━━━\n\n"
-    text += "Получайте бонус каждый день! Чем дольше серия — тем больше награда.\n"
+    text += "📐 КАК РАБОТАЕТ СИСТЕМА:\n"
+    text += "• Заходите каждый день и забирайте бонус\n"
+    text += "• Чем дольше серия — тем выше базовая награда\n"
+    text += "• Размер награды зависит от дня серии и курса NBT\n"
+    text += "• Формула: базовая награда дня × множитель курса\n"
+    text += "• Множитель курса = 1.0 + (курс × 10 - 0.1)\n"
+    text += "• При курсе $0.01 → множитель ×1.0 (базовый)\n"
+    text += "• При курсе $0.02 → множитель ×1.1 (+10%)\n"
+    text += "• При курсе $0.005 → множитель ×0.95 (-5%)\n\n"
     text += "⚠️ ВАЖНО: Если не забрать бонус до 00:00 МСК — серия СГОРИТ!\n"
-    text += "📈 Размер наград зависит от текущего курса NBT.\n\n"
-    text += "📅 НАГРАДЫ ПО ДНЯМ:\n"
+    text += "👑 На 30-й день: единоразовый Премиум ЛС на 1 день!\n"
+    text += "💡 После 30 дня награды фиксируются (как в 30-й день, но без премиума)\n\n"
+    
+    text += "📅 ВСЕ НАГРАДЫ ПО ДНЯМ (БАЗОВЫЕ, БЕЗ УЧЁТА КУРСА):\n\n"
     
     for day in range(1, 31):
         reward = STREAK_BASE_REWARDS[day]
         text += f"{reward['icon']} {reward['name']}: {reward['base_min']}-{reward['base_max']} 💮 (база)"
         if reward.get("premium_bonus"):
-            text += " + 🎁 Премиум ЛС 1 день!"
+            text += " + 🎁 Премиум ЛС 1 день! (единоразово)"
         text += f"\n   {reward['desc']}\n\n"
     
-    text += "💡 После 30 дня награды фиксируются (как в 30-й день, но без премиума).\n"
-    text += "🎁 Кнопка: 💰 Заработать → 🎁 Ежедневный бонус\n"
-    text += "⚠️ Не забудьте забрать бонус до полуночи МСК!"
+    text += "🎁 Как получить: кнопка «🔥 Награды» → «🎁 Забрать ежедневный бонус»\n"
+    text += "📊 Статистика: команда /streak"
     
     return text
 
 def get_user_bonus(streak, rate=0.01):
     """
     Рассчитывает бонус в зависимости от серии и текущего курса.
-    Чем выше курс — тем больше бонус (и наоборот).
-    Формула: базовый бонус * (1 + (rate * 10 - 0.1))
-    При rate=0.01 множитель = 1.0 (базовый)
-    При rate=0.02 множитель = 1.1 (+10%)
-    При rate=0.005 множитель = 0.95 (-5%)
+    
+    Зависимость от дня серии:
+    - День 1: база 5-10 💮
+    - День 7: база 20-35 💮
+    - День 14: база 35-58 💮
+    - День 21: база 50-80 💮
+    - День 30: база 75-120 💮 + Премиум
+    
+    Зависимость от курса:
+    - Множитель = 1.0 + (rate × 10 - 0.1)
+    - Ограничение: 0.5x - 1.5x
     """
     if streak >= MAX_STREAK_DAY:
         reward = STREAK_BASE_REWARDS[MAX_STREAK_DAY]
@@ -127,17 +140,15 @@ def get_user_bonus(streak, rate=0.01):
         reward = STREAK_BASE_REWARDS[1]
         is_max = False
     
-    # Множитель курса: центрирован вокруг 0.01 (1 NBT = $0.01)
     rate_multiplier = 1.0 + (rate * 10 - 0.1)
-    rate_multiplier = max(0.5, min(1.5, rate_multiplier))  # Ограничение 0.5x - 1.5x
+    rate_multiplier = max(0.5, min(1.5, rate_multiplier))
     
     base_bonus = random.randint(reward["base_min"], reward["base_max"])
     bonus = max(1, int(base_bonus * rate_multiplier))
     
     premium_bonus = reward.get("premium_bonus", False)
-    # Премиум только в 30-й день и только если это не "максимальный" день (т.е. именно 30-й)
     if is_max and streak > MAX_STREAK_DAY:
-        premium_bonus = False  # После 30 дня премиум не даём
+        premium_bonus = False
     
     return bonus, reward["icon"], reward["name"], premium_bonus, rate_multiplier
 
@@ -182,10 +193,12 @@ CHANGELOG = """
 
 Версия 4.1 (22.07.2026)
 • 🔥 Серия до 30 дней с прогрессивными наградами
-• 💮 Награды зависят от курса NBT
+• 💮 Награды зависят от курса NBT и дня серии
 • 👑 30-й день: Премиум ЛС на 1 день (единоразово)
 • ⚠️ Серия сгорает если не забрать до 00:00 МСК
 • 📈 После 30 дня награды фиксируются
+• 📐 Формула: базовая награда × множитель курса
+• 🔧 Исправлены кнопки наград
 
 Версия 4.0 (22.07.2026)
 • 🔥 Улучшенная система ежедневных наград
@@ -205,16 +218,21 @@ FAQ_TEXT = f"""
 Платформа с ИИ-моделями в Telegram: текст и фото.
 
 ❓ Как работают ежедневные награды? 🔥
-Каждый день вы получаете бонус. Чем дольше серия — тем больше награда!
-• Серия длится до 30 дней
-• День 1: 5-10 💮 🌱 (база, зависит от курса)
-• День 7: 20-35 💮 🔥 (НЕДЕЛЯ!)
-• День 14: 35-58 💮 👑 (2 НЕДЕЛИ!)
-• День 21: 50-80 💮 💫 (3 НЕДЕЛИ!)
-• День 28: 65-100 💮 🌍 (МЕСЯЦ!)
+Каждый день вы получаете бонус. Размер зависит от:
+• 📅 Дня серии (чем дольше, тем выше базовая награда)
+• 💮 Курса NBT (чем выше курс, тем больше бонус)
+
+📐 Формула: базовая награда × множитель курса
+Множитель курса = 1.0 + (курс × 10 - 0.1)
+
+Примеры базовых наград (без учёта курса):
+• День 1: 5-10 💮 🌱
+• День 7: 20-35 💮 🔥
+• День 14: 35-58 💮 👑
+• День 21: 50-80 💮 💫
 • День 30: 75-120 💮 👑 + Премиум ЛС 1 день!
+
 ⚠️ ВАЖНО: Не забрали до 00:00 МСК — серия СГОРИТ!
-📈 Размер наград зависит от курса NBT.
 💡 После 30 дня награды как в 30-й (без премиума).
 /streak — подробнее
 
@@ -238,38 +256,82 @@ DONATE_INFO_TEXT = """
 🌍 БЛАГОТВОРИТЕЛЬНОСТЬ
 ━━━━━━━━━━━━━━━━━━━━
 
-Сжигание токенов навсегда. Уменьшает предложение, повышает курс.
-/donate СУММА — сжечь | /donatetop — топ
+🔥 Что такое донат?
+Вы сжигаете токены NBT навсегда, уменьшая общее предложение.
+Это повышает курс токена для всех пользователей!
+
+📊 Как это работает:
+• Отправляете /donate СУММА
+• Токены безвозвратно сгорают
+• Вы попадаете в топ благотворителей
+• Общее предложение NBT уменьшается
+• Курс токена растёт
+
+🏆 Топ благотворителей:
+• /donatetop — список лучших
+• 🥇🥈🥉 медали за первые 3 места
 
 ⚠️ Сожжённые токены нельзя вернуть!
+💡 Минимальный донат: 1 💮
+💡 Максимальный донат: 100 000 💮
 """
 
 TRANSFER_INFO = f"""
 💸 ПЕРЕВОДЫ 💮 NBT
 ━━━━━━━━━━━━━━━━━━━━
 
-Способы: /transfer ID КОЛИЧЕСТВО | @username | ответ на сообщение
-Лимиты: {MIN_TRANSFER}-{MAX_TRANSFER} 💮/раз, {DAILY_TRANSFER_LIMIT} 💮/день
-Налоги: 0-15% в зависимости от суммы
+📤 СПОСОБЫ ПЕРЕВОДА:
+• /transfer ID КОЛИЧЕСТВО — перевод по ID
+• @username — перевод по username (в чатах)
+• Ответ на сообщение — перевод автору сообщения (в чатах)
+
+📊 ЛИМИТЫ:
+• Минимальный перевод: {MIN_TRANSFER} 💮
+• Максимальный перевод: {MAX_TRANSFER} 💮 за раз
+• Дневной лимит: {DAILY_TRANSFER_LIMIT} 💮
+
+💰 НАЛОГИ:
+• 0-199 💮: без налога (0%)
+• 200-499 💮: малый перевод (3%)
+• 500-999 💮: средний перевод (5%)
+• 1000-2499 💮: крупный перевод (8%)
+• 2500-4999 💮: очень крупный перевод (12%)
+• 5000-10000 💮: максимальный перевод (15%)
+
+⚠️ Налог удерживается из суммы перевода
+💡 Получатель получает сумму за вычетом налога
 """
 
 COMMANDS_LIST = """
 📋 КОМАНДЫ NeBlock AI V4.1
 ━━━━━━━━━━━━━━━━━━━━
 
-/start — главное меню
-/shop — магазин
-/faq — вопросы
-/discounts — скидки
-/tokenrate — курс 💮
-/streak — ежедневные награды (до 30 дней!) 🔥
-/transfer — перевод
-/donate — благотворительность
+💬 ОСНОВНЫЕ:
+/start — главное меню бота
+/commands — список всех команд
+/faq — часто задаваемые вопросы
+/changelog — история обновлений
+
+🛒 МАГАЗИН И ТОКЕНЫ:
+/shop — магазин запросов и премиума
+/tokenrate — текущий курс NBT
+/discounts — активные скидки
+/promo — активировать промокод
+
+🔥 НАГРАДЫ:
+/streak — ежедневные награды (до 30 дней!)
+
+💸 ФИНАНСЫ:
+/transfer — перевод токенов
+/donate — благотворительность (сжигание)
 /donatetop — топ благотворителей
-/genimage — генерация фото
-/changelog — обновления
-/promo — промокод
-/commands — команды
+
+🎨 ГЕНЕРАЦИЯ:
+/genimage — генерация изображений
+
+👥 ЧАТЫ:
+/chatowner — управление чатом
+/chatshop — магазин для чата
 """
 
 DISCOUNT_TYPES = {
@@ -282,19 +344,19 @@ DISCOUNT_TYPES = {
 }
 
 SHOP_ITEMS_BASE = {
-    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "5 запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "usage": "В ЛС."},
-    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "category": "text", "desc": "10 запросов.", "warning": "⚠️ Сгорают.", "location": "private", "usage": "В ЛС."},
-    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "50 запросов.", "warning": "⚠️ Сгорают.", "location": "private", "usage": "Активно."},
-    "unlimited_1h": {"name": "Безлимит 1ч", "price": 30, "icon": "♾️", "category": "text", "desc": "Безлимит 1ч.", "warning": "⚠️ 1 час.", "location": "private", "usage": "Без лимита."},
-    "unlimited_24h": {"name": "Безлимит 24ч", "price": 100, "icon": "♾️", "category": "text", "desc": "Безлимит 24ч.", "warning": "⚠️ 24 часа.", "location": "private", "usage": "Сутки."},
-    "unlimited_7d": {"name": "Безлимит 7д", "price": 500, "icon": "♾️", "category": "text", "desc": "Безлимит 7д.", "warning": "⚠️ 7 дней.", "location": "private", "usage": "Неделя."},
-    "image1": {"name": "1 фото", "price": 15, "icon": "🎨", "category": "image", "desc": "1 фото.", "warning": "⚠️ Сгорают.", "location": "private", "usage": "Опишите."},
-    "image5": {"name": "5 фото", "price": 60, "icon": "🎨", "category": "image", "desc": "5 фото.", "warning": "⚠️ Сгорают.", "location": "private", "usage": "5 фото."},
-    "image20": {"name": "20 фото", "price": 200, "icon": "🎨", "category": "image", "desc": "20 фото.", "warning": "⚠️ Сгорают.", "location": "private", "usage": "Творчество."},
-    "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "category": "image", "desc": "Безлимит 1ч.", "warning": "⚠️ 1 час.", "location": "private", "usage": "Без лимита."},
-    "premium_day": {"name": "Премиум ЛС 1д", "price": 200, "icon": "⭐", "category": "premium", "desc": "Безлимит 24ч.", "warning": "⚠️ 24ч.", "location": "private", "usage": "Всё."},
-    "premium_week": {"name": "Премиум ЛС 7д", "price": 1000, "icon": "⭐", "category": "premium", "desc": "Безлимит 7д.", "warning": "⚠️ 7д.", "location": "private", "usage": "Неделя."},
-    "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "category": "premium", "desc": "Навсегда.", "warning": "⚠️ ЛС.", "location": "private", "usage": "Выгодно!"},
+    "extra5": {"name": "+5 запросов", "price": 10, "icon": "📝", "category": "text", "desc": "5 дополнительных текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "usage": "В ЛС."},
+    "extra10": {"name": "+10 запросов", "price": 18, "icon": "📝", "category": "text", "desc": "10 дополнительных текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "usage": "В ЛС."},
+    "extra50": {"name": "+50 запросов", "price": 80, "icon": "📝", "category": "text", "desc": "50 дополнительных текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "usage": "Активно."},
+    "unlimited_1h": {"name": "Безлимит 1ч", "price": 30, "icon": "♾️", "category": "text", "desc": "Безлимитные текстовые запросы на 1 час.", "warning": "⚠️ Действует 1 час с момента покупки.", "location": "private", "usage": "Без лимита."},
+    "unlimited_24h": {"name": "Безлимит 24ч", "price": 100, "icon": "♾️", "category": "text", "desc": "Безлимитные текстовые запросы на 24 часа.", "warning": "⚠️ Действует 24 часа с момента покупки.", "location": "private", "usage": "Сутки."},
+    "unlimited_7d": {"name": "Безлимит 7д", "price": 500, "icon": "♾️", "category": "text", "desc": "Безлимитные текстовые запросы на 7 дней.", "warning": "⚠️ Действует 7 дней с момента покупки.", "location": "private", "usage": "Неделя."},
+    "image1": {"name": "1 фото", "price": 15, "icon": "🎨", "category": "image", "desc": "1 дополнительная генерация изображения.", "warning": "⚠️ Сгорает в 00:00 МСК.", "location": "private", "usage": "Опишите."},
+    "image5": {"name": "5 фото", "price": 60, "icon": "🎨", "category": "image", "desc": "5 дополнительных генераций изображений.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "usage": "5 фото."},
+    "image20": {"name": "20 фото", "price": 200, "icon": "🎨", "category": "image", "desc": "20 дополнительных генераций изображений.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "usage": "Творчество."},
+    "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 50, "icon": "♾️", "category": "image", "desc": "Безлимитные генерации изображений на 1 час.", "warning": "⚠️ Действует 1 час с момента покупки.", "location": "private", "usage": "Без лимита."},
+    "premium_day": {"name": "Премиум ЛС 1д", "price": 200, "icon": "⭐", "category": "premium", "desc": "Полный безлимит на всё в ЛС на 24 часа.", "warning": "⚠️ Действует 24 часа с момента покупки.", "location": "private", "usage": "Всё включено."},
+    "premium_week": {"name": "Премиум ЛС 7д", "price": 1000, "icon": "⭐", "category": "premium", "desc": "Полный безлимит на всё в ЛС на 7 дней.", "warning": "⚠️ Действует 7 дней с момента покупки.", "location": "private", "usage": "Неделя комфорта."},
+    "premium_forever": {"name": "Премиум ЛС навсегда", "price": 2500, "icon": "👑", "category": "premium", "desc": "Полный безлимит на всё в ЛС навсегда.", "warning": "⚠️ Только для личных сообщений.", "location": "private", "usage": "Максимальная выгода!"},
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -523,7 +585,7 @@ def get_user(user_id):
         "last_request": None, "total_requests": 0, "total_images": 0,
         "reset_date": datetime.now().strftime("%Y-%m-%d"),
         "tokens": START_BONUS, "daily_bonus_claimed": None, "daily_bonus_streak": 0, "last_bonus_date": None,
-        "streak_30_premium_claimed": False,  # Флаг: получил ли премиум за 30-й день
+        "streak_30_premium_claimed": False,
         "referral_code": "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8)),
         "referred_by": None, "referrals": 0, "earned_tokens": 0, "spent_tokens": 0,
         "donated_tokens": 0,
@@ -754,10 +816,11 @@ def donate_confirm_keyboard(amount):
     return InlineKeyboardMarkup([[InlineKeyboardButton("🔥 Подтвердить сжигание", callback_data=f"donate_confirm_{amount}")], [InlineKeyboardButton("❌ Отменить", callback_data="donate_cancel")]])
 
 def earn_keyboard():
+    """Клавиатура раздела Награды"""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🎁 Забрать ежедневный бонус", callback_data="daily_bonus")],
         [InlineKeyboardButton("👥 Реферальная ссылка", callback_data="ref_link")],
-        [InlineKeyboardButton("📅 Все награды", callback_data="streak_info")],
+        [InlineKeyboardButton("📅 Подробно о наградах", callback_data="streak_info")],
         [InlineKeyboardButton("🔙 Назад", callback_data="menu")],
     ])
 
@@ -806,7 +869,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Информация о ежедневных наградах"""
+    """Подробная информация о ежедневных наградах"""
     user_id = update.effective_user.id
     user = get_user(user_id)
     streak = user.get("daily_bonus_streak", 0)
@@ -815,10 +878,15 @@ async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     text = f"🔥 ВАША СЕРИЯ: {streak} дн.\n━━━━━━━━━━━━━━━━\n\n"
     
-    if streak >= MAX_STREAK_DAY:
-        text += f"👑 Вы достигли максимальной серии ({MAX_STREAK_DAY} дней)! Награды как в {MAX_STREAK_DAY}-й день (без премиума).\n"
+    # Текущий статус
+    if streak == 0:
+        text += "🌱 Вы ещё не начали серию!\n"
+        text += "Начните сегодня — заберите первый бонус!\n\n"
+    elif streak >= MAX_STREAK_DAY:
+        text += f"👑 Вы достигли максимальной серии ({MAX_STREAK_DAY} дней)!\n"
+        text += f"Награды как в {MAX_STREAK_DAY}-й день (без премиума).\n"
         text += "⚠️ Не забудьте забирать бонус каждый день до 00:00 МСК, иначе серия сгорит!\n\n"
-    elif streak > 0:
+    else:
         next_day = streak + 1
         if next_day <= MAX_STREAK_DAY:
             next_reward = STREAK_BASE_REWARDS[next_day]
@@ -827,27 +895,46 @@ async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             est_min = max(1, int(next_reward["base_min"] * rate_multiplier))
             est_max = max(1, int(next_reward["base_max"] * rate_multiplier))
             text += f"➡️ Завтра будет день {next_day}: {next_reward['icon']} {next_reward['name']}\n"
-            text += f"   Примерная награда: {est_min}-{est_max} 💮 (при текущем курсе)\n"
+            text += f"   Базовая награда: {next_reward['base_min']}-{next_reward['base_max']} 💮\n"
+            text += f"   С учётом курса (${rate:.6f}): ~{est_min}-{est_max} 💮\n"
             if next_reward.get("premium_bonus"):
                 text += "   🎁 + Премиум ЛС на 1 день! (единоразово)\n"
             text += "\n"
     
-    text += "⚠️ ВАЖНО: Если не забрать бонус до 00:00 МСК — серия СГОРИТ полностью!\n"
-    text += "📈 Размер наград зависит от текущего курса NBT.\n\n"
+    # Объяснение системы
+    text += "📐 КАК СЧИТАЕТСЯ НАГРАДА:\n"
+    text += "• Берётся базовая награда для вашего дня серии\n"
+    text += "• Умножается на множитель курса NBT\n"
+    text += "• Множитель = 1.0 + (курс × 10 - 0.1)\n"
+    text += f"• Текущий курс: ${rate:.8f}\n"
+    text += f"• Текущий множитель: ×{1.0 + (rate * 10 - 0.1):.2f}\n"
+    text += "• Диапазон множителя: 0.5x - 1.5x\n\n"
     
-    # Показываем первые 7 дней и ключевые вехи
-    text += "📅 КЛЮЧЕВЫЕ ВЕХИ:\n"
+    text += "⚠️ ВАЖНО:\n"
+    text += "• Не забрали бонус до 00:00 МСК — серия СГОРИТ!\n"
+    text += "• На 30-й день даётся Премиум ЛС на 1 день (единоразово)\n"
+    text += "• После 30 дня награды как в 30-й день (без премиума)\n"
+    text += "• Серия может длиться бесконечно\n\n"
+    
+    # Ключевые вехи
+    text += "📅 КЛЮЧЕВЫЕ ВЕХИ (БАЗОВЫЕ НАГРАДЫ):\n"
     milestones = [1, 7, 14, 21, 28, 30]
     for day in milestones:
         reward = STREAK_BASE_REWARDS[day]
-        text += f"{reward['icon']} {reward['name']}: {reward['base_min']}-{reward['base_max']} 💮 (база)"
+        text += f"{reward['icon']} День {day}: {reward['base_min']}-{reward['base_max']} 💮"
         if reward.get("premium_bonus"):
             text += " + 🎁 Премиум ЛС 1 день!"
         text += "\n"
     
-    text += f"\n💡 Всего {MAX_STREAK_DAY} дней серии. /streak — подробнее"
+    text += f"\n📋 Все 30 дней: /streak_info"
     
     await update.message.reply_text(text)
+
+async def streak_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показывает полную информацию о всех 30 днях"""
+    await update.message.reply_text(STREAK_INFO[:4000])
+    if len(STREAK_INFO) > 4000:
+        await update.message.reply_text(STREAK_INFO[4000:])
 
 async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rate_data = get_token_rate(); history = load_json(TOKEN_HISTORY_FILE)
@@ -859,20 +946,24 @@ async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     updated = rate_data.get("updated_at", "")
     updated_time = datetime.fromisoformat(updated).strftime("%d.%m.%Y %H:%M") if updated else "Нет"
     
-    text = (f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n💰 1 NBT = ${rate:.8f}\n"
-            f"💎 Кап: ${market_cap:,.2f}\n🪙 В обороте: {supply:,} NBT\n"
-            f"🔥 Сожжено: {burned:,} 💮\n"
+    text = (f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n"
+            f"💰 1 NBT = ${rate:.8f}\n"
+            f"💎 Капитализация: ${market_cap:,.2f}\n"
+            f"🪙 В обороте: {supply:,} NBT\n"
+            f"🔥 Сожжено всего: {burned:,} 💮\n"
+            f"🌍 Пожертвовано: {donated:,} 💮\n"
             f"🕐 Обновлён: {updated_time} (блок {block_hour}:00)\n"
-            f"🔄 Следующее: {next_update}\n"
-            f"📅 {day_icon} {day_name}\n\n"
-            f"💡 Зарабатывайте в будни, тратьте в выходные!\n\n📈 7д:\n")
+            f"🔄 Следующее обновление: {next_update}\n"
+            f"📅 День недели: {day_icon} {day_name}\n\n"
+            f"💡 Курс влияет на размер ежедневных наград!\n"
+            f"💡 Зарабатывайте в будни, тратьте в выходные!\n\n📈 История за 7 дней:\n")
     for date, h in sorted(history.items())[-7:]: text += f"{date}: ${h.get('rate', 0):.8f}\n"
     await update.message.reply_text(text)
 
 async def donate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not context.args:
-        await update.message.reply_text(f"🌍 /donate СУММА — сжечь токены\nПример: /donate 100")
+        await update.message.reply_text(f"{DONATE_INFO_TEXT}\n\nИспользование: /donate СУММА\nПример: /donate 100")
         return
     try: amount = int(context.args[0])
     except: await update.message.reply_text("❌ /donate СУММА"); return
@@ -881,20 +972,27 @@ async def donate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = get_user(user_id)
     if user.get("tokens", 0) < amount: await update.message.reply_text(f"❌ Недостаточно!\n💰 Баланс: {user.get('tokens', 0)} 💮"); return
     await update.message.reply_text(
-        f"🌍 ПОДТВЕРЖДЕНИЕ\n━━━━━━━━━━━━━━━━\n💰 Сумма: {amount} 💮\n🔥 Токены сгорят НАВСЕГДА\n💎 Баланс: {user.get('tokens', 0)} 💮 → {user.get('tokens', 0) - amount} 💮\n\nПодтвердите:",
+        f"🌍 ПОДТВЕРЖДЕНИЕ ДОНАТА\n━━━━━━━━━━━━━━━━\n"
+        f"💰 Сумма: {amount} 💮\n"
+        f"🔥 Токены сгорят НАВСЕГДА\n"
+        f"💎 Баланс: {user.get('tokens', 0)} 💮 → {user.get('tokens', 0) - amount} 💮\n"
+        f"📈 Это уменьшит предложение и может повысить курс!\n\n"
+        f"Подтвердите:",
         reply_markup=donate_confirm_keyboard(amount)
     )
 
 async def donatetop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total, count, top_donors = get_donation_stats()
-    if not top_donors: await update.message.reply_text("🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n\nПока никто не делал донатов.\nБудьте первым! /donate СУММА"); return
-    text = f"🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\n🔥 Всего сожжено: {total:,} 💮\n📊 Донатов: {count}\n\n🏆 ТОП-10:\n"
+    if not top_donors: 
+        await update.message.reply_text("🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\nПока никто не делал донатов.\nБудьте первым! /donate СУММА")
+        return
+    text = f"🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\n🔥 Всего сожжено: {total:,} 💮\n📊 Количество донатов: {count}\n\n🏆 ТОП-10:\n"
     users = load_users(); medals = ["🥇", "🥈", "🥉"]
     for i, (uid, donated) in enumerate(top_donors):
         name = f"@{users.get(uid, {}).get('username', 'Неизвестный')}" if uid in users else f"ID:{uid}"
         medal = medals[i] if i < 3 else f"{i+1}."
         text += f"{medal} {name}: {donated:,} 💮\n"
-    text += "\n💡 /donate СУММА — сделать вклад"
+    text += "\n💡 /donate СУММА — сделать вклад в развитие"
     await update.message.reply_text(text)
 
 async def donate_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -902,18 +1000,18 @@ async def donate_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def genimage_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; chat_type = update.effective_chat.type; chat_id = update.effective_chat.id if chat_type != "private" else None
-    if not context.args: await update.message.reply_text("🎨 /genimage ОПИСАНИЕ"); return
+    if not context.args: await update.message.reply_text("🎨 /genimage ОПИСАНИЕ\nПример: /genimage красивый закат на море"); return
     text = " ".join(context.args)
-    if not can_image_request(user_id, chat_type, chat_id): await update.message.reply_text(f"🚫 Лимит фото!"); return
-    msg = await update.message.reply_text("🎨 Генерирую...")
+    if not can_image_request(user_id, chat_type, chat_id): await update.message.reply_text(f"🚫 Лимит фото исчерпан!\n\n💡 Купите дополнительные генерации в /shop\n💎 Или активируйте Премиум"); return
+    msg = await update.message.reply_text("🎨 Генерирую изображение...")
     try:
         image_bytes, error = await generate_image(text)
         if image_bytes: add_image_request(user_id, chat_type); await msg.delete(); await update.message.reply_photo(photo=image_bytes, caption=f"🎨 NeBlock Images V2\n📝 {text[:200]}")
-        else: await msg.edit_text("❌ Ошибка")
+        else: await msg.edit_text("❌ Ошибка генерации")
     except:
         try: await msg.delete()
         except: pass
-        await update.message.reply_text("❌ Ошибка.")
+        await update.message.reply_text("❌ Ошибка генерации.")
 
 async def transfer_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; chat_type = update.effective_chat.type; to_id = None; amount = None
@@ -933,67 +1031,90 @@ async def transfer_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if not to_id: await update.message.reply_text(f"❌ @{username} не найден."); return
         else: return
     else:
-        if not context.args or len(context.args) < 2: return
+        if not context.args or len(context.args) < 2:
+            await update.message.reply_text(f"{TRANSFER_INFO}\n\nИспользование: /transfer ID КОЛИЧЕСТВО")
+            return
         try: to_id = int(context.args[0]); amount = int(context.args[1])
         except: return
     if not to_id or not amount: return
     if amount < MIN_TRANSFER or amount > MAX_TRANSFER: return
-    if to_id == user_id: await update.message.reply_text("❌ Нельзя себе!"); return
+    if to_id == user_id: await update.message.reply_text("❌ Нельзя перевести самому себе!"); return
     sender = get_user(user_id)
-    if sender.get("daily_transfer_total", 0) + amount > DAILY_TRANSFER_LIMIT: return
-    if sender.get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно!"); return
-    tax, tax_percent, _ = get_transfer_tax(amount)
+    if sender.get("daily_transfer_total", 0) + amount > DAILY_TRANSFER_LIMIT: 
+        await update.message.reply_text(f"❌ Дневной лимит переводов: {DAILY_TRANSFER_LIMIT} 💮")
+        return
+    if sender.get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно токенов!"); return
+    tax, tax_percent, tax_name = get_transfer_tax(amount)
     receiver = get_user(to_id)
-    if not receiver: await update.message.reply_text("❌ Не найден!"); return
+    if not receiver: await update.message.reply_text("❌ Получатель не найден!"); return
     final_amount = amount - tax
     receiver_name = receiver.get("username") or f"ID:{to_id}"
-    tax_info = f"Налог: {tax} 💮 ({tax_percent}%)" if tax > 0 else "Без налога"
+    tax_info = f"Налог: {tax} 💮 ({tax_percent}% - {tax_name})" if tax > 0 else "Без налога"
     await update.message.reply_text(
-        f"⚠️ ПРОВЕРЬТЕ!\n👤 @{receiver_name}\n🆔 {to_id}\n💸 {amount} 💮\n📊 {tax_info}\n💰 Получит: {final_amount} 💮\n\nПодтвердите:",
+        f"⚠️ ПРОВЕРЬТЕ ДАННЫЕ ПЕРЕВОДА!\n━━━━━━━━━━━━━━━━\n"
+        f"👤 Получатель: @{receiver_name}\n"
+        f"🆔 ID: {to_id}\n"
+        f"💸 Сумма: {amount} 💮\n"
+        f"📊 {tax_info}\n"
+        f"💰 Получит: {final_amount} 💮\n\n"
+        f"Подтвердите перевод:",
         reply_markup=transfer_confirm_keyboard(to_id, amount)
     )
 
 async def transfer_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["waiting_transfer"] = True
-    await update.message.reply_text("💸 Отправьте: ID КОЛИЧЕСТВО")
+    await update.message.reply_text(f"{TRANSFER_INFO}\n\n💸 Отправьте ID и сумму:\nФормат: ID КОЛИЧЕСТВО\nПример: 1671403667 100")
 
 async def transfer_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(TRANSFER_INFO)
 
 async def discounts_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     discounts = get_discounts(); active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
-    text = f"🎫 СКИДКИ\n\n🔄 {get_next_update_time().strftime('%d.%m.%Y 9:00 МСК')}\n\n"
-    if not active: text += "Нет."
+    text = f"🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
+    text += f"🔄 Следующее обновление: {get_next_update_time().strftime('%d.%m.%Y в 9:00 МСК')}\n\n"
+    if not active: text += "😔 Сейчас нет активных скидок.\nЗаходите позже или проверяйте /shop!"
     else:
+        text += "📊 ДОСТУПНЫЕ СКИДКИ:\n\n"
         for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
             item = get_shop_items().get(item_id)
-            if item: text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}: -{disc['percent']}%\n"
+            if item: 
+                text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n"
+                text += f"   Скидка: -{disc['percent']}%\n"
+                text += f"   Цена: {disc['new_price']} 💮 (было {disc['original']} 💮)\n"
+                text += f"   Тип: {disc.get('type_name', 'Обычная')} {disc.get('icon', '')}\n\n"
     await update.message.reply_text(text)
 
 async def promo_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["waiting_promo"] = True
-    await update.message.reply_text("🎟 Отправьте промокод.")
+    await update.message.reply_text("🎟 АКТИВАЦИЯ ПРОМОКОДА\n━━━━━━━━━━━━━━━━\n\nОтправьте промокод для получения бонуса.")
 
-async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE): await update.message.reply_text(CHANGELOG)
-async def commands_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE): await update.message.reply_text(COMMANDS_LIST)
-async def shopdesc_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE): await update.message.reply_text("📋 /shop — магазин")
+async def changelog_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE): 
+    await update.message.reply_text(CHANGELOG)
+
+async def commands_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE): 
+    await update.message.reply_text(COMMANDS_LIST)
+
+async def shopdesc_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE): 
+    await update.message.reply_text("📋 МАГАЗИН\n━━━━━━━━━━━━━━━━\n\nИспользуйте /shop для просмотра и покупки товаров.")
 
 async def chatowner_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type not in ["group", "supergroup"]: return
     chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
     chats = load_chats(); c = chats.get(str(chat_id), {})
     owners = c.get("owners", []) if isinstance(c, dict) else c
-    text = f"👑 Владельцы:\n"
+    text = f"👑 ВЛАДЕЛЬЦЫ ЧАТА\n━━━━━━━━━━━━━━━━\n\n"
     for i, oid in enumerate(owners, 1): text += f"{i}. ID: {oid}\n"
     await update.message.reply_text(text)
 
 async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type not in ["group", "supergroup"]: return
     chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
-    if not is_chat_owner(chat_id, user_id): return
-    await update.message.reply_text(f"🛒 Магазин чата\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("chat"))
+    if not is_chat_owner(chat_id, user_id): 
+        await update.message.reply_text("❌ Только владельцы чата могут использовать магазин чата.")
+        return
+    await update.message.reply_text(f"🛒 МАГАЗИН ЧАТА\n━━━━━━━━━━━━━━━━\n💰 Ваш баланс: {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("chat"))
 
-# Админ
+# Админ команды
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args or len(context.args) < 2: return
@@ -1043,7 +1164,7 @@ async def admin_top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users()
     top = sorted(users.items(), key=lambda x: x[1].get("tokens", 0), reverse=True)[:10]
-    text = "🏆 ТОП 💮\n\n"
+    text = "🏆 ТОП ПО ТОКЕНАМ\n\n"
     for i, (uid, data) in enumerate(top, 1):
         name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
         text += f"{i}. {name} — {data.get('tokens', 0)} 💮\n"
@@ -1062,7 +1183,7 @@ async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     promos = load_promos()
     if not promos: return
-    text = "🎟 Промокоды:\n\n"
+    text = "🎟 ПРОМОКОДЫ:\n\n"
     for code, data in promos.items(): text += f"{code}: {data['amount']} 💮\n"
     await update.message.reply_text(text)
 
@@ -1076,7 +1197,7 @@ async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users(); rate_data = get_token_rate()
     donated_total, _, _ = get_donation_stats()
-    await update.message.reply_text(f"📊 Статистика\n👥 {len(users)}\n💮 В обороте: {rate_data.get('total_supply', 0):,} NBT\n🔥 Донатов: {donated_total:,} 💮")
+    await update.message.reply_text(f"📊 СТАТИСТИКА\n👥 Пользователей: {len(users)}\n💮 В обороте: {rate_data.get('total_supply', 0):,} NBT\n🔥 Донатов: {donated_total:,} 💮")
 
 async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -1086,7 +1207,7 @@ async def admin_force_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     rate_data = load_json(TOKEN_RATE_FILE); rate_data["rate_block"] = ""; save_json(TOKEN_RATE_FILE, rate_data)
     new_rate = get_token_rate()
-    await update.message.reply_text(f"💮 Курс: ${new_rate.get('rate', 0.01):.8f}")
+    await update.message.reply_text(f"💮 Курс обновлён: ${new_rate.get('rate', 0.01):.8f}")
 
 async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -1095,7 +1216,7 @@ async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for uid in users:
         try: await context.bot.send_message(int(uid), f"📢 {text}"); sent += 1; await asyncio.sleep(0.05)
         except: pass
-    await update.message.reply_text(f"✅ {sent}")
+    await update.message.reply_text(f"✅ Отправлено: {sent}")
 
 async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text; user_id = update.effective_user.id
@@ -1106,10 +1227,14 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if text == "💬 NeBlock AI V2":
         users = load_users(); users[str(user_id)]["current_model"] = "text"; users[str(user_id)]["waiting_for_image"] = False; save_users(users)
-        await update.message.reply_text(f"💬 NeBlock AI V2\n📊 Осталось: {remaining(user_id)}"); return True
+        await update.message.reply_text(f"💬 NeBlock AI V2 — ТЕКСТОВАЯ МОДЕЛЬ\n━━━━━━━━━━━━━━━━\n\n📊 Осталось запросов: {remaining(user_id)}\n📝 Отправьте ваш вопрос или запрос.")
+        return True
+    
     if text == "🎨 NeBlock Images V2":
         users = load_users(); users[str(user_id)]["current_model"] = "image"; users[str(user_id)]["waiting_for_image"] = True; save_users(users)
-        await update.message.reply_text(f"🎨 NeBlock Images V2\n📊 Осталось: {image_remaining(user_id)}"); return True
+        await update.message.reply_text(f"🎨 NeBlock Images V2 — ГЕНЕРАЦИЯ ИЗОБРАЖЕНИЙ\n━━━━━━━━━━━━━━━━\n\n📊 Осталось генераций: {image_remaining(user_id)}\n📝 Опишите изображение для генерации.")
+        return True
+    
     if text == "👤 Профиль":
         u = get_user(user_id); joined = datetime.fromisoformat(u.get("joined", "")).strftime("%d.%m.%Y")
         last = "Никогда"
@@ -1127,30 +1252,82 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             except: pass
             return "Не активен"
         await update.message.reply_text(
-            f"👤 Профиль V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"🆔 {user_id}\n📅 {joined}\n🔮 {cm}\n💎 Премиум: {premium}\n\n"
+            f"👤 ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ\n━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🆔 ID: {user_id}\n"
+            f"📅 Присоединился: {joined}\n"
+            f"🔮 Текущая модель: {cm}\n"
+            f"💎 Премиум: {premium}\n\n"
             f"💰 Баланс: {u.get('tokens', 0)} 💮 (~${usd:.2f})\n"
-            f"💮 Курс: 1 NBT = ${rate:.8f}\n"
+            f"💮 Курс NBT: 1 = ${rate:.8f}\n"
             f"🔥 Серия бонусов: {streak} дн.\n"
-            f"💎 Заработано: {u.get('earned_tokens', 0)} | 💸 Потрачено: {u.get('spent_tokens', 0)}\n"
-            f"🌍 Донатов: {u.get('donated_tokens', 0)} 💮\n\n"
-            f"💬 ЛС: {u.get('requests_today', 0)}/{DAILY_LIMIT + u.get('extra_requests', 0)} | {fmt(u.get('unlimited_until'))}\n"
-            f"🎨 Фото: {u.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + u.get('extra_image_requests', 0)} | {fmt(u.get('image_unlimited_until'))}\n"
-            f"👥 Чаты: {u.get('chat_requests_today', 0)}/{CHAT_DAILY_LIMIT + u.get('extra_chat_requests', 0)} | {fmt(u.get('chat_unlimited_until'))}\n"
-            f"💸 Переводов: {u.get('daily_transfer_total', 0)} 💮\n\n"
-            f"📈 Всего: {u.get('total_requests', 0)} текст | {u.get('total_images', 0)} фото\n"
-            f"🛡 {u.get('warnings', 0)}/5 | 👥 {u.get('referrals', 0)}\n🕐 {last}",
+            f"💎 Заработано всего: {u.get('earned_tokens', 0)} 💮\n"
+            f"💸 Потрачено всего: {u.get('spent_tokens', 0)} 💮\n"
+            f"🌍 Пожертвовано: {u.get('donated_tokens', 0)} 💮\n\n"
+            f"📊 ИСПОЛЬЗОВАНО СЕГОДНЯ:\n"
+            f"💬 Текст (ЛС): {u.get('requests_today', 0)}/{DAILY_LIMIT + u.get('extra_requests', 0)} | {fmt(u.get('unlimited_until'))}\n"
+            f"🎨 Фото (ЛС): {u.get('image_requests_today', 0)}/{IMAGE_DAILY_LIMIT + u.get('extra_image_requests', 0)} | {fmt(u.get('image_unlimited_until'))}\n"
+            f"👥 Текст (чаты): {u.get('chat_requests_today', 0)}/{CHAT_DAILY_LIMIT + u.get('extra_chat_requests', 0)} | {fmt(u.get('chat_unlimited_until'))}\n"
+            f"💸 Переводов сегодня: {u.get('daily_transfer_total', 0)} 💮\n\n"
+            f"📈 ВСЕГО ЗА ВСЁ ВРЕМЯ:\n"
+            f"💬 Текстовых запросов: {u.get('total_requests', 0)}\n"
+            f"🎨 Сгенерировано фото: {u.get('total_images', 0)}\n"
+            f"🛡 Предупреждения: {u.get('warnings', 0)}/5\n"
+            f"👥 Рефералов: {u.get('referrals', 0)}\n"
+            f"🕐 Последняя активность: {last}",
             reply_markup=main_menu()
         )
         return True
-    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("private")); return True
-    if text == "🔥 Награды": await streak_cmd(update, context); return True
-    if text == "💸 Перевод": await transfer_button_handler(update, context); return True
-    if text == "🌍 Донат": await donate_info_cmd(update, context); return True
-    if text == "🎟 Промокод": await promo_cmd(update, context); return True
-    if text == "📚 FAQ": await update.message.reply_text(FAQ_TEXT); return True
-    if text == "🎫 Скидки": await discounts_cmd(update, context); return True
-    if text == "💮 Курс NBT": await tokenrate_cmd(update, context); return True
+    
+    if text == "🛒 Магазин": 
+        await update.message.reply_text(f"🛒 МАГАЗИН NeBlock AI\n━━━━━━━━━━━━━━━━\n\n💰 Ваш баланс: {get_tokens(user_id)} 💮\n\nВыберите категорию товаров:", reply_markup=shop_keyboard("private"))
+        return True
+    
+    if text == "🔥 Награды": 
+        user = get_user(user_id)
+        streak = user.get("daily_bonus_streak", 0)
+        rate_data = get_token_rate()
+        rate = rate_data.get("rate", 0.01)
+        
+        text = f"🔥 НАГРАДЫ И БОНУСЫ\n━━━━━━━━━━━━━━━━\n\n"
+        text += f"📊 Ваша серия: {streak} дн.\n"
+        text += f"💮 Курс NBT: ${rate:.8f}\n"
+        
+        if streak > 0 and streak < MAX_STREAK_DAY:
+            reward = STREAK_BASE_REWARDS[streak]
+            text += f"🎁 Сегодняшний день: {reward['icon']} {reward['name']}\n"
+        
+        text += f"\n💰 Баланс: {get_tokens(user_id)} 💮\n\n"
+        text += "Выберите действие:"
+        
+        await update.message.reply_text(text, reply_markup=earn_keyboard())
+        return True
+    
+    if text == "💸 Перевод": 
+        await transfer_button_handler(update, context)
+        return True
+    
+    if text == "🌍 Донат": 
+        await donate_info_cmd(update, context)
+        return True
+    
+    if text == "🎟 Промокод": 
+        await promo_cmd(update, context)
+        return True
+    
+    if text == "📚 FAQ": 
+        await update.message.reply_text(FAQ_TEXT[:4000])
+        if len(FAQ_TEXT) > 4000:
+            await update.message.reply_text(FAQ_TEXT[4000:])
+        return True
+    
+    if text == "🎫 Скидки": 
+        await discounts_cmd(update, context)
+        return True
+    
+    if text == "💮 Курс NBT": 
+        await tokenrate_cmd(update, context)
+        return True
+    
     return False
 
 async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1163,10 +1340,16 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     
     if data.startswith("donate_confirm_"):
         amount = int(data.replace("donate_confirm_", ""))
-        if get_user(user_id).get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно!"); return
+        if get_user(user_id).get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно токенов!"); return
         if donate_tokens(user_id, amount):
             donated_total, _, _ = get_donation_stats()
-            await query.edit_message_text(f"🌍 ДОНАТ ВЫПОЛНЕН!\n🔥 Сожжено: {amount} 💮\n💎 Баланс: {get_tokens(user_id)} 💮\n🌍 Всего: {donated_total:,} 💮")
+            await query.edit_message_text(
+                f"🌍 ДОНАТ ВЫПОЛНЕН!\n━━━━━━━━━━━━━━━━\n\n"
+                f"🔥 Сожжено: {amount} 💮\n"
+                f"💎 Ваш баланс: {get_tokens(user_id)} 💮\n"
+                f"🌍 Всего сожжено: {donated_total:,} 💮\n\n"
+                f"Спасибо за вклад в развитие экосистемы!"
+            )
         return
     
     if data.startswith("transfer_confirm_"):
@@ -1174,10 +1357,10 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         if len(parts) >= 4:
             to_id = int(parts[2]); amount = int(parts[3])
             sender = get_user(user_id)
-            if sender.get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно!"); return
-            tax, tax_percent, _ = get_transfer_tax(amount)
+            if sender.get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно токенов!"); return
+            tax, tax_percent, tax_name = get_transfer_tax(amount)
             receiver = get_user(to_id)
-            if not receiver: await query.edit_message_text("❌ Не найден!"); return
+            if not receiver: await query.edit_message_text("❌ Получатель не найден!"); return
             final_amount = amount - tax
             users = load_users()
             uid_from = str(user_id); uid_to = str(to_id)
@@ -1187,44 +1370,198 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             users[uid_to]["tokens"] = users[uid_to].get("tokens", 0) + final_amount
             users[uid_to]["earned_tokens"] = users[uid_to].get("earned_tokens", 0) + final_amount
             save_users(users); log_transfer(user_id, to_id, amount, tax, final_amount)
-            tax_info = f"\n📊 Налог: {tax} 💮 ({tax_percent}%)" if tax > 0 else ""
-            await query.edit_message_text(f"✅ ПЕРЕВОД!\n👤 {to_id}\n💸 {amount} 💮\n💰 Зачислено: {final_amount} 💮{tax_info}\n💎 Баланс: {get_tokens(user_id)} 💮")
+            tax_info = f"\n📊 Налог: {tax} 💮 ({tax_percent}% - {tax_name})" if tax > 0 else "\n📊 Без налога"
+            await query.edit_message_text(
+                f"✅ ПЕРЕВОД ВЫПОЛНЕН!\n━━━━━━━━━━━━━━━━\n"
+                f"👤 Получатель: ID {to_id}\n"
+                f"💸 Сумма: {amount} 💮\n"
+                f"💰 Зачислено: {final_amount} 💮{tax_info}\n"
+                f"💎 Ваш баланс: {get_tokens(user_id)} 💮"
+            )
         return
     
-    if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n💰 {get_tokens(user_id)} 💮", reply_markup=main_menu())
-    elif data == "about": await query.edit_message_text(f"ℹ️ NeBlock AI V{BOT_VERSION}\n\n💬 Текст\n🎨 Фото\n💸 Переводы\n🌍 Донаты\n🔥 Награды (до 30 дней)\n💮 NBT", reply_markup=back_button())
-    elif data == "donate_info": await donate_info_cmd(update, context)
-    elif data == "streak_info": await streak_cmd(update, context)
-    elif data == "models": await query.edit_message_text("🧠 МОДЕЛИ\n\n💬 NeBlock AI V2\n🎨 NeBlock Images V2", reply_markup=back_button())
-    elif data == "tokenrate":
+    # Обработчики для кнопки "🔥 Награды" в разных меню
+    if data == "streak_info":
+        # Показываем информацию о наградах с кнопками действий
+        user = get_user(user_id)
+        streak = user.get("daily_bonus_streak", 0)
+        rate_data = get_token_rate()
+        rate = rate_data.get("rate", 0.01)
+        
+        text = f"🔥 НАГРАДЫ И БОНУСЫ\n━━━━━━━━━━━━━━━━\n\n"
+        text += f"📊 Ваша серия: {streak} дн.\n"
+        text += f"💮 Курс NBT: ${rate:.8f}\n"
+        
+        if streak > 0 and streak < MAX_STREAK_DAY:
+            reward = STREAK_BASE_REWARDS[streak]
+            text += f"🎁 Сегодняшний день: {reward['icon']} {reward['name']}\n"
+        elif streak >= MAX_STREAK_DAY:
+            text += f"👑 Максимальная серия!\n"
+        
+        text += f"\n💰 Баланс: {get_tokens(user_id)} 💮\n\n"
+        text += "Выберите действие:"
+        
+        await query.edit_message_text(text, reply_markup=earn_keyboard())
+        return
+    
+    if data == "menu": 
+        await query.edit_message_text(
+            f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━\n\n"
+            f"💰 Баланс: {get_tokens(user_id)} 💮\n\n"
+            f"Выберите раздел:",
+            reply_markup=main_menu()
+        )
+        return
+    
+    if data == "about": 
+        await query.edit_message_text(
+            f"ℹ️ О БОТЕ NeBlock AI\n━━━━━━━━━━━━━━━━\n\n"
+            f"Версия: {BOT_VERSION}\n\n"
+            f"💬 Текстовые запросы — YandexGPT\n"
+            f"🎨 Генерация изображений — YandexART\n"
+            f"💸 Переводы токенов между пользователями\n"
+            f"🌍 Благотворительность — сжигание токенов\n"
+            f"🔥 Ежедневные награды — серия до 30 дней\n"
+            f"💮 Внутренняя валюта NBT с рыночным курсом\n\n"
+            f"📊 Лимиты в ЛС:\n"
+            f"• {DAILY_LIMIT} текстовых запросов/день\n"
+            f"• {IMAGE_DAILY_LIMIT} генераций фото/день\n\n"
+            f"💡 Используйте /faq для ответов на вопросы",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data == "donate_info": 
+        await query.edit_message_text(DONATE_INFO_TEXT, reply_markup=back_button())
+        return
+    
+    if data == "models": 
+        await query.edit_message_text(
+            "🧠 МОДЕЛИ NeBlock AI\n━━━━━━━━━━━━━━━━\n\n"
+            "💬 NeBlock AI V2 — текстовая модель\n"
+            "• Отвечает на вопросы\n"
+            "• Помогает с задачами\n"
+            "• Работает в ЛС и чатах\n\n"
+            "🎨 NeBlock Images V2 — генерация изображений\n"
+            "• Создаёт изображения по описанию\n"
+            "• Размер: 1024×1024\n"
+            "• Команда: /genimage",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data == "tokenrate":
         rd = get_token_rate()
-        await query.edit_message_text(f"💮 NBT\n💰 1 = ${rd.get('rate', 0.01):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n{rd.get('day_icon', '📊')} {rd.get('day_name', '')}\n🔥 Сожжено: {rd.get('total_donated', 0):,} 💮", reply_markup=back_button())
-    elif data == "transfer": context.user_data["waiting_transfer"] = True; await query.edit_message_text("💸 Отправьте ID и сумму:\nID КОЛИЧЕСТВО", reply_markup=back_button())
-    elif data == "commands": await query.edit_message_text(COMMANDS_LIST, reply_markup=back_button())
-    elif data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button())
-    elif data == "discounts_info":
+        await query.edit_message_text(
+            f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n"
+            f"💰 1 NBT = ${rd.get('rate', 0.01):.8f}\n"
+            f"💎 Капитализация: ${rd.get('market_cap', 0):,.2f}\n"
+            f"🪙 В обороте: {rd.get('total_supply', 0):,} NBT\n"
+            f"🔥 Сожжено: {rd.get('total_donated', 0):,} 💮\n"
+            f"{rd.get('day_icon', '📊')} День: {rd.get('day_name', '')}\n"
+            f"🔄 Обновление: {rd.get('next_update', '')}\n\n"
+            f"💡 Курс влияет на размер ежедневных наград!",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data == "transfer": 
+        context.user_data["waiting_transfer"] = True
+        await query.edit_message_text(
+            f"{TRANSFER_INFO}\n\n"
+            f"💸 Отправьте ID и сумму:\n"
+            f"Формат: ID КОЛИЧЕСТВО\n"
+            f"Пример: 1671403667 100",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data == "commands": 
+        await query.edit_message_text(COMMANDS_LIST, reply_markup=back_button())
+        return
+    
+    if data == "changelog": 
+        await query.edit_message_text(CHANGELOG, reply_markup=back_button())
+        return
+    
+    if data == "discounts_info":
         discounts = get_discounts(); active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
-        text = "🎫 СКИДКИ\n\n"
-        if not active: text += "Нет."
+        text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
+        if not active: text += "😔 Сейчас нет активных скидок."
         else:
             for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
                 item = shop_items.get(item_id)
                 if not item: continue
-                if disc.get("type") == "legendary": text += f"🌟 {item['icon']} {item['name']}\n💫 БЕСПЛАТНО!\n\n"
-                else: text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n🔥 -{disc['percent']}% = {disc['new_price']} 💮\n\n"
+                if disc.get("type") == "legendary": 
+                    text += f"🌟 {item['icon']} {item['name']}\n💫 БЕСПЛАТНО! (ЛЕГЕНДАРНАЯ СКИДКА)\n\n"
+                else: 
+                    text += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n🔥 Скидка -{disc['percent']}% = {disc['new_price']} 💮\n\n"
         await query.edit_message_text(text, reply_markup=back_button())
-    elif data == "premium_info": await query.edit_message_text(f"💎 ПРЕМИУМ\n\nЛС: {shop_items.get('premium_day', {}).get('price', '?')}/{shop_items.get('premium_week', {}).get('price', '?')}/{shop_items.get('premium_forever', {}).get('price', '?')} 💮", reply_markup=back_button())
-    elif data == "stats":
+        return
+    
+    if data == "premium_info": 
+        await query.edit_message_text(
+            f"💎 ПРЕМИУМ В ЛС\n━━━━━━━━━━━━━━━━\n\n"
+            f"Премиум снимает все лимиты в личных сообщениях:\n"
+            f"• Безлимитные текстовые запросы\n"
+            f"• Безлимитная генерация фото\n\n"
+            f"🛒 ДОСТУПНЫЕ ТОВАРЫ:\n"
+            f"⭐ Премиум ЛС 1 день — {shop_items.get('premium_day', {}).get('price', '?')} 💮\n"
+            f"⭐ Премиум ЛС 7 дней — {shop_items.get('premium_week', {}).get('price', '?')} 💮\n"
+            f"👑 Премиум ЛС навсегда — {shop_items.get('premium_forever', {}).get('price', '?')} 💮\n\n"
+            f"💡 Также можно получить Премиум ЛС 1 день за 30-й день серии!",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data == "stats":
         u = get_user(user_id)
-        await query.edit_message_text(f"📊 Статистика\n💬 {u.get('requests_today', 0)}\n🎨 {u.get('image_requests_today', 0)}\n💰 {u.get('tokens', 0)} 💮\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n🌍 Донатов: {u.get('donated_tokens', 0)}", reply_markup=back_button())
-    elif data == "shop": await query.edit_message_text(f"🛒 Магазин\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("private"))
-    elif data == "earn": await query.edit_message_text(f"🔥 Награды\n💎 {get_tokens(user_id)} 💮", reply_markup=earn_keyboard())
-    elif data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправь промокод.", reply_markup=back_button())
-    elif data == "faq": await query.edit_message_text(FAQ_TEXT[:4000], reply_markup=back_button())
-    elif data == "daily_bonus":
+        await query.edit_message_text(
+            f"📊 СТАТИСТИКА\n━━━━━━━━━━━━━━━━\n\n"
+            f"💬 Запросов сегодня: {u.get('requests_today', 0)}\n"
+            f"🎨 Генераций сегодня: {u.get('image_requests_today', 0)}\n"
+            f"💰 Баланс: {u.get('tokens', 0)} 💮\n"
+            f"🔥 Серия бонусов: {u.get('daily_bonus_streak', 0)} дн.\n"
+            f"🌍 Пожертвовано: {u.get('donated_tokens', 0)} 💮\n"
+            f"👥 Рефералов: {u.get('referrals', 0)}",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data == "shop": 
+        await query.edit_message_text(
+            f"🛒 МАГАЗИН\n━━━━━━━━━━━━━━━━\n\n"
+            f"💰 Баланс: {get_tokens(user_id)} 💮\n\n"
+            f"Выберите категорию:",
+            reply_markup=shop_keyboard("private")
+        )
+        return
+    
+    if data == "earn": 
+        user = get_user(user_id)
+        streak = user.get("daily_bonus_streak", 0)
+        await query.edit_message_text(
+            f"🔥 НАГРАДЫ\n━━━━━━━━━━━━━━━━\n\n"
+            f"📊 Серия: {streak} дн.\n"
+            f"💰 Баланс: {get_tokens(user_id)} 💮\n\n"
+            f"Выберите действие:",
+            reply_markup=earn_keyboard()
+        )
+        return
+    
+    if data == "promo": 
+        context.user_data["waiting_promo"] = True
+        await query.edit_message_text("🎟 Отправьте промокод для активации.", reply_markup=back_button())
+        return
+    
+    if data == "faq": 
+        await query.edit_message_text(FAQ_TEXT[:4000], reply_markup=back_button())
+        return
+    
+    if data == "daily_bonus":
         u = get_user(user_id); today = datetime.now().strftime("%Y-%m-%d")
         if u.get("daily_bonus_claimed") == today:
-            await query.answer("❌ Уже забирали сегодня!", show_alert=True)
+            await query.answer("❌ Вы уже забирали бонус сегодня! Приходите завтра.", show_alert=True)
         else:
             users = load_users(); uid = str(user_id)
             users[uid]["daily_bonus_claimed"] = today
@@ -1234,7 +1571,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             if users[uid].get("last_bonus_date") == yesterday:
                 users[uid]["daily_bonus_streak"] = users[uid].get("daily_bonus_streak", 0) + 1
             elif users[uid].get("last_bonus_date") != today:
-                users[uid]["daily_bonus_streak"] = 1  # Сброс серии
+                users[uid]["daily_bonus_streak"] = 1
             
             users[uid]["last_bonus_date"] = today
             streak = users[uid]["daily_bonus_streak"]
@@ -1246,7 +1583,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             
             # Проверяем, не получил ли уже премиум за 30-й день
             if premium_bonus and users[uid].get("streak_30_premium_claimed"):
-                premium_bonus = False  # Уже получал, больше не даём
+                premium_bonus = False
             
             save_users(users)
             add_tokens(user_id, bonus)
@@ -1260,13 +1597,13 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 users[uid]["premium_until"] = (base + timedelta(hours=24)).isoformat()
                 users[uid]["streak_30_premium_claimed"] = True
                 save_users(users)
-                premium_text = "\n🎁 + Премиум ЛС на 1 день!"
+                premium_text = "\n🎁 + Премиум ЛС на 1 день! (единоразово)"
             
-            rate_info = f"\n📈 Множитель курса: x{rate_multiplier:.2f}" if abs(rate_multiplier - 1.0) > 0.01 else ""
+            rate_info = f"\n📈 Множитель курса: ×{rate_multiplier:.2f}" if abs(rate_multiplier - 1.0) > 0.01 else ""
             
             await query.answer(f"🎉 +{bonus} 💮! {icon} {day_name}", show_alert=True)
             await query.edit_message_text(
-                f"🎁 ЕЖЕДНЕВНЫЙ БОНУС\n━━━━━━━━━━━━━━━━\n\n"
+                f"🎁 ЕЖЕДНЕВНЫЙ БОНУС ПОЛУЧЕН!\n━━━━━━━━━━━━━━━━\n\n"
                 f"{icon} {day_name}\n"
                 f"💰 Получено: +{bonus} 💮{premium_text}{rate_info}\n"
                 f"💎 Баланс: {get_tokens(user_id)} 💮\n"
@@ -1276,15 +1613,28 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 f"📅 /streak — все награды",
                 reply_markup=back_button()
             )
-    elif data == "ref_link":
+        return
+    
+    if data == "ref_link":
         user = get_user(user_id); bot_username = (await context.bot.get_me()).username
-        await query.edit_message_text(f"👥 https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n💰 +{REFERRAL_BONUS} 💮 тебе\n🎁 +{INVITED_BONUS} 💮 другу", reply_markup=back_button())
-    elif data.startswith("confirm_"):
+        await query.edit_message_text(
+            f"👥 РЕФЕРАЛЬНАЯ ПРОГРАММА\n━━━━━━━━━━━━━━━━\n\n"
+            f"🔗 Ваша ссылка:\n"
+            f"https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n\n"
+            f"💰 Вы получаете: +{REFERRAL_BONUS} 💮 за каждого друга\n"
+            f"🎁 Друг получает: +{INVITED_BONUS} 💮 при регистрации\n\n"
+            f"📊 Ваши рефералы: {user.get('referrals', 0)}\n\n"
+            f"💡 Отправьте ссылку друзьям и получайте бонусы!",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data.startswith("confirm_"):
         item_id = data.replace("confirm_", ""); item = shop_items.get(item_id)
         if not item: return
         price, percent, disc = get_discounted_price(item_id)
         tokens = get_tokens(user_id)
-        if tokens < price: await query.answer("❌ Недостаточно!", show_alert=True); return
+        if tokens < price: await query.answer("❌ Недостаточно токенов!", show_alert=True); return
         remove_tokens(user_id, price); users = load_users(); uid = str(user_id)
         actions = {"extra5": ("extra_requests", 5), "extra10": ("extra_requests", 10), "extra50": ("extra_requests", 50), "image1": ("extra_image_requests", 1), "image5": ("extra_image_requests", 5), "image20": ("extra_image_requests", 20)}
         time_actions = {"unlimited_1h": ("unlimited_until", 1), "unlimited_24h": ("unlimited_until", 24), "unlimited_7d": ("unlimited_until", 168), "image_unlimited_1h": ("image_unlimited_until", 1)}
@@ -1294,23 +1644,40 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         elif item_id == "premium_week": users[uid]["premium_until"] = (datetime.now() + timedelta(days=7)).isoformat()
         elif item_id == "premium_forever": users[uid]["premium_until"] = (datetime.now() + timedelta(days=36500)).isoformat()
         save_users(users)
-        dt = f"\n🎫 -{percent}%" if percent > 0 else ""
-        if disc and disc.get("type") == "legendary": dt = "\n🌟 ЛЕГЕНДАРНАЯ!"
-        await query.answer(f"✅ {item['name']}!", show_alert=True)
-        await query.edit_message_text(f"✅ {item['name']}{dt}\n💰 Потрачено: {price} 💮\n💎 Остаток: {get_tokens(user_id)} 💮", reply_markup=back_button())
-    elif data.startswith("buy_"):
+        dt = f"\n🎫 Скидка: -{percent}%" if percent > 0 else ""
+        if disc and disc.get("type") == "legendary": dt = "\n🌟 ЛЕГЕНДАРНАЯ СКИДКА! Товар бесплатно!"
+        await query.answer(f"✅ {item['name']} куплен!", show_alert=True)
+        await query.edit_message_text(
+            f"✅ ПОКУПКА ВЫПОЛНЕНА!\n━━━━━━━━━━━━━━━━\n\n"
+            f"{item['icon']} {item['name']}\n"
+            f"📝 {item['desc']}{dt}\n"
+            f"💰 Потрачено: {price} 💮\n"
+            f"💎 Остаток: {get_tokens(user_id)} 💮",
+            reply_markup=back_button()
+        )
+        return
+    
+    if data.startswith("buy_"):
         item_id = data.replace("buy_", ""); item = shop_items.get(item_id)
         if not item: return
         price, percent, disc = get_discounted_price(item_id)
         tokens = get_tokens(user_id); can = "✅ Хватает" if tokens >= price else "❌ Не хватает"
         dt = ""
         if percent > 0 and disc:
-            if disc.get("type") == "legendary": dt = "\n\n🌟 БЕСПЛАТНО!"
-            else: dt = f"\n\n{disc.get('color', '🟢')} -{percent}%\n💵 {disc['original']} → 🔥 {price} 💮"
-        await query.edit_message_text(f"🛒 {item['icon']} {item['name']}\n📝 {item['desc']}\n⚠️ {item.get('warning', '')}{dt}\n\n💎 {tokens} 💮\n{can}", reply_markup=confirm_keyboard(item_id))
+            if disc.get("type") == "legendary": dt = "\n\n🌟 ЛЕГЕНДАРНАЯ СКИДКА! Товар БЕСПЛАТНО!"
+            else: dt = f"\n\n{disc.get('color', '🟢')} СКИДКА -{percent}%\n💵 Старая цена: {disc['original']} 💮\n🔥 Новая цена: {price} 💮"
+        await query.edit_message_text(
+            f"🛒 {item['icon']} {item['name']}\n━━━━━━━━━━━━━━━━\n\n"
+            f"📝 Описание: {item['desc']}\n"
+            f"⚠️ Важно: {item.get('warning', '')}{dt}\n\n"
+            f"💎 Ваш баланс: {tokens} 💮\n"
+            f"{can}",
+            reply_markup=confirm_keyboard(item_id)
+        )
+        return
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤔 Неизвестная команда.\n/start — меню | /commands — список")
+    await update.message.reply_text("🤔 Неизвестная команда.\nИспользуйте /start для меню или /commands для списка команд.")
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip() if update.message.text else ""
@@ -1322,7 +1689,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         users = load_users(); uid = str(user_id)
         if uid in users: users[uid]["username"] = username; save_users(users)
     
-    if is_user_muted(user_id): await update.message.reply_text("🚫 Заблокированы."); return
+    if is_user_muted(user_id): await update.message.reply_text("🚫 Вы заблокированы."); return
     is_clean, severity, reason = moderate_content(text)
     if not is_clean: muted, warn = warn_user(user_id, severity); await update.message.reply_text(f"⚠️ {reason}\n{warn}"); return
     
@@ -1335,7 +1702,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 context.args = [str(to_id), str(amount)]
                 await transfer_cmd(update, context)
                 return
-            except: await update.message.reply_text("❌ ID КОЛИЧЕСТВО"); return
+            except: await update.message.reply_text("❌ Неверный формат. Используйте: ID КОЛИЧЕСТВО"); return
     
     if chat_type == "private":
         if await reply_button_handler(update, context): return
@@ -1365,27 +1732,31 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     
     user = get_user(user_id)
-    if context.user_data.get("waiting_promo"): context.user_data["waiting_promo"] = False; success, result = use_promo(user_id, text); await update.message.reply_text(f"🎟 +{result} 💮!" if success else f"❌ {result}"); return
+    if context.user_data.get("waiting_promo"): 
+        context.user_data["waiting_promo"] = False
+        success, result = use_promo(user_id, text)
+        await update.message.reply_text(f"🎟 Промокод активирован! +{result} 💮" if success else f"❌ {result}")
+        return
     
     if is_image_request or (chat_type == "private" and (user.get("current_model") == "image" or user.get("waiting_for_image"))):
         if chat_type == "private": users = load_users(); users[str(user_id)]["waiting_for_image"] = False; save_users(users)
         if not can_image_request(user_id, chat_type, chat_id):
-            await update.message.reply_text(f"🚫 Лимит фото!", reply_to_message_id=update.message.message_id if chat_type != "private" else None, reply_markup=limit_reached_keyboard() if chat_type == "private" else None); return
-        msg = await update.message.reply_text("🎨 Генерирую...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
+            await update.message.reply_text(f"🚫 Лимит генераций исчерпан!", reply_to_message_id=update.message.message_id if chat_type != "private" else None, reply_markup=limit_reached_keyboard() if chat_type == "private" else None); return
+        msg = await update.message.reply_text("🎨 Генерирую изображение...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
         try:
             image_bytes, error = await generate_image(text)
             if image_bytes: add_image_request(user_id, chat_type); await msg.delete(); await update.message.reply_photo(photo=image_bytes, caption=f"🎨 NeBlock Images V2\n📝 {text[:200]}", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
-            else: await msg.edit_text("❌ Ошибка")
+            else: await msg.edit_text("❌ Ошибка генерации.")
         except:
             try: await msg.delete()
             except: pass
-            await update.message.reply_text("❌ Ошибка.")
+            await update.message.reply_text("❌ Ошибка генерации.")
         return
     
     if not can_request(user_id, chat_type, chat_id):
-        await update.message.reply_text(f"🚫 Лимит!", reply_markup=limit_reached_keyboard() if chat_type == "private" else None, reply_to_message_id=update.message.message_id if chat_type != "private" else None); return
+        await update.message.reply_text(f"🚫 Лимит запросов исчерпан!", reply_markup=limit_reached_keyboard() if chat_type == "private" else None, reply_to_message_id=update.message.message_id if chat_type != "private" else None); return
     
-    msg = await update.message.reply_text("💬 Генерирую...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
+    msg = await update.message.reply_text("💬 Генерирую ответ...", reply_to_message_id=update.message.message_id if chat_type != "private" else None)
     try:
         response = client.responses.create(prompt={"id": PROMPT_ID}, input=text); answer = response.output_text
         add_request(user_id, chat_type); await msg.delete()
@@ -1395,11 +1766,11 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else: used = user.get("requests_today", 0) + 1; total = DAILY_LIMIT + user.get("extra_requests", 0); label = "💬 NeBlock AI V2"
             footer = f"\n\n━━━━━━━━━━━━━━━━\n{label} | 📊 {used}/{total} | Осталось: {rem}{AI_DISCLAIMER}"
             for i in range(0, len(answer), 4000): chunk = answer[i:i+4000]; await update.message.reply_text(chunk + footer if i == 0 else chunk, reply_to_message_id=update.message.message_id if chat_type != "private" else None)
-        else: await update.message.reply_text(f"🤷 Пусто{AI_DISCLAIMER}")
+        else: await update.message.reply_text(f"🤷 Пустой ответ{AI_DISCLAIMER}")
     except:
         try: await msg.delete()
         except: pass
-        await update.message.reply_text(f"❌ Ошибка{AI_DISCLAIMER}")
+        await update.message.reply_text(f"❌ Ошибка генерации{AI_DISCLAIMER}")
 
 def main():
     print(f"🧠 NeBlock AI V{BOT_VERSION}")
@@ -1407,6 +1778,7 @@ def main():
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("streak", streak_cmd))
+    app.add_handler(CommandHandler("streak_info", streak_info_cmd))
     app.add_handler(CommandHandler("genimage", genimage_cmd))
     app.add_handler(CommandHandler("tokenrate", tokenrate_cmd))
     app.add_handler(CommandHandler("discounts", discounts_cmd))
