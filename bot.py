@@ -1,4 +1,4 @@
-iimport openai
+import openai
 import base64
 import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
