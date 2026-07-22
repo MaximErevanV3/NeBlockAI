@@ -1274,10 +1274,16 @@ async def admin_unmute(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def admin_warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args: return
-    try: uid = str(int(context.args[0])); users = load_users(); users[uid]["warnings"] = users[uid].get("warnings", 0) + 1
-        if users[uid]["warnings"] >= 5: users[uid]["banned"] = True
-        save_users(users); await update.message.reply_text(f"⚠️ Предупреждение {users[uid]['warnings']}/5")
-    except: pass
+    try:
+        uid = str(int(context.args[0]))
+        users = load_users()
+        users[uid]["warnings"] = users[uid].get("warnings", 0) + 1
+        if users[uid]["warnings"] >= 5:
+            users[uid]["banned"] = True
+        save_users(users)
+        await update.message.reply_text(f"⚠️ Предупреждение {users[uid]['warnings']}/5")
+    except:
+        pass
 
 async def admin_resetwarns(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
