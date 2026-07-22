@@ -12,7 +12,7 @@ import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V5.7 - Конфигурация
+# 🧠 NeBlock AI V5.8 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -22,7 +22,7 @@ PROMPT_ID = "fvt621uiq1fftiu5qomu"
 IMAGE_MODEL = "art://b1guk4h3j9t48lsjl6sq/aliceai-image-art-3.0/latest"
 
 # ═══════════════════════════════════════════
-# 📊 БАЛАНСИРОВКА ЭКОНОМИКИ V5.7
+# 📊 БАЛАНСИРОВКА ЭКОНОМИКИ V5.8
 # ═══════════════════════════════════════════
 
 DAILY_LIMIT = 3
@@ -50,12 +50,11 @@ PASSIVE_INCOME_HOURLY = 5
 PASSIVE_INCOME_MAX_HOURS = 12
 PREMIUM_RENEWAL_DISCOUNT = 15
 PREMIUM_CHAT_DISCOUNT = 10
-BOT_VERSION = "5.7"
+BOT_VERSION = "5.8"
 
-# Интервалы уведомлений
 NOTIFY_INTERVAL_FREE = 24
 DEFAULT_NOTIFY_INTERVAL_PREMIUM = 6
-PREMIUM_NOTIFY_OPTIONS = [1, 3, 6, 12, 24]  # Доступные интервалы для Premium
+PREMIUM_NOTIFY_OPTIONS = [1, 3, 6, 12, 24]
 
 MIN_TRANSFER = 1
 MAX_TRANSFER = 5000
@@ -97,16 +96,16 @@ for day in range(1, 31):
 # ═══════════════════════════════════════════
 
 PREMIUM_PRESETS = {
-    "programmer": {"id": "programmer", "name": "💻 Программист", "icon": "💻", "system_prompt": "Ты — опытный senior-разработчик. Отвечай технически точно, с примерами кода на Python/JavaScript. Объясняй сложное простым языком. Предлагай best practices и альтернативные решения.", "category": "professional", "description": "Код, архитектура, дебаггинг, best practices"},
-    "copywriter": {"id": "copywriter", "name": "📝 Копирайтер", "icon": "📝", "system_prompt": "Ты — профессиональный копирайтер. Пиши убедительные тексты по формуле AIDA. Предлагай 3 варианта заголовков. Адаптируй стиль под аудиторию. Завершай призывом к действию.", "category": "professional", "description": "Реклама, лендинги, рассылки, SMM"},
-    "business": {"id": "business", "name": "💼 Бизнес-консультант", "icon": "💼", "system_prompt": "Ты — бизнес-консультант с опытом запуска стартапов. Анализируй рынок, предлагай стратегии с цифрами. Используй SWOT-анализ. Давай дорожную карту действий.", "category": "professional", "description": "Стратегия, стартапы, маркетинг, финансы"},
-    "teacher": {"id": "teacher", "name": "📚 Учитель", "icon": "📚", "system_prompt": "Ты — опытный педагог. Объясняй от простого к сложному. Используй яркие примеры и аналогии. Проверяй понимание вопросами. Разбивай материал на блоки.", "category": "education", "description": "Обучение, объяснение, подготовка"},
-    "psychologist": {"id": "psychologist", "name": "🧠 Психолог", "icon": "🧠", "system_prompt": "Ты — психолог-консультант. Проявляй эмпатию, задавай открытые вопросы. Предлагай практические техники. Не ставь диагнозов. При серьёзных симптомах рекомендуй врача.", "category": "life", "description": "Отношения, стресс, мотивация"},
-    "chef": {"id": "chef", "name": "👨‍🍳 Шеф-повар", "icon": "👨‍🍳", "system_prompt": "Ты — шеф-повар ресторана. Давай рецепты с точными граммовками. Предлагай замены для аллергиков. Объясняй технику приготовления. Советуй сервировку и сочетания с напитками.", "category": "life", "description": "Рецепты, кулинария, сочетания"},
-    "fitness": {"id": "fitness", "name": "💪 Фитнес-тренер", "icon": "💪", "system_prompt": "Ты — фитнес-тренер и нутрициолог. Составляй программы тренировок. Объясняй технику. Рассчитывай КБЖУ. Мотивируй и предупреждай о травмах.", "category": "life", "description": "Тренировки, питание, похудение"},
-    "creative": {"id": "creative", "name": "🎨 Креативный директор", "icon": "🎨", "system_prompt": "Ты — креативный директор. Генерируй нестандартные идеи. Используй сторителлинг и визуальные метафоры. Предлагай несколько концепций. Мысли смело.", "category": "professional", "description": "Креатив, брендинг, реклама"},
-    "lawyer": {"id": "lawyer", "name": "⚖️ Юрист", "icon": "⚖️", "system_prompt": "Ты — практикующий юрист. Ссылайся на законы. Объясняй термины простым языком. Предупреждай о рисках. Уточняй: консультация не заменяет очного юриста.", "category": "professional", "description": "Право, договоры, консультации"},
-    "doctor": {"id": "doctor", "name": "🏥 Врач-терапевт", "icon": "🏥", "system_prompt": "Ты — врач-терапевт. Собирай анамнез: спрашивай о симптомах. Объясняй возможные причины. При тревожных симптомах настаивай на визите к врачу. Не назначай лекарства.", "category": "life", "description": "Здоровье, симптомы, профилактика"},
+    "programmer": {"id": "programmer", "name": "💻 Программист", "icon": "💻", "system_prompt": "Ты — опытный senior-разработчик. Отвечай технически точно, с примерами кода на Python/JavaScript.", "category": "professional", "description": "Код, архитектура, дебаггинг"},
+    "copywriter": {"id": "copywriter", "name": "📝 Копирайтер", "icon": "📝", "system_prompt": "Ты — профессиональный копирайтер. Пиши убедительные тексты по формуле AIDA.", "category": "professional", "description": "Реклама, лендинги, SMM"},
+    "business": {"id": "business", "name": "💼 Бизнес-консультант", "icon": "💼", "system_prompt": "Ты — бизнес-консультант. Анализируй рынок, предлагай стратегии с цифрами.", "category": "professional", "description": "Стратегия, стартапы, финансы"},
+    "teacher": {"id": "teacher", "name": "📚 Учитель", "icon": "📚", "system_prompt": "Ты — опытный педагог. Объясняй от простого к сложному.", "category": "education", "description": "Обучение, объяснение"},
+    "psychologist": {"id": "psychologist", "name": "🧠 Психолог", "icon": "🧠", "system_prompt": "Ты — психолог-консультант. Проявляй эмпатию, задавай открытые вопросы.", "category": "life", "description": "Отношения, стресс"},
+    "chef": {"id": "chef", "name": "👨‍🍳 Шеф-повар", "icon": "👨‍🍳", "system_prompt": "Ты — шеф-повар. Давай рецепты с точными граммовками.", "category": "life", "description": "Рецепты, кулинария"},
+    "fitness": {"id": "fitness", "name": "💪 Фитнес-тренер", "icon": "💪", "system_prompt": "Ты — фитнес-тренер. Составляй программы тренировок.", "category": "life", "description": "Тренировки, питание"},
+    "creative": {"id": "creative", "name": "🎨 Креативный директор", "icon": "🎨", "system_prompt": "Ты — креативный директор. Генерируй нестандартные идеи.", "category": "professional", "description": "Креатив, брендинг"},
+    "lawyer": {"id": "lawyer", "name": "⚖️ Юрист", "icon": "⚖️", "system_prompt": "Ты — практикующий юрист. Ссылайся на законы.", "category": "professional", "description": "Право, договоры"},
+    "doctor": {"id": "doctor", "name": "🏥 Врач-терапевт", "icon": "🏥", "system_prompt": "Ты — врач-терапевт. Собирай анамнез.", "category": "life", "description": "Здоровье, симптомы"},
 }
 
 def get_daily_bonus_info():
@@ -151,18 +150,16 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
-Версия 5.7
-• 🔔 Premium: кастомизация интервала уведомлений (1/3/6/12/24ч)
-• 🔔 Команда /notify — настройка интервала уведомлений
-• 📊 Расширенная информация во всех разделах
-• 🔧 Возвращены все удалённые команды
-• 🆕 Новые команды: /notify, /chatowner, /chatshop
+Версия 5.8
+• 🔧 Исправлены все инлайн-кнопки
+• 🔧 Кнопка «Скидки» в магазине работает
+• 🔧 Инлайн-кнопки работают в чатах
+• 👑 12 новых админ-команд
+• 📊 Расширенное администрирование
 
-Версия 5.6
-• Умные уведомления (Free: 24ч, Premium: 6ч)
-• Пассивный доход 5 💮/час
-• Кэшбек 15% на чат-покупки
-• Команда /id
+Версия 5.7
+• Кастомизация интервала уведомлений
+• Возвращены удалённые команды
 """
 
 FAQ_TEXT = f"""
@@ -170,28 +167,17 @@ FAQ_TEXT = f"""
 ━━━━━━━━━━━━━━━━━━━━
 
 ❓ Что такое NeBlock AI?
-Платформа с собственными ИИ-моделями в Telegram:
-• 💬 NeBlock AI V2 — текстовая модель
-• 🎨 NeBlock Images V2 — генерация изображений
+Платформа с собственными ИИ-моделями в Telegram.
 
 ❓ Что даёт Premium? 💎
 • Безлимит текста и фото в ЛС
-• 10 проф. пресетов (Программист, Юрист, Врач...)
+• 10 проф. пресетов
 • Кэшбек 15% на чат-покупки
-• Скидка 15% на продление Premium
-• Скидка 10% на чат-товары
-• Пассивный доход 5 💮/час (до 60 💮/день!)
-• Рефералы ×3 (30/10 💮)
-• Лимит перевода 25 000 💮 (налог 0-10%)
-• Умные уведомления (кастомизируемый интервал!)
-• Значок 💎 в профиле и топах
-
-❓ Как настроить уведомления? 🔔
-• Free: раз в 24 часа (фиксировано)
-• Premium: /notify — выбрать интервал (1/3/6/12/24 часа)
-
-❓ Как работает кэшбек? 🔄
-15% от покупок в чатах возвращается на баланс (только Premium).
+• Пассивный доход 5 💮/час
+• Рефералы ×3
+• Лимиты ×5
+• Уведомления с настройкой интервала
+• Значок 💎
 
 ❓ Лимиты?
 Free: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день
@@ -201,9 +187,8 @@ Premium: безлимит в ЛС
 DONATE_INFO_TEXT = f"""
 🌍 БЛАГОТВОРИТЕЛЬНОСТЬ
 ━━━━━━━━━━━━━━━━━━━━
-🔥 Сжигание NBT повышает курс для всех.
+🔥 Сжигание NBT повышает курс.
 📊 Free: до {MAX_DONATION:,} 💮 | Premium 💎: до {PREMIUM_MAX_DONATION:,} 💮
-🏆 /donatetop — топ (💎 = Premium)
 """
 
 TRANSFER_INFO = f"""
@@ -215,44 +200,41 @@ TRANSFER_INFO = f"""
 """
 
 COMMANDS_LIST = """
-📋 КОМАНДЫ NeBlock AI V5.7
+📋 КОМАНДЫ NeBlock AI V5.8
 ━━━━━━━━━━━━━━━━━━━━
 
 💬 ОСНОВНЫЕ:
-/start — главное меню | /faq — вопросы
-/commands — команды | /changelog — обновления
-🆔 /id — ваш ID | /profile — профиль
+/start | /faq | /commands | /changelog
+🆔 /id | 👤 /profile
 
 💎 PREMIUM:
-/premium — Premium-меню | /buy_premium — купить
-/notify — настройка уведомлений (Premium)
+/premium | /buy_premium | /notify
+📝 /presets
 
 🛒 МАГАЗИН:
-/shop — магазин | /tokenrate — курс NBT
-/discounts — скидки | /promo — промокод
+/shop | /tokenrate | /discounts | /promo
 
 🔥 НАГРАДЫ:
-/streak — серия | /streak_info — все 30 дней
+/streak | /streak_info
 
 💸 ФИНАНСЫ:
-/transfer — перевод | /transferinfo — инфо
-/donate — донат | /donatetop — топ донатов
+/transfer | /transferinfo | /donate | /donatetop
 
 🎨 ГЕНЕРАЦИЯ:
-/genimage — изображения
-
-📝 ПРЕСЕТЫ (Premium):
-/presets — выбрать пресет
+/genimage
 
 👥 ЧАТЫ:
-/chatowner — владельцы | /chatshop — магазин чата
-/shopdesc — описание магазина
+/chatowner | /chatshop | /shopdesc
 
-🔧 АДМИН (для админов):
-/give | /take | /resetuser | /setpremium
-/userinfo | /top | /stats | /broadcast
-/createpromo | /promos | /deletepromo
+🔧 АДМИН (25+ команд):
+/give | /take | /resetuser | /setpremium | /userinfo
+/top | /topreferrals | /topdonators | /topactive
+/stats | /fullstats | /economy
+/ban | /unban | /mute | /unmute | /warn | /resetwarns
+/createpromo | /promos | /deletepromo | /promoinfo
 /forcediscounts | /forcerate | /cleardiscounts
+/broadcast | /broadcastpremium | /maintenance
+/resetalllimits | /resetuserlimits | /addtokensall
 """
 
 DISCOUNT_TYPES = {"regular": {"name": "Обычная", "min": 5, "max": 25, "color": "🟢", "chance": 40, "icon": "🏷️"}, "super": {"name": "Супер", "min": 30, "max": 50, "color": "🔴", "chance": 20, "icon": "🔥"}, "flash": {"name": "Флеш", "min": 40, "max": 70, "color": "⚡", "chance": 8, "icon": "⏰"}, "bundle": {"name": "Набор", "min": 15, "max": 35, "color": "📦", "chance": 12, "icon": "🎁"}, "premium_discount": {"name": "Premium", "min": 10, "max": 30, "color": "👑", "chance": 5, "icon": "💎"}, "legendary": {"name": "ЛЕГЕНДАРНАЯ", "min": 100, "max": 100, "color": "🌟", "chance": 0.5, "icon": "💫"}}
@@ -260,7 +242,7 @@ DISCOUNT_TYPES = {"regular": {"name": "Обычная", "min": 5, "max": 25, "co
 SHOP_ITEMS_BASE = {
     "extra5": {"name": "+5 запросов", "price": 5, "icon": "📝", "category": "text", "desc": "5 доп. текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+5 текстовых запросов"]},
     "extra10": {"name": "+10 запросов", "price": 8, "icon": "📝", "category": "text", "desc": "10 доп. текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+10 запросов"]},
-    "extra50": {"name": "+50 запросов", "price": 35, "icon": "📝", "category": "text", "desc": "50 доп. текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+50 запросов", "Экономия 30%"]},
+    "extra50": {"name": "+50 запросов", "price": 35, "icon": "📝", "category": "text", "desc": "50 доп. текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+50 запросов"]},
     "unlimited_1h": {"name": "Безлимит текста 1ч", "price": 15, "icon": "♾️", "category": "text", "desc": "Безлимит текста на 1 час.", "warning": "⚠️ 1 час.", "location": "private", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит текста"]},
     "unlimited_24h": {"name": "Безлимит текста 24ч", "price": 50, "icon": "♾️", "category": "text", "desc": "Безлимит текста на 24 часа.", "warning": "⚠️ 24 часа.", "location": "private", "type": "unlimited", "duration": "24 часа", "benefits": ["Безлимит текста"]},
     "unlimited_7d": {"name": "Безлимит текста 7д", "price": 250, "icon": "♾️", "category": "text", "desc": "Безлимит текста на 7 дней.", "warning": "⚠️ 7 дней.", "location": "private", "type": "unlimited", "duration": "7 дней", "benefits": ["Безлимит текста"]},
@@ -268,13 +250,13 @@ SHOP_ITEMS_BASE = {
     "image5": {"name": "5 фото", "price": 30, "icon": "🎨", "category": "image", "desc": "5 генераций. 1024×1024.", "warning": "⚠️ Сгорают.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["5 изображений"]},
     "image20": {"name": "20 фото", "price": 100, "icon": "🎨", "category": "image", "desc": "20 генераций. 1024×1024.", "warning": "⚠️ Сгорают.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["20 изображений"]},
     "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 25, "icon": "♾️", "category": "image", "desc": "Безлимит фото на 1 час.", "warning": "⚠️ 1 час.", "location": "private", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит фото"]},
-    "premium_day": {"name": "Premium 1 день", "price": 100, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 15% на чат", "Пассивный доход 5 💮/час", "Рефералы ×3", "Уведомления (настраиваемые)", "Значок 💎"]},
-    "premium_week": {"name": "Premium 7 дней", "price": 500, "icon": "⭐", "category": "premium", "desc": "Неделя Premium-привилегий.", "warning": "⚠️ 7 дней.", "location": "private", "type": "premium", "duration": "7 дней", "benefits": ["Всё из Premium 1 день", "Экономия 28%"]},
-    "premium_30d": {"name": "Premium 30 дней 🔥", "price": 1500, "icon": "💎", "category": "premium", "desc": "Месяц Premium. Экономия 25%!", "warning": "⚠️ 30 дней.", "location": "private", "type": "premium", "duration": "30 дней", "benefits": ["Всё из Premium 1 день", "Экономия 25%"]},
-    "premium_60d": {"name": "Premium 60 дней 🚀", "price": 2500, "icon": "💎", "category": "premium", "desc": "2 месяца Premium. Экономия 37%!", "warning": "⚠️ 60 дней.", "location": "private", "type": "premium", "duration": "60 дней", "benefits": ["Всё из Premium 1 день", "Экономия 37%"]},
-    "premium_90d": {"name": "Premium 90 дней 👑", "price": 3500, "icon": "💎", "category": "premium", "desc": "3 месяца Premium. Экономия 50%!", "warning": "⚠️ 90 дней.", "location": "private", "type": "premium", "duration": "90 дней", "benefits": ["Всё из Premium 1 день", "Экономия 50%"]},
-    "premium_year": {"name": "Premium 1 год 💫", "price": 10000, "icon": "👑", "category": "premium", "desc": "Год Premium. Экономия 72%!", "warning": "⚠️ 365 дней.", "location": "private", "type": "premium", "duration": "1 год", "benefits": ["Всё из Premium 1 день", "Экономия 72%"]},
-    "premium_forever": {"name": "Premium НАВСЕГДА ✨", "price": 25000, "icon": "🌟", "category": "premium", "desc": "Пожизненный Premium.", "warning": "⚠️ Только ЛС.", "location": "private", "type": "premium", "duration": "Навсегда", "benefits": ["Всё из Premium 1 день", "Пожизненно", "Легендарный значок"]},
+    "premium_day": {"name": "Premium 1 день", "price": 100, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа.", "warning": "⚠️ 24 часа.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 15%", "Пассивный доход 5 💮/час", "Уведомления", "Значок 💎"]},
+    "premium_week": {"name": "Premium 7 дней", "price": 500, "icon": "⭐", "category": "premium", "desc": "Неделя Premium.", "warning": "⚠️ 7 дней.", "location": "private", "type": "premium", "duration": "7 дней", "benefits": ["Всё из Premium 1 день", "Экономия 28%"]},
+    "premium_30d": {"name": "Premium 30 дней 🔥", "price": 1500, "icon": "💎", "category": "premium", "desc": "Месяц Premium.", "warning": "⚠️ 30 дней.", "location": "private", "type": "premium", "duration": "30 дней", "benefits": ["Всё из Premium 1 день", "Экономия 25%"]},
+    "premium_60d": {"name": "Premium 60 дней 🚀", "price": 2500, "icon": "💎", "category": "premium", "desc": "2 месяца Premium.", "warning": "⚠️ 60 дней.", "location": "private", "type": "premium", "duration": "60 дней", "benefits": ["Всё из Premium 1 день", "Экономия 37%"]},
+    "premium_90d": {"name": "Premium 90 дней 👑", "price": 3500, "icon": "💎", "category": "premium", "desc": "3 месяца Premium.", "warning": "⚠️ 90 дней.", "location": "private", "type": "premium", "duration": "90 дней", "benefits": ["Всё из Premium 1 день", "Экономия 50%"]},
+    "premium_year": {"name": "Premium 1 год 💫", "price": 10000, "icon": "👑", "category": "premium", "desc": "Год Premium.", "warning": "⚠️ 365 дней.", "location": "private", "type": "premium", "duration": "1 год", "benefits": ["Всё из Premium 1 день", "Экономия 72%"]},
+    "premium_forever": {"name": "Premium НАВСЕГДА ✨", "price": 25000, "icon": "🌟", "category": "premium", "desc": "Пожизненный Premium.", "warning": "⚠️ Только ЛС.", "location": "private", "type": "premium", "duration": "Навсегда", "benefits": ["Всё из Premium 1 день", "Пожизненно"]},
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -454,66 +436,24 @@ def process_passive_income(user_id):
     if income > 0: users[uid]["tokens"] = users[uid].get("tokens", 0) + income; users[uid]["earned_tokens"] = users[uid].get("earned_tokens", 0) + income; users[uid]["last_passive_income"] = now.isoformat(); save_users(users)
     return income
 
-# ═══════════════════════════════════════════
-# 🔔 СИСТЕМА УМНЫХ УВЕДОМЛЕНИЙ
-# ═══════════════════════════════════════════
-
 async def send_smart_notification(user_id, context):
-    """Отправляет умное уведомление пользователю"""
-    user = get_user(user_id)
-    premium = is_premium(user_id)
+    user = get_user(user_id); premium = is_premium(user_id)
     interval = user.get("notify_interval", NOTIFY_INTERVAL_FREE) if premium else NOTIFY_INTERVAL_FREE
-    
-    # Проверяем интервал
     last_notify = user.get("last_notification")
     if last_notify:
-        last_time = datetime.fromisoformat(last_notify)
-        hours_passed = (datetime.now() - last_time).total_seconds() / 3600
-        if hours_passed < interval: return
-    
-    # Обновляем время уведомления
-    users = load_users(); uid = str(user_id)
-    users[uid]["last_notification"] = datetime.now().isoformat(); save_users(users)
-    
+        if (datetime.now() - datetime.fromisoformat(last_notify)).total_seconds() / 3600 < interval: return
+    users = load_users(); uid = str(user_id); users[uid]["last_notification"] = datetime.now().isoformat(); save_users(users)
     rate_data = get_token_rate(); rate = rate_data.get("rate", 0.005)
-    streak = user.get("daily_bonus_streak", 0)
     tokens = user.get("tokens", 0); usd = tokens * rate
     donated_total, _, _ = get_donation_stats()
     passive_income = process_passive_income(user_id)
-    
-    premium_icon = "💎" if premium else ""
-    notify_type = "PREMIUM" if premium else "БЕСПЛАТНАЯ"
-    
-    text = (
-        f"🔔 СВОДКА {notify_type} {premium_icon}\n━━━━━━━━━━━━━━━━\n\n"
-        f"💰 Баланс: {tokens:,} 💮 (~${usd:.2f})\n"
-        f"💮 Курс NBT: 1 = ${rate:.8f}\n"
-        f"🔥 Серия бонусов: {streak} дн.\n"
-    )
-    
-    if passive_income > 0:
-        text += f"💤 Пассивный доход: +{passive_income} 💮 (5 💮/час)\n"
-    
-    text += f"🌍 Всего сожжено: {donated_total:,} 💮\n\n"
-    
+    text = f"🔔 СВОДКА {'💎' if premium else ''}\n━━━━━━━━━━━━━━━━\n\n💰 Баланс: {tokens:,} 💮 (~${usd:.2f})\n💮 Курс: 1 = ${rate:.8f}\n🔥 Серия: {user.get('daily_bonus_streak', 0)} дн.\n"
+    if passive_income > 0: text += f"💤 Пассивный доход: +{passive_income} 💮\n"
+    text += f"🌍 Сожжено: {donated_total:,} 💮\n"
     if premium:
-        prem_until = user.get("premium_until")
-        if prem_until:
-            remaining = datetime.fromisoformat(prem_until) - datetime.now()
-            if remaining.total_seconds() > 0:
-                text += f"💎 Premium: активно (осталось {remaining.days} дн. {remaining.seconds // 3600} ч.)\n"
-                text += f"🔄 Скидка на продление: {PREMIUM_RENEWAL_DISCOUNT}%\n"
-                text += f"🔔 Интервал уведомлений: каждые {interval} ч.\n"
-        text += f"🔄 Кэшбек с чат-покупок: {CASHBACK_PERCENT}% (накоплено: {user.get('cashback_earned', 0):,} 💮)\n"
-        
-        if prem_until:
-            remaining = datetime.fromisoformat(prem_until) - datetime.now()
-            if timedelta(0) < remaining <= timedelta(hours=6):
-                text += f"\n⚠️ Premium истекает через {remaining.seconds // 3600} ч.!\nПродлите в /premium со скидкой {PREMIUM_RENEWAL_DISCOUNT}%!\n"
-    else:
-        text += f"\n💡 С Premium:\n• Безлимит текста и фото\n• Пассивный доход 5 💮/час\n• Уведомления от 1 часа\n• 10 проф. пресетов\n💎 /premium — узнать больше\n"
-    
-    text += f"\n━━━━━━━━━━━━━━━━\n🕐 Следующая: через {interval} ч."
+        text += f"💎 Premium активно\n🔔 Интервал: {interval} ч.\n"
+    else: text += f"\n💡 Premium: безлимит, 5 💮/час, пресеты\n💎 /premium\n"
+    text += f"\n🕐 Следующая: через {interval} ч."
     try: await context.bot.send_message(user_id, text)
     except: pass
 
@@ -678,7 +618,7 @@ def shop_keyboard(location="private", user_id=None):
     active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
     if active:
         legendary = any(d.get("type") == "legendary" for d in active.values())
-        keyboard.append([InlineKeyboardButton("🌟 ЛЕГЕНДАРНАЯ СКИДКА! 🌟" if legendary else "🎫 Скидки", callback_data="discounts_info")])
+        keyboard.append([InlineKeyboardButton("🌟 ЛЕГЕНДАРНАЯ СКИДКА! 🌟" if legendary else "🎫 Скидки", callback_data="show_discounts")])
     cats = {"private": [("📝 Текст", "text"), ("🎨 Фото", "image"), ("⭐ Premium", "premium")], "chat": [("👥 Запросы", "chat"), ("🖼️ Фото", "chat_image"), ("⭐ Premium", "chat_premium")]}
     for label, cat in cats.get(location, cats["private"]):
         items_in_cat = False
@@ -718,11 +658,9 @@ def presets_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 def notify_keyboard():
-    """Клавиатура выбора интервала уведомлений"""
     keyboard = []
     for interval in PREMIUM_NOTIFY_OPTIONS:
-        label = f"Каждые {interval} ч." + (" (чаще)" if interval <= 3 else "")
-        keyboard.append([InlineKeyboardButton(label, callback_data=f"notify_{interval}")])
+        keyboard.append([InlineKeyboardButton(f"Каждые {interval} ч.", callback_data=f"notify_{interval}")])
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="premium_menu")])
     return InlineKeyboardMarkup(keyboard)
 
@@ -734,10 +672,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; user = get_user(user_id); chat_type = update.effective_chat.type
     username = update.effective_user.username
     if username: users = load_users(); users[str(user_id)]["username"] = username; save_users(users)
-    
     passive_income = process_passive_income(user_id)
     await send_smart_notification(user_id, context)
-    
     if context.args and context.args[0].startswith("ref_"):
         ref_code = context.args[0].replace("ref_", ""); users = load_users(); uid = str(user_id)
         for u_id, u_data in users.items():
@@ -750,147 +686,52 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try: await context.bot.send_message(int(u_id), f"🎉 Реферал!\n💰 +{ref_bonus} 💮")
                 except: pass
                 break
-    
     if chat_type in ["group", "supergroup"]:
         await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION}\n\n💬 @{context.bot.username} вопрос\n🎨 /genimage | 💸 /transfer\n💎 /premium | 👤 /profile | 🆔 /id")
         return
-    
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
     rate_data = get_token_rate(); rate = rate_data.get("rate", 0.005)
     passive_text = f"\n💤 Пассивный доход: +{passive_income} 💮" if passive_income > 0 else ""
-    notify_interval = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
-    notify_text = f"\n🔔 Уведомления: каждые {notify_interval} ч." if is_premium(user_id) else "\n🔔 Уведомления: каждые 24 ч."
-    
-    await update.message.reply_text(
-        f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"💎 Premium: {premium}\n💰 Баланс: {user.get('tokens', 0):,} 💮 (~${user.get('tokens', 0) * rate:.2f})\n"
-        f"💮 Курс: 1 NBT = ${rate:.8f}\n🔥 Серия: {user.get('daily_bonus_streak', 0)} дн.\n"
-        f"📊 Лимиты: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день{passive_text}{notify_text}\n\n"
-        f"👇 Выберите модель:",
-        reply_markup=main_reply_keyboard()
-    )
+    await update.message.reply_text(f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n💎 Premium: {premium}\n💰 Баланс: {user.get('tokens', 0):,} 💮 (~${user.get('tokens', 0) * rate:.2f})\n💮 Курс: 1 NBT = ${rate:.8f}\n🔥 Серия: {user.get('daily_bonus_streak', 0)} дн.\n📊 Лимиты: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день{passive_text}\n\n👇 Выберите модель:", reply_markup=main_reply_keyboard())
 
 async def id_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if context.args:
         try: user_id = int(context.args[0])
         except: pass
-    username = update.effective_user.username
-    name = f"@{username}" if username else "Не указан"
-    await update.message.reply_text(f"🆔 ИНФОРМАЦИЯ\n━━━━━━━━━━━━━━━━\n\n👤 Имя: {name}\n🆔 ID: `{user_id}`\n\n💡 /profile {user_id} — профиль", parse_mode="Markdown")
+    await update.message.reply_text(f"🆔 ID: `{user_id}`", parse_mode="Markdown")
 
 async def notify_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Настройка интервала уведомлений (Premium)"""
     user_id = update.effective_user.id
-    if not is_premium(user_id):
-        await update.message.reply_text("❌ Настройка уведомлений доступна только Premium пользователям!\n💎 /premium — купить Premium\n\nFree пользователи получают уведомления раз в 24 часа.")
-        return
-    
+    if not is_premium(user_id): await update.message.reply_text("❌ Только для Premium 💎"); return
     if context.args:
         try:
             interval = int(context.args[0])
             if interval in PREMIUM_NOTIFY_OPTIONS:
-                users = load_users(); uid = str(user_id)
-                users[uid]["notify_interval"] = interval; save_users(users)
-                await update.message.reply_text(f"✅ Интервал уведомлений: каждые {interval} ч.\n\nСледующая сводка придёт через {interval} ч. после последней.")
-                return
+                users = load_users(); uid = str(user_id); users[uid]["notify_interval"] = interval; save_users(users)
+                await update.message.reply_text(f"✅ Интервал: каждые {interval} ч."); return
         except: pass
-        await update.message.reply_text(f"❌ Доступные интервалы: {', '.join(map(str, PREMIUM_NOTIFY_OPTIONS))} часов\nПример: /notify 3")
-        return
-    
-    user = get_user(user_id)
-    current = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
-    await update.message.reply_text(
-        f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\n"
-        f"Текущий интервал: каждые {current} ч.\n\n"
-        f"Выберите новый интервал:",
-        reply_markup=notify_keyboard()
-    )
+    user = get_user(user_id); current = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
+    await update.message.reply_text(f"🔔 Интервал: каждые {current} ч.\n\nВыберите новый:", reply_markup=notify_keyboard())
 
 async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id; premium = is_premium(user_id)
-    shop_items = get_shop_items(user_id)
-    
+    user_id = update.effective_user.id; premium = is_premium(user_id); shop_items = get_shop_items(user_id)
     if premium:
         user = get_user(user_id); prem_until = user.get("premium_until")
         remaining_text = ""
         if prem_until:
             remaining = datetime.fromisoformat(prem_until) - datetime.now()
-            if remaining.total_seconds() > 0:
-                remaining_text = f"⏳ Осталось: {remaining.days} дн. {remaining.seconds // 3600} ч.\n🔄 Скидка на продление: {PREMIUM_RENEWAL_DISCOUNT}%\n"
-        
-        active_preset = user.get("active_preset")
-        preset_name = "Нет"
-        if active_preset:
-            p = PREMIUM_PRESETS.get(active_preset)
-            if p: preset_name = f"{p['icon']} {p['name']}"
-        
-        notify_interval = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
-        
-        text = (
-            f"💎 PREMIUM-МЕНЮ\n━━━━━━━━━━━━━━━━\n\n"
-            f"💎 Статус: АКТИВЕН\n{remaining_text}\n"
-            f"📊 ВАШИ ПРИВИЛЕГИИ:\n"
-            f"• Безлимит текста и фото в ЛС\n"
-            f"• 10 профессиональных пресетов\n"
-            f"• Активный пресет: {preset_name}\n"
-            f"• Кэшбек {CASHBACK_PERCENT}% на чат-покупки (накоплено: {user.get('cashback_earned', 0):,} 💮)\n"
-            f"• Скидка {PREMIUM_RENEWAL_DISCOUNT}% на продление Premium\n"
-            f"• Скидка {PREMIUM_CHAT_DISCOUNT}% на чат-товары\n"
-            f"• Пассивный доход: {PASSIVE_INCOME_HOURLY} 💮/час (до {PASSIVE_INCOME_HOURLY * PASSIVE_INCOME_MAX_HOURS} 💮/день)\n"
-            f"• Рефералы: {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮\n"
-            f"• Лимит перевода: {PREMIUM_MAX_TRANSFER:,} 💮 (налог 0-10%)\n"
-            f"• Лимит доната: {PREMIUM_MAX_DONATION:,} 💮\n"
-            f"• Умные уведомления: каждые {notify_interval} ч. (/notify)\n"
-            f"• Значок 💎 в профиле и топах\n\n"
-            f"🛒 /buy_premium | 📝 /presets | 🔔 /notify"
-        )
+            if remaining.total_seconds() > 0: remaining_text = f"⏳ Осталось: {remaining.days} дн. {remaining.seconds // 3600} ч.\n"
+        text = f"💎 PREMIUM АКТИВЕН\n━━━━━━━━━━━━━━━━\n\n{remaining_text}🔄 Скидка на продление: {PREMIUM_RENEWAL_DISCOUNT}%\n📝 /presets | 🔔 /notify"
     else:
-        text = (
-            f"💎 NeBlock Premium\n━━━━━━━━━━━━━━━━\n\n"
-            f"📊 СРАВНЕНИЕ FREE vs PREMIUM:\n\n"
-            f"┌──────────────────────────┬────────────┬────────────┐\n"
-            f"│ Возможность              │    FREE    │  PREMIUM   │\n"
-            f"├──────────────────────────┼────────────┼────────────┤\n"
-            f"│ Текстовые запросы (ЛС)   │  {DAILY_LIMIT}/день     │ Безлимит   │\n"
-            f"│ Генерация фото (ЛС)      │  {IMAGE_DAILY_LIMIT}/день     │ Безлимит   │\n"
-            f"│ Профессиональные пресеты │     ❌     │  10 ролей  │\n"
-            f"│ Кэшбек с чат-покупок     │     0%     │    {CASHBACK_PERCENT}%     │\n"
-            f"│ Скидка на продление      │     -      │    {PREMIUM_RENEWAL_DISCOUNT}%     │\n"
-            f"│ Скидка на чат-товары     │     -      │    {PREMIUM_CHAT_DISCOUNT}%     │\n"
-            f"│ Пассивный доход          │     ❌     │ {PASSIVE_INCOME_HOURLY} 💮/час     │\n"
-            f"│ Реферальный бонус        │ {REFERRAL_BONUS}/{INVITED_BONUS} 💮      │ {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮      │\n"
-            f"│ Макс. перевод            │ {MAX_TRANSFER:,} 💮  │ {PREMIUM_MAX_TRANSFER:,} 💮  │\n"
-            f"│ Налог на перевод         │   0-15%    │   0-10%    │\n"
-            f"│ Макс. донат              │ {MAX_DONATION:,} 💮 │ {PREMIUM_MAX_DONATION:,} 💮│\n"
-            f"│ Умные уведомления        │ каждые 24ч │ 1-24ч     │\n"
-            f"│ Настройка уведомлений    │     ❌     │     ✅     │\n"
-            f"│ Значок 💎                │     ❌     │     ✅     │\n"
-            f"└──────────────────────────┴────────────┴────────────┘\n\n"
-            f"🛒 ТАРИФЫ:\n"
-            f"⭐ 1 день — {shop_items.get('premium_day', {}).get('price', '?')} 💮\n"
-            f"⭐ 7 дней — {shop_items.get('premium_week', {}).get('price', '?')} 💮 (-28%)\n"
-            f"💎 30 дней — {shop_items.get('premium_30d', {}).get('price', '?')} 💮 (-25%)\n"
-            f"🚀 60 дней — {shop_items.get('premium_60d', {}).get('price', '?')} 💮 (-37%)\n"
-            f"👑 90 дней — {shop_items.get('premium_90d', {}).get('price', '?')} 💮 (-50%)\n"
-            f"💫 1 год — {shop_items.get('premium_year', {}).get('price', '?')} 💮 (-72%)\n"
-            f"🌟 Навсегда — {shop_items.get('premium_forever', {}).get('price', '?')} 💮\n\n"
-            f"🛒 /buy_premium — купить Premium\n"
-            f"💡 30-й день серии даёт Premium 1 день!"
-        )
-    
-    keyboard = []
-    keyboard.append([InlineKeyboardButton("🛒 Купить/Продлить Premium", callback_data="premium_shop")])
-    if premium:
-        keyboard.append([InlineKeyboardButton("📝 Управление пресетами", callback_data="presets_menu")])
-        keyboard.append([InlineKeyboardButton("🔔 Настройка уведомлений", callback_data="notify_menu")])
+        text = f"💎 NeBlock Premium\n━━━━━━━━━━━━━━━━\n\n📊 FREE vs PREMIUM:\n\n┌─────────────────────┬──────────┬──────────┐\n│ Текст (ЛС)          │  {DAILY_LIMIT}/день   │ Безлимит │\n│ Фото (ЛС)           │  {IMAGE_DAILY_LIMIT}/день   │ Безлимит │\n│ Пресеты             │    ❌    │ 10 ролей │\n│ Пассивный доход     │    ❌    │ 5 💮/час  │\n│ Рефералы            │ {REFERRAL_BONUS}/{INVITED_BONUS} 💮  │ {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮 │\n│ Переводы            │ до {MAX_TRANSFER:,} │ до {PREMIUM_MAX_TRANSFER:,} │\n│ Уведомления         │ 24 ч     │ 1-24 ч   │\n│ Значок 💎           │    ❌    │    ✅    │\n└─────────────────────┴──────────┴──────────┘\n\n🛒 /buy_premium"
+    keyboard = [[InlineKeyboardButton("🛒 Купить/Продлить Premium", callback_data="premium_shop")]]
+    if premium: keyboard.append([InlineKeyboardButton("📝 Пресеты", callback_data="presets_menu"), InlineKeyboardButton("🔔 Уведомления", callback_data="notify_menu")])
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
-    
     await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def buy_premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    await update.message.reply_text(f"🛒 ПОКУПКА PREMIUM\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id):,} 💮\n\nВыберите тариф:", reply_markup=shop_keyboard("private", user_id))
+    await update.message.reply_text(f"🛒 Premium\n💰 {get_tokens(update.effective_user.id):,} 💮\n\nВыберите тариф:", reply_markup=shop_keyboard("private", update.effective_user.id))
 
 async def profile_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target_id = update.effective_user.id
@@ -902,65 +743,40 @@ async def profile_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = f"@{u['username']}" if u.get("username") else f"ID:{target_id}"
     premium_icon = " 💎" if is_premium(target_id) else ""
     joined = datetime.fromisoformat(u.get("joined", "")).strftime("%d.%m.%Y") if u.get("joined") else "?"
-    premium_status = "💎 Активен" if is_premium(target_id) else "Не активен"
     rate_data = get_token_rate(); usd = u.get("tokens", 0) * rate_data.get("rate", 0.005)
-    
-    premium_info = ""
-    if is_premium(target_id):
-        prem_until = u.get("premium_until")
-        if prem_until:
-            remaining = datetime.fromisoformat(prem_until) - datetime.now()
-            if remaining.total_seconds() > 0:
-                notify_interval = u.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
-                premium_info = f"\n⏳ Premium: {remaining.days} дн. {remaining.seconds // 3600} ч.\n🔄 Кэшбек: {u.get('cashback_earned', 0):,} 💮\n🔔 Уведомления: каждые {notify_interval} ч."
-    
-    text = (
-        f"👤 ПРОФИЛЬ{premium_icon}\n━━━━━━━━━━━━━━━━\n\n"
-        f"🆔 {username}\n📅 В боте с: {joined}\n💎 Premium: {premium_status}{premium_info}\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"💰 Баланс: {u.get('tokens', 0):,} 💮 (~${usd:.2f})\n"
-        f"🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n"
-        f"💎 Заработано: {u.get('earned_tokens', 0):,} 💮\n"
-        f"🌍 Донатов: {u.get('donated_tokens', 0):,} 💮\n"
-        f"👥 Рефералов: {u.get('referrals', 0)}\n"
-        f"📈 Запросов: {u.get('total_requests', 0):,} | Фото: {u.get('total_images', 0):,}\n"
-        f"🆔 ID: `{target_id}`"
-    )
+    text = f"👤 ПРОФИЛЬ{premium_icon}\n━━━━━━━━━━━━━━━━\n\n🆔 {username}\n📅 {joined}\n💎 {'Активен' if is_premium(target_id) else 'Не активен'}\n━━━━━━━━━━━━━━━━\n💰 {u.get('tokens', 0):,} 💮 (~${usd:.2f})\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n💎 Заработано: {u.get('earned_tokens', 0):,}\n🌍 Донатов: {u.get('donated_tokens', 0):,}\n👥 Рефералов: {u.get('referrals', 0)}\n🆔 ID: `{target_id}`"
     await update.message.reply_text(text, parse_mode="Markdown")
 
 async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id; streak = get_user(user_id).get("daily_bonus_streak", 0)
+    streak = get_user(update.effective_user.id).get("daily_bonus_streak", 0)
     rate = get_token_rate().get("rate", 0.005)
-    text = f"🔥 ВАША СЕРИЯ: {streak} дн.\n━━━━━━━━━━━━━━━━\n\n"
-    if streak == 0: text += "🌱 Начните сегодня!\n"
-    elif streak >= MAX_STREAK_DAY: text += f"👑 Максимум ({MAX_STREAK_DAY} дней)!\n"
-    else:
+    text = f"🔥 СЕРИЯ: {streak} дн.\n━━━━━━━━━━━━━━━━\n\n"
+    if streak >= MAX_STREAK_DAY: text += f"👑 Максимум!\n"
+    elif streak > 0:
         nr = STREAK_BASE_REWARDS.get(streak + 1, STREAK_BASE_REWARDS[MAX_STREAK_DAY])
-        rm = max(0.5, min(1.5, 1.0 + (rate * 10 - 0.1)))
-        text += f"➡️ Завтра: {nr['icon']} {nr['name']}\n   ~{max(1, int(nr['base_min']*rm))}-{max(1, int(nr['base_max']*rm))} 💮\n\n"
+        text += f"➡️ Завтра: {nr['icon']} {nr['name']}\n"
     text += f"📐 Курс: ${rate:.8f}\n⚠️ До 00:00 МСК!"
     await update.message.reply_text(text)
 
 async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rd = get_token_rate(); history = load_json(TOKEN_HISTORY_FILE)
-    text = f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n💰 1 NBT = ${rd.get('rate', 0.005):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n🪙 В обороте: {rd.get('total_supply', 0):,} NBT\n🔥 Сожжено: {rd.get('total_donated', 0):,} 💮\n📅 {rd.get('day_icon', '📊')} {rd.get('day_name', '')}\n🕐 Обновление: {rd.get('next_update', '')}\n\n💡 Курс влияет на ежедневные награды!\n💡 Донаты повышают курс!\n\n📈 История за 7 дней:\n"
+    text = f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n💰 1 NBT = ${rd.get('rate', 0.005):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n🪙 В обороте: {rd.get('total_supply', 0):,}\n🔥 Сожжено: {rd.get('total_donated', 0):,}\n\n📈 7 дней:\n"
     for date, h in sorted(history.items())[-7:]: text += f"• {date}: ${h.get('rate', 0):.8f}\n"
     await update.message.reply_text(text)
 
 async def donate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    max_don = PREMIUM_MAX_DONATION if is_premium(user_id) else MAX_DONATION
-    if not context.args: await update.message.reply_text(f"{DONATE_INFO_TEXT}\n\n/donate СУММА\nЛимит: до {max_don:,} 💮"); return
+    user_id = update.effective_user.id; max_don = PREMIUM_MAX_DONATION if is_premium(user_id) else MAX_DONATION
+    if not context.args: await update.message.reply_text(f"{DONATE_INFO_TEXT}\n\n/donate СУММА"); return
     try: amount = int(context.args[0])
     except: return
-    if amount < 1 or amount > max_don: await update.message.reply_text(f"❌ Лимит: 1 – {max_don:,} 💮"); return
+    if amount < 1 or amount > max_don: return
     if get_user(user_id).get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно!"); return
-    await update.message.reply_text(f"🌍 ПОДТВЕРЖДЕНИЕ\n━━━━━━━━━━━━━━━━\n\n💰 {amount:,} 💮\n💎 Баланс: {get_tokens(user_id):,} → {get_tokens(user_id) - amount:,} 💮\n\nПодтвердите:", reply_markup=donate_confirm_keyboard(amount))
+    await update.message.reply_text(f"🌍 Подтвердите сжигание {amount:,} 💮", reply_markup=donate_confirm_keyboard(amount))
 
 async def donatetop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total, count, top_donors = get_donation_stats()
-    if not top_donors: await update.message.reply_text("🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n\nПока никого."); return
-    text = f"🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\n🔥 Сожжено: {total:,} 💮 | Донатов: {count}\n\n🏆 ТОП-10:\n"
+    if not top_donors: await update.message.reply_text("🌍 ТОП\n\nПока никого."); return
+    text = f"🌍 ТОП БЛАГОТВОРИТЕЛЕЙ\n━━━━━━━━━━━━━━━━\n\n🔥 {total:,} 💮\n\n"
     users = load_users(); medals = ["🥇", "🥈", "🥉"]
     for i, (uid, donated) in enumerate(top_donors):
         name = f"@{users.get(uid, {}).get('username', '?')}" if uid in users else f"ID:{uid}"
@@ -971,9 +787,9 @@ async def donatetop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def genimage_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; chat_type = update.effective_chat.type
-    if not context.args: await update.message.reply_text("🎨 /genimage ОПИСАНИЕ\nПример: /genimage красивый закат"); return
+    if not context.args: await update.message.reply_text("🎨 /genimage ОПИСАНИЕ"); return
     text = " ".join(context.args)
-    if not can_image_request(user_id, chat_type): await update.message.reply_text("🚫 Лимит!\n💡 /shop или 💎 Premium"); return
+    if not can_image_request(user_id, chat_type): await update.message.reply_text("🚫 Лимит!"); return
     msg = await update.message.reply_text("🎨 Генерирую...")
     try:
         image_bytes, error = await generate_image(text)
@@ -987,113 +803,327 @@ async def transfer_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args or len(context.args) < 2: await update.message.reply_text(f"{TRANSFER_INFO}\n\n/transfer ID КОЛИЧЕСТВО"); return
     try: to_id = int(context.args[0]); amount = int(context.args[1])
     except: return
-    if amount > max_t: await update.message.reply_text(f"❌ Лимит: до {max_t:,} 💮"); return
-    sender = get_user(user_id)
-    if sender.get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно!"); return
+    if amount > max_t: return
+    if get_user(user_id).get("tokens", 0) < amount: await update.message.reply_text("❌ Недостаточно!"); return
     tax, tax_percent, _ = get_transfer_tax(amount, premium)
     receiver = get_user(to_id)
     if not receiver: return
     final_amount = amount - tax
-    tax_info = f"Налог: {tax} 💮 ({tax_percent}%)" if tax > 0 else "Без налога"
-    await update.message.reply_text(f"⚠️ ПРОВЕРЬТЕ\n━━━━━━━━━━━━━━━━\n👤 ID {to_id}\n💸 {amount:,} 💮\n📊 {tax_info}\n💰 Получит: {final_amount:,} 💮\n\nПодтвердите:", reply_markup=transfer_confirm_keyboard(to_id, amount))
+    await update.message.reply_text(f"⚠️ Перевод\n━━━━━━━━━━━━━━━━\n👤 ID {to_id}\n💸 {amount:,} 💮\n💰 Получит: {final_amount:,} 💮\n\nПодтвердите:", reply_markup=transfer_confirm_keyboard(to_id, amount))
 
 async def presets_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if not is_premium(user_id): await update.message.reply_text("❌ Пресеты только для Premium 💎\n💎 /premium — купить Premium\n\n10 профессиональных ролей ждут вас!"); return
-    user = get_user(user_id); active = user.get("active_preset")
-    text = "📝 ПРЕСЕТЫ (Premium 💎)\n━━━━━━━━━━━━━━━━\n\n"
+    if not is_premium(update.effective_user.id): await update.message.reply_text("❌ Только для Premium 💎"); return
+    user = get_user(update.effective_user.id); active = user.get("active_preset")
+    text = "📝 ПРЕСЕТЫ\n━━━━━━━━━━━━━━━━\n\n"
     if active:
         p = PREMIUM_PRESETS.get(active)
-        if p: text += f"🎯 Выбран: {p['icon']} {p['name']}\n📋 Инструкция добавится к запросу.\n\n"
+        if p: text += f"🎯 {p['icon']} {p['name']}\n\n"
     text += "Выберите роль:"
     await update.message.reply_text(text, reply_markup=presets_keyboard())
 
 async def chatowner_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type not in ["group", "supergroup"]: await update.message.reply_text("❌ Только в чатах!"); return
-    chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
-    chats = load_chats(); c = chats.get(str(chat_id), {})
-    owners = c.get("owners", []) if isinstance(c, dict) else c
-    text = "👑 ВЛАДЕЛЬЦЫ ЧАТА\n━━━━━━━━━━━━━━━━\n\n"
-    for i, oid in enumerate(owners, 1): text += f"{i}. ID: {oid}\n"
+    if update.effective_chat.type not in ["group", "supergroup"]: return
+    add_chat_owner(update.effective_chat.id, update.effective_user.id)
+    c = load_chats().get(str(update.effective_chat.id), {}); owners = c.get("owners", []) if isinstance(c, dict) else c
+    text = "👑 ВЛАДЕЛЬЦЫ\n\n" + "\n".join([f"{i}. ID: {o}" for i, o in enumerate(owners, 1)])
     await update.message.reply_text(text)
 
 async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_chat.type not in ["group", "supergroup"]: await update.message.reply_text("❌ Только в чатах!"); return
-    chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
-    if not is_chat_owner(chat_id, user_id): await update.message.reply_text("❌ Только владельцы чата!"); return
-    await update.message.reply_text(f"🛒 МАГАЗИН ЧАТА\n━━━━━━━━━━━━━━━━\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("chat", user_id))
+    if update.effective_chat.type not in ["group", "supergroup"]: return
+    user_id = update.effective_user.id; add_chat_owner(update.effective_chat.id, user_id)
+    if not is_chat_owner(update.effective_chat.id, user_id): return
+    await update.message.reply_text(f"🛒 МАГАЗИН ЧАТА\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("chat", user_id))
 
-# Админ команды
+# ═══════════════════════════════════════════
+# 👑 РАСШИРЕННЫЕ АДМИН-КОМАНДЫ
+# ═══════════════════════════════════════════
+
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: return
+    if not context.args or len(context.args) < 2: await update.message.reply_text("❌ /give ID СУММА"); return
     try: add_tokens(int(context.args[0]), int(context.args[1])); await update.message.reply_text(f"✅ +{context.args[1]} 💮")
     except: pass
 
 async def admin_take(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: return
+    if not context.args or len(context.args) < 2: await update.message.reply_text("❌ /take ID СУММА"); return
     try:
         uid = str(int(context.args[0])); amount = int(context.args[1])
-        if get_user(int(context.args[0])).get("tokens", 0) < amount: return
-        users = load_users(); users[uid]["tokens"] = users[uid].get("tokens", 0) - amount; users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount; save_users(users)
+        users = load_users(); users[uid]["tokens"] = max(0, users[uid].get("tokens", 0) - amount); users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount; save_users(users)
+        await update.message.reply_text(f"✅ -{amount} 💮 у {context.args[0]}")
     except: pass
 
 async def admin_resetuser(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args: return
+    if not context.args: await update.message.reply_text("❌ /resetuser ID"); return
     try:
         uid = str(int(context.args[0])); users = load_users()
         if uid in users:
             for f in ["requests_today", "extra_requests", "image_requests_today", "extra_image_requests", "warnings"]: users[uid][f] = 0
             users[uid]["muted_until"] = None; users[uid]["banned"] = False; save_users(users)
+        await update.message.reply_text(f"✅ Пользователь {context.args[0]} сброшен")
     except: pass
 
 async def admin_setpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: return
+    if not context.args or len(context.args) < 2: await update.message.reply_text("❌ /setpremium ID ДНИ"); return
     try:
         uid = str(int(context.args[0])); days = int(context.args[1]); users = load_users()
-        if uid in users:
-            existing = users[uid].get("premium_until")
-            base = datetime.fromisoformat(existing) if existing and datetime.now() < datetime.fromisoformat(existing) else datetime.now()
-            users[uid]["premium_until"] = (base + timedelta(days=days)).isoformat(); save_users(users)
+        existing = users[uid].get("premium_until")
+        base = datetime.fromisoformat(existing) if existing and datetime.now() < datetime.fromisoformat(existing) else datetime.now()
+        users[uid]["premium_until"] = (base + timedelta(days=days)).isoformat(); save_users(users)
+        await update.message.reply_text(f"✅ Premium {context.args[0]}: +{days} дн.")
+    except: pass
+
+async def admin_removepremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Снять Premium с пользователя"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: await update.message.reply_text("❌ /removepremium ID"); return
+    try:
+        uid = str(int(context.args[0])); users = load_users()
+        if uid in users: users[uid]["premium_until"] = None; save_users(users)
+        await update.message.reply_text(f"✅ Premium снят с {context.args[0]}")
     except: pass
 
 async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args: return
+    if not context.args: await update.message.reply_text("❌ /userinfo ID"); return
     try:
         u = get_user(int(context.args[0])); un = u.get("username") or "Не указан"
-        await update.message.reply_text(f"👤 @{un}\n💰 {u.get('tokens', 0):,} 💮\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.")
+        prem = "💎 Активен" if is_premium(int(context.args[0])) else "Нет"
+        prem_until = u.get("premium_until", "Нет")
+        banned = "Да" if u.get("banned") else "Нет"
+        muted = u.get("muted_until")
+        muted_text = f"До {muted[:16]}" if muted and datetime.now() < datetime.fromisoformat(muted) else "Нет"
+        await update.message.reply_text(
+            f"👤 ИНФОРМАЦИЯ\n━━━━━━━━━━━━━━━━\n\n"
+            f"🆔 {context.args[0]}\n👤 @{un}\n"
+            f"💰 {u.get('tokens', 0):,} 💮\n💎 Premium: {prem}\n"
+            f"⏳ Premium до: {prem_until}\n"
+            f"🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n"
+            f"💬 Запросов: {u.get('total_requests', 0):,}\n"
+            f"🎨 Фото: {u.get('total_images', 0):,}\n"
+            f"👥 Рефералов: {u.get('referrals', 0)}\n"
+            f"🛡 Предупреждений: {u.get('warnings', 0)}/5\n"
+            f"🚫 Забанен: {banned}\n🔇 Мут: {muted_text}"
+        )
     except: pass
 
 async def admin_top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users()
-    top = sorted(users.items(), key=lambda x: x[1].get("tokens", 0), reverse=True)[:10]
-    text = "🏆 ТОП ПО ТОКЕНАМ\n\n"
+    top = sorted(users.items(), key=lambda x: x[1].get("tokens", 0), reverse=True)[:15]
+    text = "🏆 ТОП-15 ПО ТОКЕНАМ\n\n"
     for i, (uid, data) in enumerate(top, 1):
         name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
         mark = " 💎" if is_premium(int(uid)) else ""
         text += f"{i}. {name}{mark} — {data.get('tokens', 0):,} 💮\n"
     await update.message.reply_text(text)
 
+async def admin_topreferrals(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Топ по рефералам"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    users = load_users()
+    top = sorted(users.items(), key=lambda x: x[1].get("referrals", 0), reverse=True)[:15]
+    text = "👥 ТОП-15 ПО РЕФЕРАЛАМ\n\n"
+    for i, (uid, data) in enumerate(top, 1):
+        name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
+        text += f"{i}. {name} — {data.get('referrals', 0)} реф.\n"
+    await update.message.reply_text(text)
+
+async def admin_topdonators(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Топ по донатам"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    total, count, top_donors = get_donation_stats()
+    if not top_donors: await update.message.reply_text("Нет донатов."); return
+    text = f"🌍 ТОП-15 ДОНАТОРОВ\n\n🔥 {total:,} 💮 | {count} донатов\n\n"
+    users = load_users()
+    for i, (uid, donated) in enumerate(top_donors, 1):
+        name = f"@{users.get(uid, {}).get('username', '?')}" if uid in users else f"ID:{uid}"
+        text += f"{i}. {name} — {donated:,} 💮\n"
+    await update.message.reply_text(text)
+
+async def admin_topactive(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Топ по активности"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    users = load_users()
+    top = sorted(users.items(), key=lambda x: x[1].get("total_requests", 0), reverse=True)[:15]
+    text = "📊 ТОП-15 ПО АКТИВНОСТИ\n\n"
+    for i, (uid, data) in enumerate(top, 1):
+        name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
+        text += f"{i}. {name} — {data.get('total_requests', 0):,} запр.\n"
+    await update.message.reply_text(text)
+
 async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     users = load_users(); rate_data = get_token_rate()
-    donated_total, _, _ = get_donation_stats()
+    donated_total, donated_count, _ = get_donation_stats()
     premium_count = sum(1 for u in users.values() if u.get("premium_until") and datetime.now() < datetime.fromisoformat(u["premium_until"]))
-    await update.message.reply_text(f"📊 СТАТИСТИКА\n👥 {len(users)} (💎{premium_count})\n💮 {rate_data.get('total_supply', 0):,} NBT\n🔥 {donated_total:,} 💮")
+    total_requests = sum(u.get("total_requests", 0) for u in users.values())
+    total_images = sum(u.get("total_images", 0) for u in users.values())
+    active_today = sum(1 for u in users.values() if u.get("requests_today", 0) > 0)
+    await update.message.reply_text(
+        f"📊 СТАТИСТИКА\n━━━━━━━━━━━━━━━━\n\n"
+        f"👥 Пользователей: {len(users)}\n💎 Premium: {premium_count}\n"
+        f"📊 Активных сегодня: {active_today}\n"
+        f"💮 В обороте: {rate_data.get('total_supply', 0):,} NBT\n"
+        f"💰 Капитализация: ${rate_data.get('market_cap', 0):,.2f}\n"
+        f"🔥 Донатов: {donated_total:,} 💮 ({donated_count})\n"
+        f"💬 Запросов всего: {total_requests:,}\n"
+        f"🎨 Генераций всего: {total_images:,}"
+    )
+
+async def admin_fullstats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Полная статистика с детализацией"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    users = load_users(); rate_data = get_token_rate()
+    total_tokens = sum(u.get("tokens", 0) for u in users.values())
+    total_earned = sum(u.get("earned_tokens", 0) for u in users.values())
+    total_spent = sum(u.get("spent_tokens", 0) for u in users.values())
+    total_donated = sum(u.get("donated_tokens", 0) for u in users.values())
+    total_cashback = sum(u.get("cashback_earned", 0) for u in users.values())
+    premium_count = sum(1 for u in users.values() if u.get("premium_until") and datetime.now() < datetime.fromisoformat(u["premium_until"]))
+    banned_count = sum(1 for u in users.values() if u.get("banned"))
+    muted_count = sum(1 for u in users.values() if u.get("muted_until") and datetime.now() < datetime.fromisoformat(u["muted_until"]))
+    await update.message.reply_text(
+        f"📊 ПОЛНАЯ СТАТИСТИКА\n━━━━━━━━━━━━━━━━\n\n"
+        f"👥 Всего: {len(users)}\n💎 Premium: {premium_count}\n"
+        f"🚫 Забанено: {banned_count}\n🔇 Замучено: {muted_count}\n\n"
+        f"💮 ЭКОНОМИКА:\n"
+        f"В обороте: {total_tokens:,} NBT\n"
+        f"Заработано: {total_earned:,} 💮\n"
+        f"Потрачено: {total_spent:,} 💮\n"
+        f"Пожертвовано: {total_donated:,} 💮\n"
+        f"Кэшбек: {total_cashback:,} 💮\n"
+        f"Курс: ${rate_data.get('rate', 0.005):.8f}\n"
+        f"Кап: ${rate_data.get('market_cap', 0):,.2f}"
+    )
+
+async def admin_economy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Детальная экономическая статистика"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    rate_data = get_token_rate()
+    await update.message.reply_text(
+        f"💮 ЭКОНОМИКА\n━━━━━━━━━━━━━━━━\n\n"
+        f"💰 Курс: ${rate_data.get('rate', 0.005):.8f}\n"
+        f"💎 Кап: ${rate_data.get('market_cap', 0):,.2f}\n"
+        f"🪙 В обороте: {rate_data.get('total_supply', 0):,} NBT\n"
+        f"🔥 Сожжено: {rate_data.get('total_burned', 0):,} 💮\n"
+        f"🌍 Пожертвовано: {rate_data.get('total_donated', 0):,} 💮\n"
+        f"📊 Supply factor: ×{rate_data.get('supply_factor', 1):.2f}\n"
+        f"📊 Activity factor: ×{rate_data.get('activity_factor', 1):.2f}\n"
+        f"📊 Burn factor: ×{rate_data.get('burn_factor', 1):.2f}\n"
+        f"📅 День: {rate_data.get('day_name', '?')} (×{rate_data.get('day_factor', 1):.2f})\n"
+        f"📈 Волатильность: ×{rate_data.get('volatility_index', 1):.2f}\n"
+        f"🔄 Обновление: {rate_data.get('next_update', '?')}"
+    )
+
+async def admin_ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Забанить пользователя"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: await update.message.reply_text("❌ /ban ID"); return
+    try:
+        uid = str(int(context.args[0])); users = load_users()
+        if uid in users: users[uid]["banned"] = True; save_users(users)
+        await update.message.reply_text(f"✅ {context.args[0]} забанен")
+    except: pass
+
+async def admin_unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Разбанить пользователя"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: await update.message.reply_text("❌ /unban ID"); return
+    try:
+        uid = str(int(context.args[0])); users = load_users()
+        if uid in users: users[uid]["banned"] = False; users[uid]["warnings"] = 0; save_users(users)
+        await update.message.reply_text(f"✅ {context.args[0]} разбанен")
+    except: pass
+
+async def admin_mute(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Замутить пользователя на N часов"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args or len(context.args) < 2: await update.message.reply_text("❌ /mute ID ЧАСЫ"); return
+    try:
+        uid = str(int(context.args[0])); hours = int(context.args[1])
+        users = load_users()
+        if uid in users: users[uid]["muted_until"] = (datetime.now() + timedelta(hours=hours)).isoformat(); save_users(users)
+        await update.message.reply_text(f"✅ {context.args[0]} замучен на {hours} ч.")
+    except: pass
+
+async def admin_unmute(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Снять мут"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: await update.message.reply_text("❌ /unmute ID"); return
+    try:
+        uid = str(int(context.args[0])); users = load_users()
+        if uid in users: users[uid]["muted_until"] = None; save_users(users)
+        await update.message.reply_text(f"✅ Мут снят с {context.args[0]}")
+    except: pass
+
+async def admin_warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Выдать предупреждение"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: await update.message.reply_text("❌ /warn ID"); return
+    try:
+        uid = str(int(context.args[0])); users = load_users()
+        users[uid]["warnings"] = users[uid].get("warnings", 0) + 1
+        if users[uid]["warnings"] >= 5: users[uid]["banned"] = True
+        save_users(users)
+        await update.message.reply_text(f"⚠️ Предупреждение {users[uid]['warnings']}/5 для {context.args[0]}")
+    except: pass
+
+async def admin_resetwarns(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Сбросить предупреждения"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: await update.message.reply_text("❌ /resetwarns ID"); return
+    try:
+        uid = str(int(context.args[0])); users = load_users()
+        if uid in users: users[uid]["warnings"] = 0; save_users(users)
+        await update.message.reply_text(f"✅ Предупреждения {context.args[0]} сброшены")
+    except: pass
+
+async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args or len(context.args) < 2: await update.message.reply_text("❌ /createpromo КОД СУММА [ЛИМИТ]"); return
+    create_promo(context.args[0].upper(), int(context.args[1]), int(context.args[2]) if len(context.args) > 2 else 0)
+    await update.message.reply_text(f"✅ Промокод {context.args[0].upper()} на {context.args[1]} 💮")
+
+async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    promos = load_promos()
+    if not promos: await update.message.reply_text("🎟 Нет активных промокодов."); return
+    text = "🎟 ПРОМОКОДЫ\n\n"
+    for code, data in promos.items(): text += f"{code}: {data['amount']} 💮 ({len(data['used_by'])}/{data['max_uses'] or '∞'})\n"
+    await update.message.reply_text(text)
+
+async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: return
+    promos = load_promos(); code = context.args[0].upper()
+    if code in promos: del promos[code]; save_promos(promos); await update.message.reply_text(f"✅ {code} удалён")
+
+async def admin_promoinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Детальная информация о промокоде"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: return
+    promos = load_promos(); code = context.args[0].upper()
+    if code not in promos: await update.message.reply_text("❌ Не найден"); return
+    p = promos[code]
+    users = load_users()
+    used_list = "\n".join([f"• {u_id} (@{users.get(u_id, {}).get('username', '?')})" for u_id in p["used_by"]]) or "Никто"
+    await update.message.reply_text(f"🎟 {code}\n💰 {p['amount']} 💮\n👥 {len(p['used_by'])}/{p['max_uses'] or '∞'}\n📅 {p.get('created', '?')[:10]}\n\nИспользовали:\n{used_list}")
 
 async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    new_d = generate_discounts(); new_d["last_update"] = datetime.now().strftime("%Y-%m-%d"); save_discounts(new_d)
+    save_discounts(generate_discounts()); await update.message.reply_text("✅ Скидки обновлены")
 
 async def admin_force_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
-    rate_data = load_json(TOKEN_RATE_FILE); rate_data["rate_block"] = ""; save_json(TOKEN_RATE_FILE, rate_data)
+    load_json(TOKEN_RATE_FILE)["rate_block"] = ""; save_json(TOKEN_RATE_FILE, load_json(TOKEN_RATE_FILE))
     await update.message.reply_text(f"💮 Курс: ${get_token_rate().get('rate', 0.005):.8f}")
+
+async def admin_cleardiscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    save_discounts({"last_update": datetime.now().strftime("%Y-%m-%d")}); await update.message.reply_text("✅ Скидки очищены")
 
 async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
@@ -1104,28 +1134,58 @@ async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except: pass
     await update.message.reply_text(f"✅ Отправлено: {sent}")
 
-async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id not in ADMIN_IDS: return
-    if not context.args or len(context.args) < 2: return
-    create_promo(context.args[0].upper(), int(context.args[1]), int(context.args[2]) if len(context.args) > 2 else 0)
-
-async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id not in ADMIN_IDS: return
-    promos = load_promos()
-    if not promos: await update.message.reply_text("🎟 ПРОМОКОДЫ\n\nНет активных."); return
-    text = "🎟 ПРОМОКОДЫ:\n\n"
-    for code, data in promos.items(): text += f"{code}: {data['amount']} 💮 (исп: {len(data['used_by'])}/{data['max_uses'] or '∞'})\n"
-    await update.message.reply_text(text)
-
-async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def admin_broadcastpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Рассылка только Premium пользователям"""
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args: return
-    promos = load_promos(); code = context.args[0].upper()
-    if code in promos: del promos[code]; save_promos(promos); await update.message.reply_text(f"✅ Промокод {code} удалён.")
+    text = " ".join(context.args); users = load_users(); sent = 0
+    for uid in users:
+        if is_premium(int(uid)):
+            try: await context.bot.send_message(int(uid), f"💎 {text}"); sent += 1; await asyncio.sleep(0.05)
+            except: pass
+    await update.message.reply_text(f"✅ Premium: {sent}")
 
-async def admin_cleardiscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def admin_maintenance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Включить/выключить режим обслуживания (заглушка)"""
     if update.effective_user.id not in ADMIN_IDS: return
-    save_discounts({"last_update": datetime.now().strftime("%Y-%m-%d")}); await update.message.reply_text("✅ Скидки очищены.")
+    mode = "ВКЛЮЧЕН" if context.args and context.args[0].lower() == "on" else "ВЫКЛЮЧЕН"
+    await update.message.reply_text(f"🔧 Режим обслуживания: {mode}\n(заглушка — требуется реализация)")
+
+async def admin_resetalllimits(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Сбросить лимиты всем пользователям"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    users = load_users(); today = datetime.now().strftime("%Y-%m-%d")
+    for uid in users:
+        for f in ["requests_today", "extra_requests", "image_requests_today", "extra_image_requests", "chat_requests_today", "extra_chat_requests", "chat_image_requests_today", "extra_chat_image_requests"]:
+            users[uid][f] = 0
+        users[uid]["reset_date"] = today; users[uid]["daily_transfer_total"] = 0; users[uid]["transfer_reset_date"] = today
+    save_users(users)
+    await update.message.reply_text(f"✅ Лимиты сброшены для {len(users)} пользователей")
+
+async def admin_resetuserlimits(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Сбросить лимиты конкретному пользователю"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: return
+    try:
+        uid = str(int(context.args[0])); users = load_users(); today = datetime.now().strftime("%Y-%m-%d")
+        if uid in users:
+            for f in ["requests_today", "extra_requests", "image_requests_today", "extra_image_requests", "chat_requests_today", "extra_chat_requests", "chat_image_requests_today", "extra_chat_image_requests"]:
+                users[uid][f] = 0
+            users[uid]["reset_date"] = today; users[uid]["daily_transfer_total"] = 0; users[uid]["transfer_reset_date"] = today
+            save_users(users)
+        await update.message.reply_text(f"✅ Лимиты {context.args[0]} сброшены")
+    except: pass
+
+async def admin_addtokensall(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Выдать токены всем пользователям"""
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: await update.message.reply_text("❌ /addtokensall СУММА"); return
+    try:
+        amount = int(context.args[0]); users = load_users()
+        for uid in users: users[uid]["tokens"] = users[uid].get("tokens", 0) + amount; users[uid]["earned_tokens"] = users[uid].get("earned_tokens", 0) + amount
+        save_users(users)
+        await update.message.reply_text(f"✅ +{amount} 💮 для {len(users)} пользователей")
+    except: pass
 
 async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text; user_id = update.effective_user.id
@@ -1134,21 +1194,16 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if text == "💬 NeBlock AI V2":
         users = load_users(); users[str(user_id)]["current_model"] = "text"; users[str(user_id)]["waiting_for_image"] = False; save_users(users)
-        await update.message.reply_text(f"💬 NeBlock AI V2\n━━━━━━━━━━━━━━━━\n📊 Осталось: {remaining(user_id)}\n📝 Отправьте вопрос.")
+        await update.message.reply_text(f"💬 NeBlock AI V2\n📊 Осталось: {remaining(user_id)}")
         return True
     if text == "🎨 NeBlock Images V2":
         users = load_users(); users[str(user_id)]["current_model"] = "image"; users[str(user_id)]["waiting_for_image"] = True; save_users(users)
-        await update.message.reply_text(f"🎨 NeBlock Images V2\n━━━━━━━━━━━━━━━━\n📊 Осталось: {image_remaining(user_id)}\n📝 Опишите изображение.")
+        await update.message.reply_text(f"🎨 NeBlock Images V2\n📊 Осталось: {image_remaining(user_id)}")
         return True
     if text == "👤 Профиль": await profile_cmd(update, context); return True
-    if text == "🛒 Магазин": 
-        await update.message.reply_text(f"🛒 МАГАЗИН\n━━━━━━━━━━━━━━━━\n💰 {get_tokens(user_id)} 💮\n\nВыберите категорию:", reply_markup=shop_keyboard("private", user_id))
-        return True
+    if text == "🛒 Магазин": await update.message.reply_text(f"🛒 МАГАЗИН\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("private", user_id)); return True
     if text == "💎 Premium": await premium_cmd(update, context); return True
-    if text == "🔥 Награды": 
-        streak = get_user(user_id).get("daily_bonus_streak", 0)
-        await update.message.reply_text(f"🔥 НАГРАДЫ\n━━━━━━━━━━━━━━━━\n\n📊 Серия: {streak} дн.\n💰 Баланс: {get_tokens(user_id)} 💮\n\nВыберите действие:", reply_markup=earn_keyboard())
-        return True
+    if text == "🔥 Награды": await update.message.reply_text(f"🔥 НАГРАДЫ\nСерия: {get_user(user_id).get('daily_bonus_streak', 0)} дн.\n\nВыберите действие:", reply_markup=earn_keyboard()); return True
     if text == "📝 Пресеты": await presets_cmd(update, context); return True
     if text == "💸 Перевод": context.user_data["waiting_transfer"] = True; await update.message.reply_text(f"{TRANSFER_INFO}\n\nОтправьте: ID КОЛИЧЕСТВО"); return True
     if text == "🌍 Донат": await update.message.reply_text(DONATE_INFO_TEXT); return True
@@ -1157,31 +1212,41 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     if text == "📚 FAQ": await update.message.reply_text(FAQ_TEXT[:4000]); return True
     if text == "🎫 Скидки":
         discounts = get_discounts(); active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
+        shop_items = get_shop_items(user_id)
         txt = f"🎫 СКИДКИ\n━━━━━━━━━━━━━━━━\n\n🔄 Обновление: каждые 2 дня в 9:00 МСК\n\n"
-        if not active: txt += "Нет активных скидок."
+        if not active: txt += "Нет активных."
         else:
             for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
-                item = get_shop_items().get(item_id)
-                if item: txt += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n   Скидка: -{disc['percent']}% | Тип: {disc.get('type_name', 'Обычная')}\n\n"
+                item = shop_items.get(item_id)
+                if item: txt += f"{disc.get('color', '🟢')} {item['icon']} {item['name']}\n   -{disc['percent']}% | {disc.get('type_name', '')}\n\n"
         await update.message.reply_text(txt); return True
     return False
 
 async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query; await query.answer(); user_id = query.from_user.id; data = query.data
-    shop_items = get_shop_items(user_id); premium = is_premium(user_id)
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+    data = query.data
+    shop_items = get_shop_items(user_id)
+    premium = is_premium(user_id)
     
+    # Заглушки
     if data == "none": return
+    
+    # Отмены
     if data == "transfer_cancel": await query.edit_message_text("❌ Отменён."); return
     if data == "donate_cancel": await query.edit_message_text("❌ Отменён."); return
     
+    # Донат
     if data.startswith("donate_confirm_"):
         amount = int(data.replace("donate_confirm_", ""))
         if get_user(user_id).get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно!"); return
         if donate_tokens(user_id, amount):
             donated_total, _, _ = get_donation_stats()
-            await query.edit_message_text(f"🌍 ДОНАТ!\n🔥 Сожжено: {amount:,} 💮\n💎 Баланс: {get_tokens(user_id):,} 💮\n🌍 Всего: {donated_total:,} 💮")
+            await query.edit_message_text(f"🌍 ДОНАТ!\n🔥 {amount:,} 💮\n💎 Баланс: {get_tokens(user_id):,} 💮\n🌍 Всего: {donated_total:,} 💮")
         return
     
+    # Перевод
     if data.startswith("transfer_confirm_"):
         parts = data.split("_")
         if len(parts) >= 4:
@@ -1200,11 +1265,29 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text(f"✅ ПЕРЕВОД!\n👤 ID {to_id}\n💸 {amount:,} 💮\n💰 Зачислено: {final_amount:,} 💮{tax_info}\n💎 Баланс: {get_tokens(user_id):,} 💮")
         return
     
+    # Показ скидок (ФИКС)
+    if data == "show_discounts":
+        discounts = get_discounts(); active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
+        text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
+        if not active: text += "Сейчас нет активных скидок.\nНовые появятся при обновлении (каждые 2 дня в 9:00 МСК)."
+        else:
+            for item_id, disc in sorted(active.items(), key=lambda x: x[1]["percent"], reverse=True):
+                item = shop_items.get(item_id)
+                if item:
+                    current_price = item["price"]
+                    discounted_price = max(1, int(current_price * (1 - disc["percent"] / 100)))
+                    text += f"{disc.get('color', '🟢')} {disc.get('icon', '🏷️')} {item['icon']} {item['name']}\n"
+                    text += f"   Скидка: -{disc['percent']}%\n"
+                    text += f"   Тип: {disc.get('type_name', 'Обычная')}\n"
+                    text += f"   Цена: {discounted_price} 💮 (было {current_price} 💮)\n\n"
+        await query.edit_message_text(text, reply_markup=back_button())
+        return
+    
     # Уведомления
     if data == "notify_menu":
         if not premium: await query.edit_message_text("❌ Только для Premium 💎", reply_markup=back_button()); return
         user = get_user(user_id); current = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
-        await query.edit_message_text(f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\nТекущий интервал: каждые {current} ч.\n\nВыберите новый:", reply_markup=notify_keyboard())
+        await query.edit_message_text(f"🔔 Интервал: каждые {current} ч.\n\nВыберите новый:", reply_markup=notify_keyboard())
         return
     
     if data.startswith("notify_"):
@@ -1212,50 +1295,40 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         try:
             interval = int(data.replace("notify_", ""))
             if interval in PREMIUM_NOTIFY_OPTIONS:
-                users = load_users(); uid = str(user_id)
-                users[uid]["notify_interval"] = interval; save_users(users)
-                await query.edit_message_text(f"✅ Интервал: каждые {interval} ч.\nСледующая сводка по расписанию.", reply_markup=back_button())
+                users = load_users(); uid = str(user_id); users[uid]["notify_interval"] = interval; save_users(users)
+                await query.edit_message_text(f"✅ Каждые {interval} ч.", reply_markup=back_button())
         except: pass
         return
     
-    if data == "premium_shop":
-        await query.edit_message_text(f"🛒 ПОКУПКА PREMIUM\n━━━━━━━━━━━━━━━━\n💰 {get_tokens(user_id):,} 💮\n\nВыберите тариф:", reply_markup=shop_keyboard("private", user_id))
-        return
+    # Premium
+    if data == "premium_shop": await query.edit_message_text(f"🛒 Premium\n💰 {get_tokens(user_id):,} 💮\n\nВыберите тариф:", reply_markup=shop_keyboard("private", user_id)); return
+    if data == "premium_menu": await premium_cmd(update, context); return
     
-    if data == "premium_menu":
-        await premium_cmd(update, context)
-        try: await query.edit_message_text("См. сообщение выше ↑")
-        except: pass
-        return
-    
+    # Пресеты
     if data == "presets_menu":
         if not premium: await query.edit_message_text("❌ Только для Premium 💎", reply_markup=back_button()); return
-        await presets_cmd(update, context)
-        return
+        await presets_cmd(update, context); return
     
     if data.startswith("preset_"):
         if not premium: await query.edit_message_text("❌ Только для Premium 💎", reply_markup=back_button()); return
         preset_id = data.replace("preset_", "")
         if preset_id == "off":
             users = load_users(); users[str(user_id)]["active_preset"] = None; save_users(users)
-            await query.edit_message_text("✅ Пресет отключён.", reply_markup=back_button())
-            return
+            await query.edit_message_text("✅ Пресет отключён.", reply_markup=back_button()); return
         preset = PREMIUM_PRESETS.get(preset_id)
         if preset:
             users = load_users(); users[str(user_id)]["active_preset"] = preset_id; save_users(users)
-            await query.edit_message_text(f"✅ {preset['icon']} {preset['name']}\n📝 {preset['description']}\n\nИнструкция добавится к запросу.", reply_markup=back_button())
+            await query.edit_message_text(f"✅ {preset['icon']} {preset['name']}\n{preset['description']}", reply_markup=back_button())
         return
     
-    if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━\n\n💰 {get_tokens(user_id):,} 💮\n\nВыберите раздел:", reply_markup=main_menu()); return
-    if data == "about": await query.edit_message_text(f"ℹ️ О БОТЕ\n━━━━━━━━━━━━━━━━\n\n📌 Версия: {BOT_VERSION}\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n💎 Premium — безлимит + привилегии\n🔔 Умные уведомления\n🆔 /id — ваш ID\n\n💡 /faq — ответы на вопросы", reply_markup=back_button()); return
+    # Навигация
+    if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n\n💰 {get_tokens(user_id):,} 💮\n\nВыберите раздел:", reply_markup=main_menu()); return
+    if data == "about": await query.edit_message_text(f"ℹ️ О БОТЕ\n\n📌 Версия: {BOT_VERSION}\n💬 NeBlock AI V2\n🎨 NeBlock Images V2\n💎 Premium\n🔔 Уведомления", reply_markup=back_button()); return
     if data == "stats":
-        u = get_user(user_id); prem = is_premium(user_id)
-        await query.edit_message_text(f"📊 СТАТИСТИКА\n━━━━━━━━━━━━━━━━\n\n💬 Запросов сегодня: {u.get('requests_today', 0)}\n🎨 Генераций: {u.get('image_requests_today', 0)}\n💰 Баланс: {u.get('tokens', 0):,} 💮\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n🌍 Донатов: {u.get('donated_tokens', 0):,} 💮\n👥 Рефералов: {u.get('referrals', 0)}\n" + (f"🔄 Кэшбек: {u.get('cashback_earned', 0):,} 💮\n" if prem else ""), reply_markup=back_button()); return
-    if data == "shop": await query.edit_message_text(f"🛒 МАГАЗИН\n━━━━━━━━━━━━━━━━\n💰 {get_tokens(user_id):,} 💮\n\nВыберите категорию:", reply_markup=shop_keyboard("private", user_id)); return
-    if data == "earn": 
-        streak = get_user(user_id).get("daily_bonus_streak", 0)
-        await query.edit_message_text(f"🔥 НАГРАДЫ\n━━━━━━━━━━━━━━━━\n\n📊 Серия: {streak} дн.\n💰 Баланс: {get_tokens(user_id):,} 💮\n\nВыберите действие:", reply_markup=earn_keyboard()); return
-    
+        u = get_user(user_id)
+        await query.edit_message_text(f"📊 СТАТИСТИКА\n\n💰 {u.get('tokens', 0):,} 💮\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n👥 Рефералов: {u.get('referrals', 0)}\n" + (f"🔄 Кэшбек: {u.get('cashback_earned', 0):,} 💮" if premium else ""), reply_markup=back_button()); return
+    if data == "shop": await query.edit_message_text(f"🛒 МАГАЗИН\n💰 {get_tokens(user_id):,} 💮\n\nВыберите категорию:", reply_markup=shop_keyboard("private", user_id)); return
+    if data == "earn": await query.edit_message_text(f"🔥 НАГРАДЫ\nСерия: {get_user(user_id).get('daily_bonus_streak', 0)} дн.\n\nВыберите действие:", reply_markup=earn_keyboard()); return
     if data == "daily_bonus":
         u = get_user(user_id); today = datetime.now().strftime("%Y-%m-%d")
         if u.get("daily_bonus_claimed") == today: await query.answer("❌ Уже забирали!"); return
@@ -1276,34 +1349,40 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             users[uid]["premium_until"] = (base + timedelta(hours=24)).isoformat(); users[uid]["streak_30_premium_claimed"] = True; save_users(users)
             premium_text = "\n🎁 + Premium ЛС 1 день!"
         await query.answer(f"🎉 +{bonus} 💮!")
-        await query.edit_message_text(f"🎁 БОНУС!\n━━━━━━━━━━━━━━━━\n\n{icon} {day_name}\n💰 +{bonus} 💮{premium_text}\n💎 Баланс: {get_tokens(user_id):,} 💮\n🔥 Серия: {streak} дн.\n\n⚠️ Заберите завтра до 00:00 МСК!", reply_markup=back_button())
+        await query.edit_message_text(f"🎁 БОНУС!\n\n{icon} {day_name}\n💰 +{bonus} 💮{premium_text}\n💎 Баланс: {get_tokens(user_id):,} 💮\n🔥 Серия: {streak} дн.\n\n⚠️ Заберите завтра до 00:00 МСК!", reply_markup=back_button())
         return
-    
     if data == "ref_link":
         user = get_user(user_id); bot_username = (await context.bot.get_me()).username
         bonus_you = PREMIUM_REFERRAL_BONUS if premium else REFERRAL_BONUS
         bonus_friend = PREMIUM_INVITED_BONUS if premium else INVITED_BONUS
-        await query.edit_message_text(f"👥 РЕФЕРАЛЫ\n━━━━━━━━━━━━━━━━\n\n🔗 https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n\n💰 Вы: +{bonus_you} 💮 | Друг: +{bonus_friend} 💮\n📊 Рефералов: {user.get('referrals', 0)}\n" + ("💎 Premium бонусы ×3!" if premium else f"\n💡 С Premium: +{PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮"), reply_markup=back_button()); return
+        await query.edit_message_text(f"👥 РЕФЕРАЛЫ\n\n🔗 https://t.me/{bot_username}?start=ref_{user.get('referral_code', '')}\n\n💰 Вы: +{bonus_you} 💮 | Друг: +{bonus_friend} 💮\n📊 Рефералов: {user.get('referrals', 0)}", reply_markup=back_button()); return
+    if data == "streak_info": await query.edit_message_text(STREAK_INFO[:4000], reply_markup=back_button()); return
+    if data == "donate_info": await query.edit_message_text(DONATE_INFO_TEXT, reply_markup=back_button()); return
+    if data == "models": await query.edit_message_text("🧠 МОДЕЛИ\n\n💬 NeBlock AI V2\n🎨 NeBlock Images V2\n📝 /genimage", reply_markup=back_button()); return
+    if data == "tokenrate":
+        rd = get_token_rate()
+        await query.edit_message_text(f"💮 КУРС NBT\n\n💰 1 NBT = ${rd.get('rate', 0.005):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n🪙 В обороте: {rd.get('total_supply', 0):,}", reply_markup=back_button()); return
+    if data == "transfer": context.user_data["waiting_transfer"] = True; await query.edit_message_text(f"{TRANSFER_INFO}\n\nОтправьте: ID КОЛИЧЕСТВО", reply_markup=back_button()); return
+    if data == "commands": await query.edit_message_text(COMMANDS_LIST, reply_markup=back_button()); return
+    if data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button()); return
+    if data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправьте промокод.", reply_markup=back_button()); return
+    if data == "faq": await query.edit_message_text(FAQ_TEXT[:4000], reply_markup=back_button()); return
     
+    # Покупка
     if data.startswith("confirm_"):
         item_id = data.replace("confirm_", ""); item = shop_items.get(item_id)
         if not item: return
         price, percent, disc = get_discounted_price(item_id, user_id)
         if get_tokens(user_id) < price: await query.answer("❌ Недостаточно!"); return
-        
         if item_id == "premium_forever" and is_premium(user_id):
             user = get_user(user_id)
-            if user.get("premium_until"):
-                if (datetime.fromisoformat(user["premium_until"]) - datetime.now()).days > 36500: await query.answer("❌ Уже Premium НАВСЕГДА!"); return
-        
-        remove_tokens(user_id, price)
-        cashback = process_cashback(user_id, price, item_id)
+            if user.get("premium_until") and (datetime.fromisoformat(user["premium_until"]) - datetime.now()).days > 36500:
+                await query.answer("❌ Уже Premium НАВСЕГДА!"); return
+        remove_tokens(user_id, price); cashback = process_cashback(user_id, price, item_id)
         users = load_users(); uid = str(user_id)
-        
         actions = {"extra5": ("extra_requests", 5), "extra10": ("extra_requests", 10), "extra50": ("extra_requests", 50), "image1": ("extra_image_requests", 1), "image5": ("extra_image_requests", 5), "image20": ("extra_image_requests", 20), "chat_extra10": ("extra_chat_requests", 10), "chat_extra50": ("extra_chat_requests", 50), "chat_image5": ("extra_chat_image_requests", 5), "chat_image20": ("extra_chat_image_requests", 20)}
         time_actions = {"unlimited_1h": ("unlimited_until", 1), "unlimited_24h": ("unlimited_until", 24), "unlimited_7d": ("unlimited_until", 168), "image_unlimited_1h": ("image_unlimited_until", 1), "chat_unlimited_1h": ("chat_unlimited_until", 1), "chat_unlimited_24h": ("chat_unlimited_until", 24)}
         premium_actions = {"premium_day": 1, "premium_week": 7, "premium_30d": 30, "premium_60d": 60, "premium_90d": 90, "premium_year": 365, "premium_forever": 36500}
-        
         if item_id in actions: field, amount = actions[item_id]; users[uid][field] = users[uid].get(field, 0) + amount
         elif item_id in time_actions: field, hours = time_actions[item_id]; users[uid][field] = (datetime.now() + timedelta(hours=hours)).isoformat()
         elif item_id in premium_actions:
@@ -1311,13 +1390,12 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             existing = users[uid].get("premium_until")
             base = datetime.fromisoformat(existing) if existing and datetime.now() < datetime.fromisoformat(existing) else datetime.now()
             users[uid]["premium_until"] = (base + timedelta(days=days)).isoformat()
-        
         save_users(users)
-        dt = f"\n🎫 Скидка {percent}%" if percent > 0 else ""
+        dt = f"\n🎫 -{percent}%" if percent > 0 else ""
         if disc and disc.get("type") == "legendary": dt = "\n🌟 ЛЕГЕНДАРНАЯ!"
         cashback_text = f"\n🔄 Кэшбек: +{cashback} 💮" if cashback > 0 else ""
         await query.answer(f"✅ {item['name']}!")
-        await query.edit_message_text(f"✅ ПОКУПКА!\n━━━━━━━━━━━━━━━━\n\n{item['icon']} {item['name']}\n{dt}{cashback_text}\n💰 Потрачено: {price} 💮\n💎 Остаток: {get_tokens(user_id):,} 💮\n⏱ {item.get('duration', 'Н/Д')}", reply_markup=back_button())
+        await query.edit_message_text(f"✅ ПОКУПКА!\n\n{item['icon']} {item['name']}\n{dt}{cashback_text}\n💰 Потрачено: {price} 💮\n💎 Остаток: {get_tokens(user_id):,} 💮\n⏱ {item.get('duration', 'Н/Д')}", reply_markup=back_button())
         return
     
     if data.startswith("buy_"):
@@ -1325,65 +1403,34 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         if not item: return
         price, percent, disc = get_discounted_price(item_id, user_id)
         tokens = get_tokens(user_id); can = "✅ Хватает" if tokens >= price else "❌ Не хватает"
-        
         discount_info = ""
         if premium:
             if item.get("category") == "premium" and item.get("location") == "private": discount_info = f"\n💎 Скидка на продление: {PREMIUM_RENEWAL_DISCOUNT}%"
             elif item.get("location") == "chat": discount_info = f"\n💎 Скидка на чат: {PREMIUM_CHAT_DISCOUNT}%"
         cashback_info = ""
-        if premium and item.get("location") == "chat":
-            cashback_info = f"\n🔄 Кэшбек: +{int(price * CASHBACK_PERCENT / 100)} 💮"
-        
+        if premium and item.get("location") == "chat": cashback_info = f"\n🔄 Кэшбек: +{int(price * CASHBACK_PERCENT / 100)} 💮"
         benefits_text = "\n".join([f"  ✓ {b}" for b in item.get("benefits", [])])
         dt = f"\n\n💵 Цена: {price} 💮"
         if percent > 0 and disc:
             if disc.get("type") == "legendary": dt = "\n\n🌟 ЛЕГЕНДАРНАЯ СКИДКА! 0 💮"
             else: dt = f"\n\n{disc.get('color', '🟢')} СКИДКА {percent}%\n💵 Обычная: {item['price']} 💮\n🔥 Со скидкой: {price} 💮"
-        
         premium_comparison = ""
         if item_id.startswith("premium_"):
             premium_comparison = (
                 f"\n\n📊 FREE vs PREMIUM:\n"
-                f"┌──────────────────────────┬────────────┬────────────┐\n"
-                f"│                          │    FREE    │  PREMIUM   │\n"
-                f"├──────────────────────────┼────────────┼────────────┤\n"
-                f"│ Текст (ЛС)               │  {DAILY_LIMIT}/день     │ Безлимит   │\n"
-                f"│ Фото (ЛС)                │  {IMAGE_DAILY_LIMIT}/день     │ Безлимит   │\n"
-                f"│ Пресеты                  │     ❌     │  10 ролей  │\n"
-                f"│ Кэшбек (чат)             │     0%     │    {CASHBACK_PERCENT}%     │\n"
-                f"│ Скидка на продление      │     -      │    {PREMIUM_RENEWAL_DISCOUNT}%     │\n"
-                f"│ Скидка на чат            │     -      │    {PREMIUM_CHAT_DISCOUNT}%     │\n"
-                f"│ Пассивный доход          │     ❌     │ {PASSIVE_INCOME_HOURLY} 💮/час     │\n"
-                f"│ Рефералы                 │ {REFERRAL_BONUS}/{INVITED_BONUS} 💮      │ {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮      │\n"
-                f"│ Переводы                 │ до {MAX_TRANSFER:,} │ до {PREMIUM_MAX_TRANSFER:,} │\n"
-                f"│ Уведомления              │ каждые 24ч │ 1-24ч     │\n"
-                f"│ Настройка уведомлений    │     ❌     │     ✅     │\n"
-                f"│ Значок 💎                │     ❌     │     ✅     │\n"
-                f"└──────────────────────────┴────────────┴────────────┘"
+                f"┌─────────────────────┬──────────┬──────────┐\n"
+                f"│ Текст (ЛС)          │  {DAILY_LIMIT}/день   │ Безлимит │\n"
+                f"│ Фото (ЛС)           │  {IMAGE_DAILY_LIMIT}/день   │ Безлимит │\n"
+                f"│ Пресеты             │    ❌    │ 10 ролей │\n"
+                f"│ Пассивный доход     │    ❌    │ 5 💮/час  │\n"
+                f"│ Рефералы            │ {REFERRAL_BONUS}/{INVITED_BONUS} 💮  │ {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮 │\n"
+                f"│ Уведомления         │ 24 ч     │ 1-24 ч   │\n"
+                f"│ Значок 💎           │    ❌    │    ✅    │\n"
+                f"└─────────────────────┴──────────┴──────────┘"
             )
-        
-        text = (
-            f"🛒 {item['icon']} {item['name']}\n━━━━━━━━━━━━━━━━\n\n"
-            f"📝 {item['desc']}\n\n"
-            f"✨ ПРЕИМУЩЕСТВА:\n{benefits_text}\n"
-            f"{dt}{discount_info}{cashback_info}{premium_comparison}\n\n"
-            f"⏱ Длительность: {item.get('duration', 'Н/Д')}\n"
-            f"⚠️ {item.get('warning', '')}\n\n"
-            f"💎 Баланс: {tokens:,} 💮\n{can}"
-        )
+        text = f"🛒 {item['icon']} {item['name']}\n━━━━━━━━━━━━━━━━\n\n📝 {item['desc']}\n\n✨ ПРЕИМУЩЕСТВА:\n{benefits_text}\n{dt}{discount_info}{cashback_info}{premium_comparison}\n\n⏱ {item.get('duration', 'Н/Д')}\n⚠️ {item.get('warning', '')}\n\n💎 Баланс: {tokens:,} 💮\n{can}"
         await query.edit_message_text(text, reply_markup=confirm_keyboard(item_id))
         return
-    
-    if data == "donate_info": await query.edit_message_text(DONATE_INFO_TEXT, reply_markup=back_button()); return
-    if data == "models": await query.edit_message_text("🧠 МОДЕЛИ\n━━━━━━━━━━━━━━━━\n\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n📝 /genimage", reply_markup=back_button()); return
-    if data == "tokenrate":
-        rd = get_token_rate()
-        await query.edit_message_text(f"💮 КУРС NBT\n\n💰 1 NBT = ${rd.get('rate', 0.005):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}", reply_markup=back_button()); return
-    if data == "transfer": context.user_data["waiting_transfer"] = True; await query.edit_message_text(f"{TRANSFER_INFO}\n\nОтправьте: ID КОЛИЧЕСТВО", reply_markup=back_button()); return
-    if data == "commands": await query.edit_message_text(COMMANDS_LIST, reply_markup=back_button()); return
-    if data == "changelog": await query.edit_message_text(CHANGELOG, reply_markup=back_button()); return
-    if data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 Отправьте промокод.", reply_markup=back_button()); return
-    if data == "faq": await query.edit_message_text(FAQ_TEXT[:4000], reply_markup=back_button()); return
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤔 Неизвестная команда.\n/start | /commands")
@@ -1392,26 +1439,20 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip() if update.message.text else ""
     user_id = update.effective_user.id; chat_type = update.effective_chat.type; chat_id = update.effective_chat.id
     bot_username = context.bot.username
-    
     username = update.effective_user.username
     if username: users = load_users(); users[str(user_id)]["username"] = username; save_users(users)
-    
     if is_user_muted(user_id): await update.message.reply_text("🚫 Заблокированы."); return
     is_clean, _, reason = moderate_content(text)
     if not is_clean: _, warn = warn_user(user_id); await update.message.reply_text(f"⚠️ {reason}\n{warn}"); return
-    
     if context.user_data.get("waiting_transfer"):
         context.user_data["waiting_transfer"] = False
         parts = text.split()
         if len(parts) >= 2:
             try: to_id = int(parts[0]); amount = int(parts[1]); context.args = [str(to_id), str(amount)]; await transfer_cmd(update, context); return
             except: await update.message.reply_text("❌ ID КОЛИЧЕСТВО"); return
-    
     if chat_type == "private":
         if await reply_button_handler(update, context): return
-    
     is_image_request = False; should_respond = False
-    
     if chat_type in ["group", "supergroup"]:
         mention = f"@{bot_username}"; text_lower = text.lower().strip()
         if mention in text:
@@ -1424,18 +1465,12 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if is_img: is_image_request = True
                 break
         if not should_respond: return
-    
     user = get_user(user_id)
-    if context.user_data.get("waiting_promo"): 
-        context.user_data["waiting_promo"] = False
-        success, result = use_promo(user_id, text)
-        await update.message.reply_text(f"🎟 +{result} 💮!" if success else f"❌ {result}"); return
-    
+    if context.user_data.get("waiting_promo"): context.user_data["waiting_promo"] = False; success, result = use_promo(user_id, text); await update.message.reply_text(f"🎟 +{result} 💮!" if success else f"❌ {result}"); return
     active_preset_id = user.get("active_preset")
     if active_preset_id and is_premium(user_id) and chat_type == "private" and not is_image_request:
         preset = PREMIUM_PRESETS.get(active_preset_id)
         if preset: text = f"[Инструкция: {preset['system_prompt']}]\n\nЗапрос: {text}"
-    
     if is_image_request or (chat_type == "private" and user.get("current_model") == "image"):
         if chat_type == "private": users = load_users(); users[str(user_id)]["waiting_for_image"] = False; save_users(users)
         if not can_image_request(user_id, chat_type, chat_id): await update.message.reply_text("🚫 Лимит!"); return
@@ -1446,9 +1481,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else: await msg.edit_text("❌ Ошибка")
         except: await msg.edit_text("❌ Ошибка")
         return
-    
     if not can_request(user_id, chat_type, chat_id): await update.message.reply_text("🚫 Лимит!"); return
-    
     msg = await update.message.reply_text("💬 Генерирую...")
     try:
         response = client.responses.create(prompt={"id": PROMPT_ID}, input=text); answer = response.output_text
@@ -1465,60 +1498,57 @@ def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
     # Основные
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("id", id_cmd))
-    app.add_handler(CommandHandler("profile", profile_cmd))
-    app.add_handler(CommandHandler("faq", lambda u, c: u.message.reply_text(FAQ_TEXT[:4000])))
-    app.add_handler(CommandHandler("changelog", lambda u, c: u.message.reply_text(CHANGELOG)))
-    app.add_handler(CommandHandler("commands", lambda u, c: u.message.reply_text(COMMANDS_LIST)))
+    for cmd, handler in [
+        ("start", start), ("id", id_cmd), ("profile", profile_cmd),
+        ("faq", lambda u, c: u.message.reply_text(FAQ_TEXT[:4000])),
+        ("changelog", lambda u, c: u.message.reply_text(CHANGELOG)),
+        ("commands", lambda u, c: u.message.reply_text(COMMANDS_LIST)),
+    ]: app.add_handler(CommandHandler(cmd, handler))
     
     # Premium
-    app.add_handler(CommandHandler("premium", premium_cmd))
-    app.add_handler(CommandHandler("buy_premium", buy_premium_cmd))
-    app.add_handler(CommandHandler("notify", notify_cmd))
+    for cmd, handler in [
+        ("premium", premium_cmd), ("buy_premium", buy_premium_cmd), ("notify", notify_cmd),
+    ]: app.add_handler(CommandHandler(cmd, handler))
     
-    # Награды
-    app.add_handler(CommandHandler("streak", streak_cmd))
-    app.add_handler(CommandHandler("streak_info", lambda u, c: u.message.reply_text(STREAK_INFO[:4000])))
+    # Награды и финансы
+    for cmd, handler in [
+        ("streak", streak_cmd), ("streak_info", lambda u, c: u.message.reply_text(STREAK_INFO[:4000])),
+        ("tokenrate", tokenrate_cmd), ("transfer", transfer_cmd),
+        ("transferinfo", lambda u, c: u.message.reply_text(TRANSFER_INFO)),
+        ("donate", donate_cmd), ("donatetop", donatetop_cmd),
+        ("promo", lambda u, c: setattr(c, 'user_data', {**c.user_data, 'waiting_promo': True}) or u.message.reply_text("🎟 Отправьте промокод.")),
+    ]: app.add_handler(CommandHandler(cmd, handler))
     
-    # Финансы
-    app.add_handler(CommandHandler("tokenrate", tokenrate_cmd))
-    app.add_handler(CommandHandler("transfer", transfer_cmd))
-    app.add_handler(CommandHandler("transferinfo", lambda u, c: u.message.reply_text(TRANSFER_INFO)))
-    app.add_handler(CommandHandler("donate", donate_cmd))
-    app.add_handler(CommandHandler("donatetop", donatetop_cmd))
-    app.add_handler(CommandHandler("promo", lambda u, c: setattr(c, 'user_data', {**c.user_data, 'waiting_promo': True}) or u.message.reply_text("🎟 Отправьте промокод.")))
-    
-    # Генерация
+    # Генерация и пресеты
     app.add_handler(CommandHandler("genimage", genimage_cmd))
-    
-    # Пресеты
     app.add_handler(CommandHandler("presets", presets_cmd))
     
-    # Магазин
+    # Магазин и чаты
     app.add_handler(CommandHandler("shop", lambda u, c: u.message.reply_text("🛒 Магазин", reply_markup=shop_keyboard("private", u.effective_user.id))))
-    app.add_handler(CommandHandler("shopdesc", lambda u, c: u.message.reply_text("📋 /shop — магазин товаров\n/shop — текстовые запросы, фото, Premium\n/chatshop — магазин для чата")))
+    app.add_handler(CommandHandler("shopdesc", lambda u, c: u.message.reply_text("📋 /shop — магазин")))
     app.add_handler(CommandHandler("discounts", lambda u, c: inline_button_handler(u, c)))
-    
-    # Чаты
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
     
-    # Админ
-    app.add_handler(CommandHandler("give", admin_give))
-    app.add_handler(CommandHandler("take", admin_take))
-    app.add_handler(CommandHandler("resetuser", admin_resetuser))
-    app.add_handler(CommandHandler("setpremium", admin_setpremium))
-    app.add_handler(CommandHandler("userinfo", admin_userinfo))
-    app.add_handler(CommandHandler("top", admin_top))
-    app.add_handler(CommandHandler("stats", admin_stats))
-    app.add_handler(CommandHandler("forcediscounts", admin_forcediscounts))
-    app.add_handler(CommandHandler("forcerate", admin_force_rate))
-    app.add_handler(CommandHandler("broadcast", admin_broadcast))
-    app.add_handler(CommandHandler("createpromo", admin_create_promo))
-    app.add_handler(CommandHandler("promos", admin_promos))
-    app.add_handler(CommandHandler("deletepromo", admin_delete_promo))
-    app.add_handler(CommandHandler("cleardiscounts", admin_cleardiscounts))
+    # Админ (25+ команд)
+    admin_commands = [
+        ("give", admin_give), ("take", admin_take), ("resetuser", admin_resetuser),
+        ("setpremium", admin_setpremium), ("removepremium", admin_removepremium),
+        ("userinfo", admin_userinfo), ("top", admin_top), ("topreferrals", admin_topreferrals),
+        ("topdonators", admin_topdonators), ("topactive", admin_topactive),
+        ("stats", admin_stats), ("fullstats", admin_fullstats), ("economy", admin_economy),
+        ("ban", admin_ban), ("unban", admin_unban), ("mute", admin_mute),
+        ("unmute", admin_unmute), ("warn", admin_warn), ("resetwarns", admin_resetwarns),
+        ("createpromo", admin_create_promo), ("promos", admin_promos),
+        ("deletepromo", admin_delete_promo), ("promoinfo", admin_promoinfo),
+        ("forcediscounts", admin_forcediscounts), ("forcerate", admin_force_rate),
+        ("cleardiscounts", admin_cleardiscounts), ("broadcast", admin_broadcast),
+        ("broadcastpremium", admin_broadcastpremium), ("maintenance", admin_maintenance),
+        ("resetalllimits", admin_resetalllimits), ("resetuserlimits", admin_resetuserlimits),
+        ("addtokensall", admin_addtokensall),
+    ]
+    for cmd, handler in admin_commands:
+        app.add_handler(CommandHandler(cmd, handler))
     
     app.add_handler(CallbackQueryHandler(inline_button_handler))
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
