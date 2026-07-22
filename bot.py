@@ -777,7 +777,7 @@ def main_menu():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("ℹ️ О боте", callback_data="about"), InlineKeyboardButton("📊 Статистика", callback_data="stats")],
         [InlineKeyboardButton("🧠 Модели", callback_data="models"), InlineKeyboardButton("💎 Премиум", callback_data="premium_info")],
-        [InlineKeyboardButton("🔥 Награды", callback_data="streak_info"), InlineKeyboardButton("💮 Курс NBT", callback_data="tokenrate")],
+        [InlineKeyboardButton("🔥 Награды", callback_data="earn"), InlineKeyboardButton("💮 Курс NBT", callback_data="tokenrate")],
         [InlineKeyboardButton("💸 Перевод", callback_data="transfer"), InlineKeyboardButton("🌍 Донат", callback_data="donate_info")],
     ])
 
@@ -825,7 +825,7 @@ def earn_keyboard():
     ])
 
 def limit_reached_keyboard():
-    return InlineKeyboardMarkup([[InlineKeyboardButton("🛒 Купить запросы", callback_data="shop"), InlineKeyboardButton("🔥 Награды", callback_data="streak_info")], [InlineKeyboardButton("💎 Премиум", callback_data="premium_info")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🛒 Купить запросы", callback_data="shop"), InlineKeyboardButton("🔥 Награды", callback_data="earn")], [InlineKeyboardButton("💎 Премиум", callback_data="premium_info")]])
 
 # ═══════════════════════════════════════════
 # КОМАНДЫ
@@ -878,7 +878,6 @@ async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     text = f"🔥 ВАША СЕРИЯ: {streak} дн.\n━━━━━━━━━━━━━━━━\n\n"
     
-    # Текущий статус
     if streak == 0:
         text += "🌱 Вы ещё не начали серию!\n"
         text += "Начните сегодня — заберите первый бонус!\n\n"
@@ -901,7 +900,6 @@ async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text += "   🎁 + Премиум ЛС на 1 день! (единоразово)\n"
             text += "\n"
     
-    # Объяснение системы
     text += "📐 КАК СЧИТАЕТСЯ НАГРАДА:\n"
     text += "• Берётся базовая награда для вашего дня серии\n"
     text += "• Умножается на множитель курса NBT\n"
@@ -916,7 +914,6 @@ async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text += "• После 30 дня награды как в 30-й день (без премиума)\n"
     text += "• Серия может длиться бесконечно\n\n"
     
-    # Ключевые вехи
     text += "📅 КЛЮЧЕВЫЕ ВЕХИ (БАЗОВЫЕ НАГРАДЫ):\n"
     milestones = [1, 7, 14, 21, 28, 30]
     for day in milestones:
@@ -932,9 +929,11 @@ async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def streak_info_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показывает полную информацию о всех 30 днях"""
-    await update.message.reply_text(STREAK_INFO[:4000])
     if len(STREAK_INFO) > 4000:
+        await update.message.reply_text(STREAK_INFO[:4000])
         await update.message.reply_text(STREAK_INFO[4000:])
+    else:
+        await update.message.reply_text(STREAK_INFO)
 
 async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rate_data = get_token_rate(); history = load_json(TOKEN_HISTORY_FILE)
@@ -1380,28 +1379,53 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             )
         return
     
-    # Обработчики для кнопки "🔥 Награды" в разных меню
     if data == "streak_info":
-        # Показываем информацию о наградах с кнопками действий
+        # Показываем ПОДРОБНУЮ информацию о всех 30 днях наград
         user = get_user(user_id)
         streak = user.get("daily_bonus_streak", 0)
         rate_data = get_token_rate()
         rate = rate_data.get("rate", 0.01)
         
-        text = f"🔥 НАГРАДЫ И БОНУСЫ\n━━━━━━━━━━━━━━━━\n\n"
-        text += f"📊 Ваша серия: {streak} дн.\n"
-        text += f"💮 Курс NBT: ${rate:.8f}\n"
+        text = f"🔥 ПОДРОБНО О НАГРАДАХ\n━━━━━━━━━━━━━━━━\n\n"
+        text += f"📊 Ваша текущая серия: {streak} дн.\n"
+        text += f"💮 Текущий курс NBT: ${rate:.8f}\n"
+        text += f"📈 Множитель курса: ×{1.0 + (rate * 10 - 0.1):.2f}\n\n"
         
-        if streak > 0 and streak < MAX_STREAK_DAY:
-            reward = STREAK_BASE_REWARDS[streak]
-            text += f"🎁 Сегодняшний день: {reward['icon']} {reward['name']}\n"
-        elif streak >= MAX_STREAK_DAY:
-            text += f"👑 Максимальная серия!\n"
+        text += "📐 КАК РАБОТАЕТ СИСТЕМА:\n"
+        text += "• Заходите каждый день и забирайте бонус\n"
+        text += "• Чем дольше серия — тем выше базовая награда\n"
+        text += "• Размер награды зависит от дня серии и курса NBT\n"
+        text += "• Формула: базовая награда дня × множитель курса\n"
+        text += "• Множитель курса = 1.0 + (курс × 10 - 0.1)\n"
+        text += "• При курсе $0.01 → множитель ×1.0 (базовый)\n"
+        text += "• При курсе $0.02 → множитель ×1.1 (+10%)\n"
+        text += "• При курсе $0.005 → множитель ×0.95 (-5%)\n\n"
         
-        text += f"\n💰 Баланс: {get_tokens(user_id)} 💮\n\n"
-        text += "Выберите действие:"
+        text += "⚠️ ВАЖНО:\n"
+        text += "• Если не забрать бонус до 00:00 МСК — серия СГОРИТ!\n"
+        text += "• На 30-й день даётся Премиум ЛС на 1 день (единоразово)\n"
+        text += "• После 30 дня награды как в 30-й день (без премиума)\n"
+        text += "• Серия может длиться бесконечно\n\n"
         
-        await query.edit_message_text(text, reply_markup=earn_keyboard())
+        text += "📅 ВСЕ НАГРАДЫ ПО ДНЯМ (БАЗОВЫЕ):\n\n"
+        
+        for day in range(1, 31):
+            reward = STREAK_BASE_REWARDS[day]
+            text += f"{reward['icon']} {reward['name']}: {reward['base_min']}-{reward['base_max']} 💮 (база)"
+            if reward.get("premium_bonus"):
+                text += " + 🎁 Премиум ЛС 1 день!"
+            text += f"\n   {reward['desc']}\n\n"
+        
+        # Разбиваем на части если слишком длинное
+        if len(text) > 4000:
+            await query.edit_message_text(text[:4000], reply_markup=back_button())
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=text[4000:],
+                reply_markup=back_button()
+            )
+        else:
+            await query.edit_message_text(text, reply_markup=back_button())
         return
     
     if data == "menu": 
@@ -1540,13 +1564,23 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     if data == "earn": 
         user = get_user(user_id)
         streak = user.get("daily_bonus_streak", 0)
-        await query.edit_message_text(
-            f"🔥 НАГРАДЫ\n━━━━━━━━━━━━━━━━\n\n"
-            f"📊 Серия: {streak} дн.\n"
-            f"💰 Баланс: {get_tokens(user_id)} 💮\n\n"
-            f"Выберите действие:",
-            reply_markup=earn_keyboard()
-        )
+        rate_data = get_token_rate()
+        rate = rate_data.get("rate", 0.01)
+        
+        text = f"🔥 НАГРАДЫ И БОНУСЫ\n━━━━━━━━━━━━━━━━\n\n"
+        text += f"📊 Ваша серия: {streak} дн.\n"
+        text += f"💮 Курс NBT: ${rate:.8f}\n"
+        
+        if streak > 0 and streak < MAX_STREAK_DAY:
+            reward = STREAK_BASE_REWARDS[streak]
+            text += f"🎁 Сегодняшний день: {reward['icon']} {reward['name']}\n"
+        elif streak >= MAX_STREAK_DAY:
+            text += f"👑 Максимальная серия!\n"
+        
+        text += f"\n💰 Баланс: {get_tokens(user_id)} 💮\n\n"
+        text += "Выберите действие:"
+        
+        await query.edit_message_text(text, reply_markup=earn_keyboard())
         return
     
     if data == "promo": 
