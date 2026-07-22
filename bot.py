@@ -12,7 +12,7 @@ import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V5.6 - Конфигурация
+# 🧠 NeBlock AI V5.7 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -22,7 +22,7 @@ PROMPT_ID = "fvt621uiq1fftiu5qomu"
 IMAGE_MODEL = "art://b1guk4h3j9t48lsjl6sq/aliceai-image-art-3.0/latest"
 
 # ═══════════════════════════════════════════
-# 📊 БАЛАНСИРОВКА ЭКОНОМИКИ V5.6
+# 📊 БАЛАНСИРОВКА ЭКОНОМИКИ V5.7
 # ═══════════════════════════════════════════
 
 DAILY_LIMIT = 3
@@ -38,7 +38,6 @@ TOKEN_RATE_FILE = "token_rate.json"
 TOKEN_HISTORY_FILE = "token_history.json"
 TRANSFER_LOG_FILE = "transfer_log.json"
 DONATION_FILE = "donations.json"
-NOTIFY_FILE = "notifications.json"
 ADMIN_IDS = [1671403667]
 
 START_BONUS = 25
@@ -46,16 +45,17 @@ REFERRAL_BONUS = 10
 INVITED_BONUS = 5
 PREMIUM_REFERRAL_BONUS = 30
 PREMIUM_INVITED_BONUS = 10
-CASHBACK_PERCENT = 15          # Только для чат-покупок
-PASSIVE_INCOME_HOURLY = 5      # Увеличено до 5 💮/час
+CASHBACK_PERCENT = 15
+PASSIVE_INCOME_HOURLY = 5
 PASSIVE_INCOME_MAX_HOURS = 12
 PREMIUM_RENEWAL_DISCOUNT = 15
 PREMIUM_CHAT_DISCOUNT = 10
-BOT_VERSION = "5.6"
+BOT_VERSION = "5.7"
 
-# Интервалы уведомлений (в часах)
-NOTIFY_INTERVAL_FREE = 24      # Бесплатные: раз в 24 часа
-NOTIFY_INTERVAL_PREMIUM = 6    # Premium: раз в 6 часов
+# Интервалы уведомлений
+NOTIFY_INTERVAL_FREE = 24
+DEFAULT_NOTIFY_INTERVAL_PREMIUM = 6
+PREMIUM_NOTIFY_OPTIONS = [1, 3, 6, 12, 24]  # Доступные интервалы для Premium
 
 MIN_TRANSFER = 1
 MAX_TRANSFER = 5000
@@ -93,7 +93,7 @@ for day in range(1, 31):
         STREAK_BASE_REWARDS[day] = {"name": f"День {day}", "base_min": prev["base_min"] + 1, "base_max": prev["base_max"] + 2, "icon": "📅", "desc": f"День {day} подряд!"}
 
 # ═══════════════════════════════════════════
-# 📝 СИСТЕМА ПРЕСЕТОВ (ТОЛЬКО PREMIUM)
+# 📝 СИСТЕМА ПРЕСЕТОВ
 # ═══════════════════════════════════════════
 
 PREMIUM_PRESETS = {
@@ -151,18 +151,18 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
-Версия 5.6
-• 🔔 Умные уведомления (Free: раз в 24ч, Premium: раз в 6ч)
-• 💎 Premium: пассивный доход увеличен до 5 💮/час
-• 💎 Кэшбек 15% теперь только на чат-покупки
+Версия 5.7
+• 🔔 Premium: кастомизация интервала уведомлений (1/3/6/12/24ч)
+• 🔔 Команда /notify — настройка интервала уведомлений
 • 📊 Расширенная информация во всех разделах
-• 🆔 Команда /id для всех
-• 📋 Детальное сравнение Free vs Premium
+• 🔧 Возвращены все удалённые команды
+• 🆕 Новые команды: /notify, /chatowner, /chatshop
 
-Версия 5.5
-• Команда /premium — меню Premium
-• Пресеты копируются в запрос
-• Исправлена ошибка синтаксиса
+Версия 5.6
+• Умные уведомления (Free: 24ч, Premium: 6ч)
+• Пассивный доход 5 💮/час
+• Кэшбек 15% на чат-покупки
+• Команда /id
 """
 
 FAQ_TEXT = f"""
@@ -183,27 +183,19 @@ FAQ_TEXT = f"""
 • Пассивный доход 5 💮/час (до 60 💮/день!)
 • Рефералы ×3 (30/10 💮)
 • Лимит перевода 25 000 💮 (налог 0-10%)
-• Умные уведомления каждые 6 часов
+• Умные уведомления (кастомизируемый интервал!)
 • Значок 💎 в профиле и топах
 
-❓ Что такое умные уведомления? 🔔
-Бот присылает сводку о вашем балансе, серии бонусов,
-пассивном доходе, скидках и курсе NBT.
-• Free: раз в 24 часа
-• Premium: раз в 6 часов
+❓ Как настроить уведомления? 🔔
+• Free: раз в 24 часа (фиксировано)
+• Premium: /notify — выбрать интервал (1/3/6/12/24 часа)
 
 ❓ Как работает кэшбек? 🔄
-15% от покупок в чатах возвращается на баланс.
-Работает только для Premium и только для чат-товаров.
-
-❓ Как работают пресеты? 📝
-Только для Premium. Выберите роль через /presets.
-Инструкция роли добавится к вашему запросу.
+15% от покупок в чатах возвращается на баланс (только Premium).
 
 ❓ Лимиты?
 Free: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день
 Premium: безлимит в ЛС
-Free перевод: до {MAX_TRANSFER:,} 💮 | Premium: до {PREMIUM_MAX_TRANSFER:,} 💮
 """
 
 DONATE_INFO_TEXT = f"""
@@ -223,17 +215,44 @@ TRANSFER_INFO = f"""
 """
 
 COMMANDS_LIST = """
-📋 КОМАНДЫ NeBlock AI V5.6
+📋 КОМАНДЫ NeBlock AI V5.7
 ━━━━━━━━━━━━━━━━━━━━
-💬 /start | /faq | /commands | /changelog
-💎 /premium — Premium-меню и покупка
-🛒 /shop | /tokenrate | /discounts | /promo
-🔥 /streak | /streak_info
-💸 /transfer | /donate | /donatetop
-🎨 /genimage
-📝 /presets — пресеты (Premium)
-👤 /profile | 🆔 /id — ваш ID
-👥 /chatowner | /chatshop
+
+💬 ОСНОВНЫЕ:
+/start — главное меню | /faq — вопросы
+/commands — команды | /changelog — обновления
+🆔 /id — ваш ID | /profile — профиль
+
+💎 PREMIUM:
+/premium — Premium-меню | /buy_premium — купить
+/notify — настройка уведомлений (Premium)
+
+🛒 МАГАЗИН:
+/shop — магазин | /tokenrate — курс NBT
+/discounts — скидки | /promo — промокод
+
+🔥 НАГРАДЫ:
+/streak — серия | /streak_info — все 30 дней
+
+💸 ФИНАНСЫ:
+/transfer — перевод | /transferinfo — инфо
+/donate — донат | /donatetop — топ донатов
+
+🎨 ГЕНЕРАЦИЯ:
+/genimage — изображения
+
+📝 ПРЕСЕТЫ (Premium):
+/presets — выбрать пресет
+
+👥 ЧАТЫ:
+/chatowner — владельцы | /chatshop — магазин чата
+/shopdesc — описание магазина
+
+🔧 АДМИН (для админов):
+/give | /take | /resetuser | /setpremium
+/userinfo | /top | /stats | /broadcast
+/createpromo | /promos | /deletepromo
+/forcediscounts | /forcerate | /cleardiscounts
 """
 
 DISCOUNT_TYPES = {"regular": {"name": "Обычная", "min": 5, "max": 25, "color": "🟢", "chance": 40, "icon": "🏷️"}, "super": {"name": "Супер", "min": 30, "max": 50, "color": "🔴", "chance": 20, "icon": "🔥"}, "flash": {"name": "Флеш", "min": 40, "max": 70, "color": "⚡", "chance": 8, "icon": "⏰"}, "bundle": {"name": "Набор", "min": 15, "max": 35, "color": "📦", "chance": 12, "icon": "🎁"}, "premium_discount": {"name": "Premium", "min": 10, "max": 30, "color": "👑", "chance": 5, "icon": "💎"}, "legendary": {"name": "ЛЕГЕНДАРНАЯ", "min": 100, "max": 100, "color": "🌟", "chance": 0.5, "icon": "💫"}}
@@ -249,7 +268,7 @@ SHOP_ITEMS_BASE = {
     "image5": {"name": "5 фото", "price": 30, "icon": "🎨", "category": "image", "desc": "5 генераций. 1024×1024.", "warning": "⚠️ Сгорают.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["5 изображений"]},
     "image20": {"name": "20 фото", "price": 100, "icon": "🎨", "category": "image", "desc": "20 генераций. 1024×1024.", "warning": "⚠️ Сгорают.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["20 изображений"]},
     "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 25, "icon": "♾️", "category": "image", "desc": "Безлимит фото на 1 час.", "warning": "⚠️ 1 час.", "location": "private", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит фото"]},
-    "premium_day": {"name": "Premium 1 день", "price": 100, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 15% на чат", "Пассивный доход 5 💮/час", "Рефералы ×3", "Лимиты ×5", "Уведомления каждые 6ч", "Значок 💎"]},
+    "premium_day": {"name": "Premium 1 день", "price": 100, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 15% на чат", "Пассивный доход 5 💮/час", "Рефералы ×3", "Уведомления (настраиваемые)", "Значок 💎"]},
     "premium_week": {"name": "Premium 7 дней", "price": 500, "icon": "⭐", "category": "premium", "desc": "Неделя Premium-привилегий.", "warning": "⚠️ 7 дней.", "location": "private", "type": "premium", "duration": "7 дней", "benefits": ["Всё из Premium 1 день", "Экономия 28%"]},
     "premium_30d": {"name": "Premium 30 дней 🔥", "price": 1500, "icon": "💎", "category": "premium", "desc": "Месяц Premium. Экономия 25%!", "warning": "⚠️ 30 дней.", "location": "private", "type": "premium", "duration": "30 дней", "benefits": ["Всё из Premium 1 день", "Экономия 25%"]},
     "premium_60d": {"name": "Premium 60 дней 🚀", "price": 2500, "icon": "💎", "category": "premium", "desc": "2 месяца Premium. Экономия 37%!", "warning": "⚠️ 60 дней.", "location": "private", "type": "premium", "duration": "60 дней", "benefits": ["Всё из Premium 1 день", "Экономия 37%"]},
@@ -280,8 +299,6 @@ def load_discounts(): return load_json(DISCOUNTS_FILE)
 def save_discounts(discounts): save_json(DISCOUNTS_FILE, discounts)
 def load_donations(): return load_json(DONATION_FILE)
 def save_donations(donations): save_json(DONATION_FILE, donations)
-def load_notifications(): return load_json(NOTIFY_FILE)
-def save_notifications(data): save_json(NOTIFY_FILE, data)
 
 def get_donation_stats():
     donations = load_donations()
@@ -415,7 +432,7 @@ def get_discounted_price(item_id, user_id=None):
 
 def get_user(user_id):
     users = load_users(); uid = str(user_id)
-    defaults = {"joined": datetime.now().isoformat(), "username": None, "requests_today": 0, "extra_requests": 0, "image_requests_today": 0, "extra_image_requests": 0, "chat_requests_today": 0, "extra_chat_requests": 0, "chat_image_requests_today": 0, "extra_chat_image_requests": 0, "unlimited_until": None, "image_unlimited_until": None, "chat_unlimited_until": None, "chat_image_unlimited_until": None, "premium_until": None, "chat_premium_until": None, "last_request": None, "total_requests": 0, "total_images": 0, "reset_date": datetime.now().strftime("%Y-%m-%d"), "tokens": START_BONUS, "daily_bonus_claimed": None, "daily_bonus_streak": 0, "last_bonus_date": None, "streak_30_premium_claimed": False, "referral_code": "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8)), "referred_by": None, "referrals": 0, "earned_tokens": 0, "spent_tokens": 0, "donated_tokens": 0, "cashback_earned": 0, "used_promos": [], "waiting_for_image": False, "current_model": "text", "active_preset": None, "warnings": 0, "muted_until": None, "banned": False, "daily_transfer_total": 0, "transfer_reset_date": datetime.now().strftime("%Y-%m-%d"), "last_passive_income": None, "last_notification": None}
+    defaults = {"joined": datetime.now().isoformat(), "username": None, "requests_today": 0, "extra_requests": 0, "image_requests_today": 0, "extra_image_requests": 0, "chat_requests_today": 0, "extra_chat_requests": 0, "chat_image_requests_today": 0, "extra_chat_image_requests": 0, "unlimited_until": None, "image_unlimited_until": None, "chat_unlimited_until": None, "chat_image_unlimited_until": None, "premium_until": None, "chat_premium_until": None, "last_request": None, "total_requests": 0, "total_images": 0, "reset_date": datetime.now().strftime("%Y-%m-%d"), "tokens": START_BONUS, "daily_bonus_claimed": None, "daily_bonus_streak": 0, "last_bonus_date": None, "streak_30_premium_claimed": False, "referral_code": "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8)), "referred_by": None, "referrals": 0, "earned_tokens": 0, "spent_tokens": 0, "donated_tokens": 0, "cashback_earned": 0, "used_promos": [], "waiting_for_image": False, "current_model": "text", "active_preset": None, "warnings": 0, "muted_until": None, "banned": False, "daily_transfer_total": 0, "transfer_reset_date": datetime.now().strftime("%Y-%m-%d"), "last_passive_income": None, "last_notification": None, "notify_interval": DEFAULT_NOTIFY_INTERVAL_PREMIUM}
     if uid not in users: users[uid] = defaults.copy(); save_users(users)
     else:
         for k, v in defaults.items():
@@ -445,35 +462,30 @@ async def send_smart_notification(user_id, context):
     """Отправляет умное уведомление пользователю"""
     user = get_user(user_id)
     premium = is_premium(user_id)
-    interval = NOTIFY_INTERVAL_PREMIUM if premium else NOTIFY_INTERVAL_FREE
+    interval = user.get("notify_interval", NOTIFY_INTERVAL_FREE) if premium else NOTIFY_INTERVAL_FREE
     
-    # Проверяем, прошло ли достаточно времени с последнего уведомления
+    # Проверяем интервал
     last_notify = user.get("last_notification")
     if last_notify:
         last_time = datetime.fromisoformat(last_notify)
         hours_passed = (datetime.now() - last_time).total_seconds() / 3600
-        if hours_passed < interval: return  # Ещё рано
+        if hours_passed < interval: return
     
-    # Обновляем время последнего уведомления
+    # Обновляем время уведомления
     users = load_users(); uid = str(user_id)
     users[uid]["last_notification"] = datetime.now().isoformat(); save_users(users)
     
     rate_data = get_token_rate(); rate = rate_data.get("rate", 0.005)
     streak = user.get("daily_bonus_streak", 0)
-    tokens = user.get("tokens", 0)
-    usd = tokens * rate
+    tokens = user.get("tokens", 0); usd = tokens * rate
     donated_total, _, _ = get_donation_stats()
-    
-    # Пассивный доход
     passive_income = process_passive_income(user_id)
     
-    # Формируем сообщение
     premium_icon = "💎" if premium else ""
     notify_type = "PREMIUM" if premium else "БЕСПЛАТНАЯ"
     
     text = (
-        f"🔔 СВОДКА {notify_type} {premium_icon}\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
+        f"🔔 СВОДКА {notify_type} {premium_icon}\n━━━━━━━━━━━━━━━━\n\n"
         f"💰 Баланс: {tokens:,} 💮 (~${usd:.2f})\n"
         f"💮 Курс NBT: 1 = ${rate:.8f}\n"
         f"🔥 Серия бонусов: {streak} дн.\n"
@@ -484,7 +496,6 @@ async def send_smart_notification(user_id, context):
     
     text += f"🌍 Всего сожжено: {donated_total:,} 💮\n\n"
     
-    # Доп. информация для Premium
     if premium:
         prem_until = user.get("premium_until")
         if prem_until:
@@ -492,26 +503,17 @@ async def send_smart_notification(user_id, context):
             if remaining.total_seconds() > 0:
                 text += f"💎 Premium: активно (осталось {remaining.days} дн. {remaining.seconds // 3600} ч.)\n"
                 text += f"🔄 Скидка на продление: {PREMIUM_RENEWAL_DISCOUNT}%\n"
+                text += f"🔔 Интервал уведомлений: каждые {interval} ч.\n"
         text += f"🔄 Кэшбек с чат-покупок: {CASHBACK_PERCENT}% (накоплено: {user.get('cashback_earned', 0):,} 💮)\n"
         
-        # Уведомление о скором истечении Premium
         if prem_until:
             remaining = datetime.fromisoformat(prem_until) - datetime.now()
             if timedelta(0) < remaining <= timedelta(hours=6):
-                text += f"\n⚠️ Premium истекает через {remaining.seconds // 3600} ч.!\n"
-                text += f"Продлите в /premium со скидкой {PREMIUM_RENEWAL_DISCOUNT}%!\n"
+                text += f"\n⚠️ Premium истекает через {remaining.seconds // 3600} ч.!\nПродлите в /premium со скидкой {PREMIUM_RENEWAL_DISCOUNT}%!\n"
     else:
-        text += (
-            f"\n💡 С Premium:\n"
-            f"• Безлимит текста и фото\n"
-            f"• Пассивный доход 5 💮/час\n"
-            f"• Уведомления каждые 6 часов\n"
-            f"• 10 проф. пресетов\n"
-            f"💎 /premium — узнать больше\n"
-        )
+        text += f"\n💡 С Premium:\n• Безлимит текста и фото\n• Пассивный доход 5 💮/час\n• Уведомления от 1 часа\n• 10 проф. пресетов\n💎 /premium — узнать больше\n"
     
-    text += f"\n━━━━━━━━━━━━━━━━\n🕐 Следующая сводка: через {interval} ч."
-    
+    text += f"\n━━━━━━━━━━━━━━━━\n🕐 Следующая: через {interval} ч."
     try: await context.bot.send_message(user_id, text)
     except: pass
 
@@ -585,13 +587,10 @@ def remove_tokens(user_id, amount):
     if str(user_id) in users: users[str(user_id)]["tokens"] = users[str(user_id)].get("tokens", 0) - amount; users[str(user_id)]["spent_tokens"] = users[str(user_id)].get("spent_tokens", 0) + amount; save_users(users)
 
 def process_cashback(user_id, amount, item_id=None):
-    """Кэшбек только для чат-покупок и только для Premium"""
     if not is_premium(user_id): return 0
-    # Проверяем, что это чат-товар
     if item_id:
         item = SHOP_ITEMS_BASE.get(item_id, {})
         if item.get("location") != "chat": return 0
-    
     cashback = int(amount * CASHBACK_PERCENT / 100)
     if cashback > 0:
         users = load_users(); uid = str(user_id)
@@ -641,6 +640,11 @@ def is_chat_owner(chat_id, user_id):
     c = load_chats().get(str(chat_id), {})
     if isinstance(c, list): return str(user_id) in c
     return str(user_id) in c.get("owners", [])
+
+def add_chat_owner(chat_id, user_id):
+    chats = load_chats(); cid = str(chat_id)
+    if cid not in chats or isinstance(chats[cid], list): chats[cid] = {"owners": chats.get(cid, []), "premium_until": None}
+    if str(user_id) not in chats[cid]["owners"]: chats[cid]["owners"].append(str(user_id)); save_chats(chats)
 
 async def generate_image(prompt):
     try:
@@ -713,6 +717,15 @@ def presets_keyboard():
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
     return InlineKeyboardMarkup(keyboard)
 
+def notify_keyboard():
+    """Клавиатура выбора интервала уведомлений"""
+    keyboard = []
+    for interval in PREMIUM_NOTIFY_OPTIONS:
+        label = f"Каждые {interval} ч." + (" (чаще)" if interval <= 3 else "")
+        keyboard.append([InlineKeyboardButton(label, callback_data=f"notify_{interval}")])
+    keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="premium_menu")])
+    return InlineKeyboardMarkup(keyboard)
+
 # ═══════════════════════════════════════════
 # ОБРАБОТЧИКИ КОМАНД
 # ═══════════════════════════════════════════
@@ -722,9 +735,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     if username: users = load_users(); users[str(user_id)]["username"] = username; save_users(users)
     
-    # Пассивный доход
     passive_income = process_passive_income(user_id)
-    # Умное уведомление
     await send_smart_notification(user_id, context)
     
     if context.args and context.args[0].startswith("ref_"):
@@ -747,34 +758,56 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     premium = "💎 Активен" if is_premium(user_id) else "Не активен"
     rate_data = get_token_rate(); rate = rate_data.get("rate", 0.005)
     passive_text = f"\n💤 Пассивный доход: +{passive_income} 💮" if passive_income > 0 else ""
+    notify_interval = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
+    notify_text = f"\n🔔 Уведомления: каждые {notify_interval} ч." if is_premium(user_id) else "\n🔔 Уведомления: каждые 24 ч."
     
     await update.message.reply_text(
         f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━━━━━\n\n"
         f"💎 Premium: {premium}\n💰 Баланс: {user.get('tokens', 0):,} 💮 (~${user.get('tokens', 0) * rate:.2f})\n"
         f"💮 Курс: 1 NBT = ${rate:.8f}\n🔥 Серия: {user.get('daily_bonus_streak', 0)} дн.\n"
-        f"📊 Лимиты: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день{passive_text}\n\n"
+        f"📊 Лимиты: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день{passive_text}{notify_text}\n\n"
         f"👇 Выберите модель:",
         reply_markup=main_reply_keyboard()
     )
 
 async def id_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показывает User ID"""
     user_id = update.effective_user.id
     if context.args:
         try: user_id = int(context.args[0])
         except: pass
     username = update.effective_user.username
     name = f"@{username}" if username else "Не указан"
+    await update.message.reply_text(f"🆔 ИНФОРМАЦИЯ\n━━━━━━━━━━━━━━━━\n\n👤 Имя: {name}\n🆔 ID: `{user_id}`\n\n💡 /profile {user_id} — профиль", parse_mode="Markdown")
+
+async def notify_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Настройка интервала уведомлений (Premium)"""
+    user_id = update.effective_user.id
+    if not is_premium(user_id):
+        await update.message.reply_text("❌ Настройка уведомлений доступна только Premium пользователям!\n💎 /premium — купить Premium\n\nFree пользователи получают уведомления раз в 24 часа.")
+        return
+    
+    if context.args:
+        try:
+            interval = int(context.args[0])
+            if interval in PREMIUM_NOTIFY_OPTIONS:
+                users = load_users(); uid = str(user_id)
+                users[uid]["notify_interval"] = interval; save_users(users)
+                await update.message.reply_text(f"✅ Интервал уведомлений: каждые {interval} ч.\n\nСледующая сводка придёт через {interval} ч. после последней.")
+                return
+        except: pass
+        await update.message.reply_text(f"❌ Доступные интервалы: {', '.join(map(str, PREMIUM_NOTIFY_OPTIONS))} часов\nПример: /notify 3")
+        return
+    
+    user = get_user(user_id)
+    current = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
     await update.message.reply_text(
-        f"🆔 ИНФОРМАЦИЯ\n━━━━━━━━━━━━━━━━\n\n"
-        f"👤 Имя: {name}\n"
-        f"🆔 ID: `{user_id}`\n\n"
-        f"💡 Используйте /profile {user_id} для просмотра профиля.",
-        parse_mode="Markdown"
+        f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\n"
+        f"Текущий интервал: каждые {current} ч.\n\n"
+        f"Выберите новый интервал:",
+        reply_markup=notify_keyboard()
     )
 
 async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Команда /premium — меню Premium"""
     user_id = update.effective_user.id; premium = is_premium(user_id)
     shop_items = get_shop_items(user_id)
     
@@ -792,6 +825,8 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             p = PREMIUM_PRESETS.get(active_preset)
             if p: preset_name = f"{p['icon']} {p['name']}"
         
+        notify_interval = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
+        
         text = (
             f"💎 PREMIUM-МЕНЮ\n━━━━━━━━━━━━━━━━\n\n"
             f"💎 Статус: АКТИВЕН\n{remaining_text}\n"
@@ -803,13 +838,12 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"• Скидка {PREMIUM_RENEWAL_DISCOUNT}% на продление Premium\n"
             f"• Скидка {PREMIUM_CHAT_DISCOUNT}% на чат-товары\n"
             f"• Пассивный доход: {PASSIVE_INCOME_HOURLY} 💮/час (до {PASSIVE_INCOME_HOURLY * PASSIVE_INCOME_MAX_HOURS} 💮/день)\n"
-            f"• Рефералы: {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮 (обычные: {REFERRAL_BONUS}/{INVITED_BONUS})\n"
-            f"• Лимит перевода: {PREMIUM_MAX_TRANSFER:,} 💮 (обычный: {MAX_TRANSFER:,})\n"
-            f"• Налог на перевод: 0-10% (обычный: 0-15%)\n"
+            f"• Рефералы: {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮\n"
+            f"• Лимит перевода: {PREMIUM_MAX_TRANSFER:,} 💮 (налог 0-10%)\n"
             f"• Лимит доната: {PREMIUM_MAX_DONATION:,} 💮\n"
-            f"• Умные уведомления каждые {NOTIFY_INTERVAL_PREMIUM} часов\n"
+            f"• Умные уведомления: каждые {notify_interval} ч. (/notify)\n"
             f"• Значок 💎 в профиле и топах\n\n"
-            f"🛒 Продлить: /buy_premium | 📝 Пресеты: /presets"
+            f"🛒 /buy_premium | 📝 /presets | 🔔 /notify"
         )
     else:
         text = (
@@ -829,7 +863,8 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"│ Макс. перевод            │ {MAX_TRANSFER:,} 💮  │ {PREMIUM_MAX_TRANSFER:,} 💮  │\n"
             f"│ Налог на перевод         │   0-15%    │   0-10%    │\n"
             f"│ Макс. донат              │ {MAX_DONATION:,} 💮 │ {PREMIUM_MAX_DONATION:,} 💮│\n"
-            f"│ Умные уведомления        │ каждые 24ч │ каждые {NOTIFY_INTERVAL_PREMIUM}ч  │\n"
+            f"│ Умные уведомления        │ каждые 24ч │ 1-24ч     │\n"
+            f"│ Настройка уведомлений    │     ❌     │     ✅     │\n"
             f"│ Значок 💎                │     ❌     │     ✅     │\n"
             f"└──────────────────────────┴────────────┴────────────┘\n\n"
             f"🛒 ТАРИФЫ:\n"
@@ -848,6 +883,7 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard.append([InlineKeyboardButton("🛒 Купить/Продлить Premium", callback_data="premium_shop")])
     if premium:
         keyboard.append([InlineKeyboardButton("📝 Управление пресетами", callback_data="presets_menu")])
+        keyboard.append([InlineKeyboardButton("🔔 Настройка уведомлений", callback_data="notify_menu")])
     keyboard.append([InlineKeyboardButton("🔙 Назад", callback_data="menu")])
     
     await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -875,7 +911,8 @@ async def profile_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if prem_until:
             remaining = datetime.fromisoformat(prem_until) - datetime.now()
             if remaining.total_seconds() > 0:
-                premium_info = f"\n⏳ Premium: {remaining.days} дн. {remaining.seconds // 3600} ч.\n🔄 Кэшбек накоплено: {u.get('cashback_earned', 0):,} 💮"
+                notify_interval = u.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
+                premium_info = f"\n⏳ Premium: {remaining.days} дн. {remaining.seconds // 3600} ч.\n🔄 Кэшбек: {u.get('cashback_earned', 0):,} 💮\n🔔 Уведомления: каждые {notify_interval} ч."
     
     text = (
         f"👤 ПРОФИЛЬ{premium_icon}\n━━━━━━━━━━━━━━━━\n\n"
@@ -906,7 +943,7 @@ async def streak_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def tokenrate_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rd = get_token_rate(); history = load_json(TOKEN_HISTORY_FILE)
-    text = f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n💰 1 NBT = ${rd.get('rate', 0.005):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n🪙 В обороте: {rd.get('total_supply', 0):,} NBT\n🔥 Сожжено: {rd.get('total_donated', 0):,} 💮\n📅 {rd.get('day_icon', '📊')} {rd.get('day_name', '')}\n🕐 Обновление: {rd.get('next_update', '')}\n\n💡 Курс влияет на размер ежедневных наград!\n💡 Донаты повышают курс через сжигание!\n\n📈 История за 7 дней:\n"
+    text = f"💮 КУРС NBT\n━━━━━━━━━━━━━━━━\n\n💰 1 NBT = ${rd.get('rate', 0.005):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}\n🪙 В обороте: {rd.get('total_supply', 0):,} NBT\n🔥 Сожжено: {rd.get('total_donated', 0):,} 💮\n📅 {rd.get('day_icon', '📊')} {rd.get('day_name', '')}\n🕐 Обновление: {rd.get('next_update', '')}\n\n💡 Курс влияет на ежедневные награды!\n💡 Донаты повышают курс!\n\n📈 История за 7 дней:\n"
     for date, h in sorted(history.items())[-7:]: text += f"• {date}: ${h.get('rate', 0):.8f}\n"
     await update.message.reply_text(text)
 
@@ -970,6 +1007,125 @@ async def presets_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if p: text += f"🎯 Выбран: {p['icon']} {p['name']}\n📋 Инструкция добавится к запросу.\n\n"
     text += "Выберите роль:"
     await update.message.reply_text(text, reply_markup=presets_keyboard())
+
+async def chatowner_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type not in ["group", "supergroup"]: await update.message.reply_text("❌ Только в чатах!"); return
+    chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
+    chats = load_chats(); c = chats.get(str(chat_id), {})
+    owners = c.get("owners", []) if isinstance(c, dict) else c
+    text = "👑 ВЛАДЕЛЬЦЫ ЧАТА\n━━━━━━━━━━━━━━━━\n\n"
+    for i, oid in enumerate(owners, 1): text += f"{i}. ID: {oid}\n"
+    await update.message.reply_text(text)
+
+async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type not in ["group", "supergroup"]: await update.message.reply_text("❌ Только в чатах!"); return
+    chat_id = update.effective_chat.id; user_id = update.effective_user.id; add_chat_owner(chat_id, user_id)
+    if not is_chat_owner(chat_id, user_id): await update.message.reply_text("❌ Только владельцы чата!"); return
+    await update.message.reply_text(f"🛒 МАГАЗИН ЧАТА\n━━━━━━━━━━━━━━━━\n💰 {get_tokens(user_id)} 💮", reply_markup=shop_keyboard("chat", user_id))
+
+# Админ команды
+async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args or len(context.args) < 2: return
+    try: add_tokens(int(context.args[0]), int(context.args[1])); await update.message.reply_text(f"✅ +{context.args[1]} 💮")
+    except: pass
+
+async def admin_take(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args or len(context.args) < 2: return
+    try:
+        uid = str(int(context.args[0])); amount = int(context.args[1])
+        if get_user(int(context.args[0])).get("tokens", 0) < amount: return
+        users = load_users(); users[uid]["tokens"] = users[uid].get("tokens", 0) - amount; users[uid]["spent_tokens"] = users[uid].get("spent_tokens", 0) + amount; save_users(users)
+    except: pass
+
+async def admin_resetuser(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: return
+    try:
+        uid = str(int(context.args[0])); users = load_users()
+        if uid in users:
+            for f in ["requests_today", "extra_requests", "image_requests_today", "extra_image_requests", "warnings"]: users[uid][f] = 0
+            users[uid]["muted_until"] = None; users[uid]["banned"] = False; save_users(users)
+    except: pass
+
+async def admin_setpremium(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args or len(context.args) < 2: return
+    try:
+        uid = str(int(context.args[0])); days = int(context.args[1]); users = load_users()
+        if uid in users:
+            existing = users[uid].get("premium_until")
+            base = datetime.fromisoformat(existing) if existing and datetime.now() < datetime.fromisoformat(existing) else datetime.now()
+            users[uid]["premium_until"] = (base + timedelta(days=days)).isoformat(); save_users(users)
+    except: pass
+
+async def admin_userinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: return
+    try:
+        u = get_user(int(context.args[0])); un = u.get("username") or "Не указан"
+        await update.message.reply_text(f"👤 @{un}\n💰 {u.get('tokens', 0):,} 💮\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.")
+    except: pass
+
+async def admin_top(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    users = load_users()
+    top = sorted(users.items(), key=lambda x: x[1].get("tokens", 0), reverse=True)[:10]
+    text = "🏆 ТОП ПО ТОКЕНАМ\n\n"
+    for i, (uid, data) in enumerate(top, 1):
+        name = f"@{data['username']}" if data.get("username") else f"ID:{uid}"
+        mark = " 💎" if is_premium(int(uid)) else ""
+        text += f"{i}. {name}{mark} — {data.get('tokens', 0):,} 💮\n"
+    await update.message.reply_text(text)
+
+async def admin_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    users = load_users(); rate_data = get_token_rate()
+    donated_total, _, _ = get_donation_stats()
+    premium_count = sum(1 for u in users.values() if u.get("premium_until") and datetime.now() < datetime.fromisoformat(u["premium_until"]))
+    await update.message.reply_text(f"📊 СТАТИСТИКА\n👥 {len(users)} (💎{premium_count})\n💮 {rate_data.get('total_supply', 0):,} NBT\n🔥 {donated_total:,} 💮")
+
+async def admin_forcediscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    new_d = generate_discounts(); new_d["last_update"] = datetime.now().strftime("%Y-%m-%d"); save_discounts(new_d)
+
+async def admin_force_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    rate_data = load_json(TOKEN_RATE_FILE); rate_data["rate_block"] = ""; save_json(TOKEN_RATE_FILE, rate_data)
+    await update.message.reply_text(f"💮 Курс: ${get_token_rate().get('rate', 0.005):.8f}")
+
+async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: return
+    text = " ".join(context.args); users = load_users(); sent = 0
+    for uid in users:
+        try: await context.bot.send_message(int(uid), f"📢 {text}"); sent += 1; await asyncio.sleep(0.05)
+        except: pass
+    await update.message.reply_text(f"✅ Отправлено: {sent}")
+
+async def admin_create_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args or len(context.args) < 2: return
+    create_promo(context.args[0].upper(), int(context.args[1]), int(context.args[2]) if len(context.args) > 2 else 0)
+
+async def admin_promos(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    promos = load_promos()
+    if not promos: await update.message.reply_text("🎟 ПРОМОКОДЫ\n\nНет активных."); return
+    text = "🎟 ПРОМОКОДЫ:\n\n"
+    for code, data in promos.items(): text += f"{code}: {data['amount']} 💮 (исп: {len(data['used_by'])}/{data['max_uses'] or '∞'})\n"
+    await update.message.reply_text(text)
+
+async def admin_delete_promo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    if not context.args: return
+    promos = load_promos(); code = context.args[0].upper()
+    if code in promos: del promos[code]; save_promos(promos); await update.message.reply_text(f"✅ Промокод {code} удалён.")
+
+async def admin_cleardiscounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ADMIN_IDS: return
+    save_discounts({"last_update": datetime.now().strftime("%Y-%m-%d")}); await update.message.reply_text("✅ Скидки очищены.")
 
 async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text; user_id = update.effective_user.id
@@ -1044,6 +1200,24 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text(f"✅ ПЕРЕВОД!\n👤 ID {to_id}\n💸 {amount:,} 💮\n💰 Зачислено: {final_amount:,} 💮{tax_info}\n💎 Баланс: {get_tokens(user_id):,} 💮")
         return
     
+    # Уведомления
+    if data == "notify_menu":
+        if not premium: await query.edit_message_text("❌ Только для Premium 💎", reply_markup=back_button()); return
+        user = get_user(user_id); current = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
+        await query.edit_message_text(f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\nТекущий интервал: каждые {current} ч.\n\nВыберите новый:", reply_markup=notify_keyboard())
+        return
+    
+    if data.startswith("notify_"):
+        if not premium: await query.edit_message_text("❌ Только для Premium 💎", reply_markup=back_button()); return
+        try:
+            interval = int(data.replace("notify_", ""))
+            if interval in PREMIUM_NOTIFY_OPTIONS:
+                users = load_users(); uid = str(user_id)
+                users[uid]["notify_interval"] = interval; save_users(users)
+                await query.edit_message_text(f"✅ Интервал: каждые {interval} ч.\nСледующая сводка по расписанию.", reply_markup=back_button())
+        except: pass
+        return
+    
     if data == "premium_shop":
         await query.edit_message_text(f"🛒 ПОКУПКА PREMIUM\n━━━━━━━━━━━━━━━━\n💰 {get_tokens(user_id):,} 💮\n\nВыберите тариф:", reply_markup=shop_keyboard("private", user_id))
         return
@@ -1055,7 +1229,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         return
     
     if data == "presets_menu":
-        if not premium: await query.edit_message_text("❌ Пресеты только для Premium 💎\n💎 /premium — купить Premium", reply_markup=back_button()); return
+        if not premium: await query.edit_message_text("❌ Только для Premium 💎", reply_markup=back_button()); return
         await presets_cmd(update, context)
         return
     
@@ -1072,17 +1246,11 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text(f"✅ {preset['icon']} {preset['name']}\n📝 {preset['description']}\n\nИнструкция добавится к запросу.", reply_markup=back_button())
         return
     
-    if data == "premium_info":
-        await premium_cmd(update, context)
-        try: await query.edit_message_text("См. сообщение выше ↑")
-        except: pass
-        return
-    
     if data == "menu": await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION}\n━━━━━━━━━━━━━━━━\n\n💰 {get_tokens(user_id):,} 💮\n\nВыберите раздел:", reply_markup=main_menu()); return
-    if data == "about": await query.edit_message_text(f"ℹ️ О БОТЕ\n━━━━━━━━━━━━━━━━\n\n📌 Версия: {BOT_VERSION}\n💬 NeBlock AI V2\n🎨 NeBlock Images V2\n💎 Premium\n🔔 Умные уведомления\n🆔 /id — ваш ID\n\n💡 /faq — ответы на вопросы", reply_markup=back_button()); return
+    if data == "about": await query.edit_message_text(f"ℹ️ О БОТЕ\n━━━━━━━━━━━━━━━━\n\n📌 Версия: {BOT_VERSION}\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n💎 Premium — безлимит + привилегии\n🔔 Умные уведомления\n🆔 /id — ваш ID\n\n💡 /faq — ответы на вопросы", reply_markup=back_button()); return
     if data == "stats":
         u = get_user(user_id); prem = is_premium(user_id)
-        await query.edit_message_text(f"📊 СТАТИСТИКА\n━━━━━━━━━━━━━━━━\n\n💬 Запросов сегодня: {u.get('requests_today', 0)}\n🎨 Генераций сегодня: {u.get('image_requests_today', 0)}\n💰 Баланс: {u.get('tokens', 0):,} 💮\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n🌍 Донатов: {u.get('donated_tokens', 0):,} 💮\n👥 Рефералов: {u.get('referrals', 0)}\n" + (f"🔄 Кэшбек: {u.get('cashback_earned', 0):,} 💮\n" if prem else ""), reply_markup=back_button()); return
+        await query.edit_message_text(f"📊 СТАТИСТИКА\n━━━━━━━━━━━━━━━━\n\n💬 Запросов сегодня: {u.get('requests_today', 0)}\n🎨 Генераций: {u.get('image_requests_today', 0)}\n💰 Баланс: {u.get('tokens', 0):,} 💮\n🔥 Серия: {u.get('daily_bonus_streak', 0)} дн.\n🌍 Донатов: {u.get('donated_tokens', 0):,} 💮\n👥 Рефералов: {u.get('referrals', 0)}\n" + (f"🔄 Кэшбек: {u.get('cashback_earned', 0):,} 💮\n" if prem else ""), reply_markup=back_button()); return
     if data == "shop": await query.edit_message_text(f"🛒 МАГАЗИН\n━━━━━━━━━━━━━━━━\n💰 {get_tokens(user_id):,} 💮\n\nВыберите категорию:", reply_markup=shop_keyboard("private", user_id)); return
     if data == "earn": 
         streak = get_user(user_id).get("daily_bonus_streak", 0)
@@ -1126,14 +1294,12 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         if item_id == "premium_forever" and is_premium(user_id):
             user = get_user(user_id)
             if user.get("premium_until"):
-                remaining = datetime.fromisoformat(user["premium_until"]) - datetime.now()
-                if remaining.days > 36500: await query.answer("❌ Уже Premium НАВСЕГДА!"); return
+                if (datetime.fromisoformat(user["premium_until"]) - datetime.now()).days > 36500: await query.answer("❌ Уже Premium НАВСЕГДА!"); return
         
         remove_tokens(user_id, price)
-        # Кэшбек только для чат-товаров
         cashback = process_cashback(user_id, price, item_id)
-        
         users = load_users(); uid = str(user_id)
+        
         actions = {"extra5": ("extra_requests", 5), "extra10": ("extra_requests", 10), "extra50": ("extra_requests", 50), "image1": ("extra_image_requests", 1), "image5": ("extra_image_requests", 5), "image20": ("extra_image_requests", 20), "chat_extra10": ("extra_chat_requests", 10), "chat_extra50": ("extra_chat_requests", 50), "chat_image5": ("extra_chat_image_requests", 5), "chat_image20": ("extra_chat_image_requests", 20)}
         time_actions = {"unlimited_1h": ("unlimited_until", 1), "unlimited_24h": ("unlimited_until", 24), "unlimited_7d": ("unlimited_until", 168), "image_unlimited_1h": ("image_unlimited_until", 1), "chat_unlimited_1h": ("chat_unlimited_until", 1), "chat_unlimited_24h": ("chat_unlimited_until", 24)}
         premium_actions = {"premium_day": 1, "premium_week": 7, "premium_30d": 30, "premium_60d": 60, "premium_90d": 90, "premium_year": 365, "premium_forever": 36500}
@@ -1164,12 +1330,9 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         if premium:
             if item.get("category") == "premium" and item.get("location") == "private": discount_info = f"\n💎 Скидка на продление: {PREMIUM_RENEWAL_DISCOUNT}%"
             elif item.get("location") == "chat": discount_info = f"\n💎 Скидка на чат: {PREMIUM_CHAT_DISCOUNT}%"
-        
-        # Кэшбек-инфо (только для чат-товаров)
         cashback_info = ""
         if premium and item.get("location") == "chat":
-            cb = int(price * CASHBACK_PERCENT / 100)
-            cashback_info = f"\n🔄 Кэшбек: +{cb} 💮"
+            cashback_info = f"\n🔄 Кэшбек: +{int(price * CASHBACK_PERCENT / 100)} 💮"
         
         benefits_text = "\n".join([f"  ✓ {b}" for b in item.get("benefits", [])])
         dt = f"\n\n💵 Цена: {price} 💮"
@@ -1193,7 +1356,8 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 f"│ Пассивный доход          │     ❌     │ {PASSIVE_INCOME_HOURLY} 💮/час     │\n"
                 f"│ Рефералы                 │ {REFERRAL_BONUS}/{INVITED_BONUS} 💮      │ {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮      │\n"
                 f"│ Переводы                 │ до {MAX_TRANSFER:,} │ до {PREMIUM_MAX_TRANSFER:,} │\n"
-                f"│ Уведомления              │ каждые 24ч │ каждые {NOTIFY_INTERVAL_PREMIUM}ч  │\n"
+                f"│ Уведомления              │ каждые 24ч │ 1-24ч     │\n"
+                f"│ Настройка уведомлений    │     ❌     │     ✅     │\n"
                 f"│ Значок 💎                │     ❌     │     ✅     │\n"
                 f"└──────────────────────────┴────────────┴────────────┘"
             )
@@ -1211,7 +1375,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         return
     
     if data == "donate_info": await query.edit_message_text(DONATE_INFO_TEXT, reply_markup=back_button()); return
-    if data == "models": await query.edit_message_text("🧠 МОДЕЛИ\n━━━━━━━━━━━━━━━━\n\n💬 NeBlock AI V2 — текстовая модель\n🎨 NeBlock Images V2 — генерация изображений\n📝 /genimage — создать изображение", reply_markup=back_button()); return
+    if data == "models": await query.edit_message_text("🧠 МОДЕЛИ\n━━━━━━━━━━━━━━━━\n\n💬 NeBlock AI V2 — текст\n🎨 NeBlock Images V2 — фото\n📝 /genimage", reply_markup=back_button()); return
     if data == "tokenrate":
         rd = get_token_rate()
         await query.edit_message_text(f"💮 КУРС NBT\n\n💰 1 NBT = ${rd.get('rate', 0.005):.8f}\n💎 Кап: ${rd.get('market_cap', 0):,.2f}", reply_markup=back_button()); return
@@ -1300,24 +1464,61 @@ def main():
     print(f"🧠 NeBlock AI V{BOT_VERSION}")
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
+    # Основные
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("id", id_cmd))
-    app.add_handler(CommandHandler("premium", premium_cmd))
-    app.add_handler(CommandHandler("buy_premium", buy_premium_cmd))
     app.add_handler(CommandHandler("profile", profile_cmd))
-    app.add_handler(CommandHandler("streak", streak_cmd))
-    app.add_handler(CommandHandler("streak_info", lambda u, c: u.message.reply_text(STREAK_INFO[:4000])))
-    app.add_handler(CommandHandler("genimage", genimage_cmd))
-    app.add_handler(CommandHandler("tokenrate", tokenrate_cmd))
-    app.add_handler(CommandHandler("transfer", transfer_cmd))
-    app.add_handler(CommandHandler("donate", donate_cmd))
-    app.add_handler(CommandHandler("donatetop", donatetop_cmd))
-    app.add_handler(CommandHandler("promo", lambda u, c: setattr(c, 'user_data', {**c.user_data, 'waiting_promo': True}) or u.message.reply_text("🎟 Отправьте промокод.")))
-    app.add_handler(CommandHandler("presets", presets_cmd))
     app.add_handler(CommandHandler("faq", lambda u, c: u.message.reply_text(FAQ_TEXT[:4000])))
     app.add_handler(CommandHandler("changelog", lambda u, c: u.message.reply_text(CHANGELOG)))
     app.add_handler(CommandHandler("commands", lambda u, c: u.message.reply_text(COMMANDS_LIST)))
+    
+    # Premium
+    app.add_handler(CommandHandler("premium", premium_cmd))
+    app.add_handler(CommandHandler("buy_premium", buy_premium_cmd))
+    app.add_handler(CommandHandler("notify", notify_cmd))
+    
+    # Награды
+    app.add_handler(CommandHandler("streak", streak_cmd))
+    app.add_handler(CommandHandler("streak_info", lambda u, c: u.message.reply_text(STREAK_INFO[:4000])))
+    
+    # Финансы
+    app.add_handler(CommandHandler("tokenrate", tokenrate_cmd))
+    app.add_handler(CommandHandler("transfer", transfer_cmd))
+    app.add_handler(CommandHandler("transferinfo", lambda u, c: u.message.reply_text(TRANSFER_INFO)))
+    app.add_handler(CommandHandler("donate", donate_cmd))
+    app.add_handler(CommandHandler("donatetop", donatetop_cmd))
+    app.add_handler(CommandHandler("promo", lambda u, c: setattr(c, 'user_data', {**c.user_data, 'waiting_promo': True}) or u.message.reply_text("🎟 Отправьте промокод.")))
+    
+    # Генерация
+    app.add_handler(CommandHandler("genimage", genimage_cmd))
+    
+    # Пресеты
+    app.add_handler(CommandHandler("presets", presets_cmd))
+    
+    # Магазин
     app.add_handler(CommandHandler("shop", lambda u, c: u.message.reply_text("🛒 Магазин", reply_markup=shop_keyboard("private", u.effective_user.id))))
+    app.add_handler(CommandHandler("shopdesc", lambda u, c: u.message.reply_text("📋 /shop — магазин товаров\n/shop — текстовые запросы, фото, Premium\n/chatshop — магазин для чата")))
+    app.add_handler(CommandHandler("discounts", lambda u, c: inline_button_handler(u, c)))
+    
+    # Чаты
+    app.add_handler(CommandHandler("chatowner", chatowner_cmd))
+    app.add_handler(CommandHandler("chatshop", chatshop_cmd))
+    
+    # Админ
+    app.add_handler(CommandHandler("give", admin_give))
+    app.add_handler(CommandHandler("take", admin_take))
+    app.add_handler(CommandHandler("resetuser", admin_resetuser))
+    app.add_handler(CommandHandler("setpremium", admin_setpremium))
+    app.add_handler(CommandHandler("userinfo", admin_userinfo))
+    app.add_handler(CommandHandler("top", admin_top))
+    app.add_handler(CommandHandler("stats", admin_stats))
+    app.add_handler(CommandHandler("forcediscounts", admin_forcediscounts))
+    app.add_handler(CommandHandler("forcerate", admin_force_rate))
+    app.add_handler(CommandHandler("broadcast", admin_broadcast))
+    app.add_handler(CommandHandler("createpromo", admin_create_promo))
+    app.add_handler(CommandHandler("promos", admin_promos))
+    app.add_handler(CommandHandler("deletepromo", admin_delete_promo))
+    app.add_handler(CommandHandler("cleardiscounts", admin_cleardiscounts))
     
     app.add_handler(CallbackQueryHandler(inline_button_handler))
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
