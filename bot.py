@@ -12,7 +12,7 @@ import math
 from datetime import datetime, timedelta
 
 # ═══════════════════════════════════════════
-# 🧠 NeBlock AI V5.9.2 - Конфигурация
+# 🧠 NeBlock AI V6.0 - Конфигурация
 # ═══════════════════════════════════════════
 
 TELEGRAM_TOKEN = "8700124191:AAE6qSSouLjlDxPWwoFObJORMbDotsby9co"
@@ -22,7 +22,7 @@ PROMPT_ID = "fvt621uiq1fftiu5qomu"
 IMAGE_MODEL = "art://b1guk4h3j9t48lsjl6sq/aliceai-image-art-3.0/latest"
 
 # ═══════════════════════════════════════════
-# 📊 БАЛАНСИРОВКА ЭКОНОМИКИ V5.9.2
+# 📊 БАЛАНСИРОВКА ЭКОНОМИКИ V6.0
 # ═══════════════════════════════════════════
 
 DAILY_LIMIT = 3
@@ -46,25 +46,31 @@ INVITED_BONUS = 5
 PREMIUM_REFERRAL_BONUS = 30
 PREMIUM_INVITED_BONUS = 10
 CASHBACK_PERCENT = 15
-PASSIVE_INCOME_HOURLY = 5
-PASSIVE_INCOME_MAX_HOURS = 12
+
+# Пассивный доход
+FREE_PASSIVE_INCOME_HOURLY = 2       # Бесплатный: 2 💮/час
+PREMIUM_PASSIVE_INCOME_HOURLY = 20   # Premium: 20 💮/час (раз в 30 минут = 10 💮/30мин)
+PASSIVE_INCOME_INTERVAL_MINUTES = 30  # Интервал начисления
+PASSIVE_INCOME_MAX_INTERVALS = 24     # Максимум накоплений (12 часов)
+
 PREMIUM_RENEWAL_DISCOUNT = 15
 PREMIUM_CHAT_DISCOUNT = 10
-BOT_VERSION = "5.9.2"
+BOT_VERSION = "6.0"
 
 NOTIFY_INTERVAL_FREE = 24
 DEFAULT_NOTIFY_INTERVAL_PREMIUM = 6
 PREMIUM_NOTIFY_OPTIONS = [1, 3, 6, 12, 24]
 
+# Увеличенные Premium лимиты
 MIN_TRANSFER = 1
 MAX_TRANSFER = 5000
 DAILY_TRANSFER_LIMIT = 25000
 MIN_DONATION = 1
 MAX_DONATION = 50000
 
-PREMIUM_MAX_TRANSFER = 25000
-PREMIUM_DAILY_TRANSFER_LIMIT = 100000
-PREMIUM_MAX_DONATION = 250000
+PREMIUM_MAX_TRANSFER = 50000          # Увеличено с 25000
+PREMIUM_DAILY_TRANSFER_LIMIT = 250000 # Увеличено с 100000
+PREMIUM_MAX_DONATION = 500000         # Увеличено с 250000
 
 # ═══════════════════════════════════════════
 # 🔥 СИСТЕМА ЕЖЕДНЕВНЫХ НАГРАД
@@ -92,11 +98,11 @@ for day in range(1, 31):
         STREAK_BASE_REWARDS[day] = {"name": f"День {day}", "base_min": prev["base_min"] + 1, "base_max": prev["base_max"] + 2, "icon": "📅", "desc": f"День {day} подряд!"}
 
 # ═══════════════════════════════════════════
-# 📝 СИСТЕМА ПРЕСЕТОВ
+# 📝 СИСТЕМА ПРЕСЕТОВ (КОПИРУЮТСЯ В ЗАПРОС)
 # ═══════════════════════════════════════════
 
 PREMIUM_PRESETS = {
-    "programmer": {"id": "programmer", "name": "💻 Программист", "icon": "💻", "system_prompt": "Ты — опытный senior-разработчик. Отвечай технически точно, с примерами кода на Python/JavaScript.", "category": "professional", "description": "Код, архитектура, дебаггинг"},
+    "programmer": {"id": "programmer", "name": "💻 Программист", "icon": "💻", "system_prompt": "Ты — опытный senior-разработчик. Отвечай технически точно, с примерами кода на Python/JavaScript. Объясняй сложное простым языком.", "category": "professional", "description": "Код, архитектура, дебаггинг"},
     "copywriter": {"id": "copywriter", "name": "📝 Копирайтер", "icon": "📝", "system_prompt": "Ты — профессиональный копирайтер. Пиши убедительные тексты по формуле AIDA.", "category": "professional", "description": "Реклама, лендинги, SMM"},
     "business": {"id": "business", "name": "💼 Бизнес-консультант", "icon": "💼", "system_prompt": "Ты — бизнес-консультант. Анализируй рынок, предлагай стратегии с цифрами.", "category": "professional", "description": "Стратегия, стартапы, финансы"},
     "teacher": {"id": "teacher", "name": "📚 Учитель", "icon": "📚", "system_prompt": "Ты — опытный педагог. Объясняй от простого к сложному.", "category": "education", "description": "Обучение, объяснение"},
@@ -129,7 +135,7 @@ def get_user_bonus(streak, rate=0.01):
 STREAK_INFO = get_daily_bonus_info()
 
 TRANSFER_TAX_BRACKETS = [{"min": 0, "max": 99, "tax_percent": 0}, {"min": 100, "max": 249, "tax_percent": 3}, {"min": 250, "max": 499, "tax_percent": 5}, {"min": 500, "max": 999, "tax_percent": 8}, {"min": 1000, "max": 2499, "tax_percent": 12}, {"min": 2500, "max": 5000, "tax_percent": 15}]
-PREMIUM_TRANSFER_TAX_BRACKETS = [{"min": 0, "max": 499, "tax_percent": 0}, {"min": 500, "max": 999, "tax_percent": 2}, {"min": 1000, "max": 4999, "tax_percent": 5}, {"min": 5000, "max": 14999, "tax_percent": 8}, {"min": 15000, "max": 25000, "tax_percent": 10}]
+PREMIUM_TRANSFER_TAX_BRACKETS = [{"min": 0, "max": 999, "tax_percent": 0}, {"min": 1000, "max": 4999, "tax_percent": 2}, {"min": 5000, "max": 14999, "tax_percent": 5}, {"min": 15000, "max": 34999, "tax_percent": 8}, {"min": 35000, "max": 50000, "tax_percent": 10}]
 
 DAY_FACTORS = {0: ("Понедельник", 1.05, "📈"), 1: ("Вторник", 1.02, "📊"), 2: ("Среда", 1.03, "📊"), 3: ("Четверг", 1.04, "📈"), 4: ("Пятница", 1.10, "🚀"), 5: ("Суббота", 0.95, "📉"), 6: ("Воскресенье", 0.95, "📉")}
 
@@ -150,15 +156,17 @@ CHANGELOG = """
 📋 ЛОГ ОБНОВЛЕНИЙ NeBlock AI
 ━━━━━━━━━━━━━━━━━━━━
 
-Версия 5.9.2
-• 💎 Отображение Premium-скидки в карточках товаров
-• 📊 Расширенная информация в карточках чат-товаров
-• 🔧 Все удалённые команды восстановлены
-• 🛒 Улучшенное отображение скидок для Premium
+Версия 6.0 🔥
+• 💎 Premium пассивный доход: 20 💮/30мин
+• 🆓 Бесплатный пассивный доход: 2 💮/час
+• 🔔 Умные уведомления отправляются автоматически
+• 📊 Обновлённая таблица сравнения Free vs Premium
+• ⬆️ Увеличены Premium лимиты (переводы ×10, донаты ×10)
+• 📝 Пресеты копируются в запрос (не активируются)
 
-Версия 5.9.1
-• 🚫 /shop заблокирована в чатах
-• 🔧 Исправлены инлайн-кнопки в чатах
+Версия 5.9.2
+• Отображение Premium-скидки в карточках товаров
+• Расширенная информация в карточках чат-товаров
 """
 
 FAQ_TEXT = f"""
@@ -166,41 +174,39 @@ FAQ_TEXT = f"""
 ━━━━━━━━━━━━━━━━━━━━
 
 ❓ Что такое NeBlock AI?
-Платформа с собственными ИИ-моделями в Telegram:
-• 💬 NeBlock AI V2 — текстовая модель
-• 🎨 NeBlock Images V2 — генерация изображений
+Платформа с собственными ИИ-моделями в Telegram.
 
 ❓ Что даёт Premium? 💎
 • Безлимит текста и фото в ЛС
-• 10 проф. пресетов (Программист, Юрист, Врач...)
+• 10 проф. пресетов (копируются в запрос)
 • Кэшбек 15% на чат-покупки
-• Скидка 15% на продление Premium
-• Скидка 10% на чат-товары
-• Пассивный доход 5 💮/час (до 60 💮/день!)
-• Рефералы ×3 (30/10 💮)
-• Лимит перевода 25 000 💮 (налог 0-10%)
-• Умные уведомления (кастомизируемый интервал!)
-• Значок 💎 в профиле и топах
+• Пассивный доход 20 💮/30мин (Free: 2 💮/час)
+• Рефералы ×3
+• Лимиты ×10
+• Уведомления каждые 1-24ч
+• Значок 💎
 
-❓ Как работают скидки Premium? 🛒
-• Скидка 15% на продление Premium (автоматически в цене)
-• Скидка 10% на ВСЕ чат-товары (автоматически в цене)
-• Кэшбек 15% с чат-покупок (возвращается на баланс)
-• Скидки отображаются в карточках товаров!
+❓ Как работают пресеты? 📝
+Выберите роль через /presets. Инструкция роли будет СКОПИРОВАНА
+в ваш запрос, а не активирована как отдельный режим.
 
-❓ Как работают лимиты?
-• Free ЛС: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день
-• Free чаты: {CHAT_DAILY_LIMIT} текст + {CHAT_IMAGE_LIMIT} фото/день
-• Premium ЛС: безлимит всего
-• Premium чаты: покупаются отдельно
+❓ Как работает пассивный доход? 💤
+• Free: 2 💮 каждый час
+• Premium: 20 💮 каждые 30 минут
+• Начисляется автоматически
+• Максимум 12 часов накопления
+
+❓ Лимиты?
+Free: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день
+Premium: безлимит в ЛС
+Переводы: до {MAX_TRANSFER:,} (Free) / {PREMIUM_MAX_TRANSFER:,} (Premium)
 """
 
 DONATE_INFO_TEXT = f"""
 🌍 БЛАГОТВОРИТЕЛЬНОСТЬ
 ━━━━━━━━━━━━━━━━━━━━
-🔥 Сжигание NBT повышает курс для всех.
+🔥 Сжигание NBT повышает курс.
 📊 Free: до {MAX_DONATION:,} 💮 | Premium 💎: до {PREMIUM_MAX_DONATION:,} 💮
-🏆 /donatetop — топ (💎 = Premium)
 """
 
 TRANSFER_INFO = f"""
@@ -212,7 +218,7 @@ TRANSFER_INFO = f"""
 """
 
 COMMANDS_LIST = """
-📋 КОМАНДЫ NeBlock AI V5.9.2
+📋 КОМАНДЫ NeBlock AI V6.0
 ━━━━━━━━━━━━━━━━━━━━
 
 💬 ОСНОВНЫЕ:
@@ -240,14 +246,7 @@ COMMANDS_LIST = """
 👥 ЧАТЫ:
 /chatowner | /shopdesc
 
-🔧 АДМИН (33 команды):
-/give | /take | /addtokensall | /resetuser | /setpremium
-/removepremium | /userinfo | /ban | /unban | /mute | /unmute
-/warn | /resetwarns | /top | /topreferrals | /topdonators
-/topactive | /stats | /fullstats | /economy | /maintenance
-/createpromo | /promos | /deletepromo | /promoinfo
-/forcediscounts | /forcerate | /cleardiscounts
-/broadcast | /broadcastpremium | /resetalllimits | /resetuserlimits
+🔧 АДМИН (33 команды)
 """
 
 DISCOUNT_TYPES = {"regular": {"name": "Обычная", "min": 5, "max": 25, "color": "🟢", "chance": 40, "icon": "🏷️"}, "super": {"name": "Супер", "min": 30, "max": 50, "color": "🔴", "chance": 20, "icon": "🔥"}, "flash": {"name": "Флеш", "min": 40, "max": 70, "color": "⚡", "chance": 8, "icon": "⏰"}, "bundle": {"name": "Набор", "min": 15, "max": 35, "color": "📦", "chance": 12, "icon": "🎁"}, "premium_discount": {"name": "Premium", "min": 10, "max": 30, "color": "👑", "chance": 5, "icon": "💎"}, "legendary": {"name": "ЛЕГЕНДАРНАЯ", "min": 100, "max": 100, "color": "🌟", "chance": 0.5, "icon": "💫"}}
@@ -263,27 +262,26 @@ SHOP_ITEMS_BASE = {
     "image5": {"name": "5 фото", "price": 30, "icon": "🎨", "category": "image", "desc": "5 генераций изображений.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["5 изображений", "Экономия 25%"]},
     "image20": {"name": "20 фото", "price": 100, "icon": "🎨", "category": "image", "desc": "20 генераций изображений.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["20 изображений", "Экономия 37%"]},
     "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 25, "icon": "♾️", "category": "image", "desc": "Безлимит фото на 1 час.", "warning": "⚠️ 1 час.", "location": "private", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит фото"]},
-    "premium_day": {"name": "Premium 1 день", "price": 100, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа. Безлимит текста и фото, 10 пресетов, кэшбек, пассивный доход и многое другое!", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 15% на чат", "Пассивный доход 5 💮/час", "Рефералы ×3", "Уведомления", "Значок 💎"]},
+    "premium_day": {"name": "Premium 1 день", "price": 100, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 15% на чат", "Пассивный доход 20 💮/30мин", "Рефералы ×3", "Лимиты ×10", "Уведомления", "Значок 💎"]},
     "premium_week": {"name": "Premium 7 дней", "price": 500, "icon": "⭐", "category": "premium", "desc": "Неделя Premium.", "warning": "⚠️ 7 дней. Только ЛС.", "location": "private", "type": "premium", "duration": "7 дней", "benefits": ["Всё из Premium 1 день", "Экономия 28%"]},
     "premium_30d": {"name": "Premium 30 дней 🔥", "price": 1500, "icon": "💎", "category": "premium", "desc": "Месяц Premium.", "warning": "⚠️ 30 дней.", "location": "private", "type": "premium", "duration": "30 дней", "benefits": ["Всё из Premium 1 день", "Экономия 25%"]},
     "premium_60d": {"name": "Premium 60 дней 🚀", "price": 2500, "icon": "💎", "category": "premium", "desc": "2 месяца Premium.", "warning": "⚠️ 60 дней.", "location": "private", "type": "premium", "duration": "60 дней", "benefits": ["Всё из Premium 1 день", "Экономия 37%"]},
     "premium_90d": {"name": "Premium 90 дней 👑", "price": 3500, "icon": "💎", "category": "premium", "desc": "3 месяца Premium.", "warning": "⚠️ 90 дней.", "location": "private", "type": "premium", "duration": "90 дней", "benefits": ["Всё из Premium 1 день", "Экономия 50%"]},
     "premium_year": {"name": "Premium 1 год 💫", "price": 10000, "icon": "👑", "category": "premium", "desc": "Год Premium.", "warning": "⚠️ 365 дней.", "location": "private", "type": "premium", "duration": "1 год", "benefits": ["Всё из Premium 1 день", "Экономия 72%"]},
     "premium_forever": {"name": "Premium НАВСЕГДА ✨", "price": 25000, "icon": "🌟", "category": "premium", "desc": "Пожизненный Premium.", "warning": "⚠️ Только ЛС.", "location": "private", "type": "premium", "duration": "Навсегда", "benefits": ["Всё из Premium 1 день", "Пожизненно"]},
-    # Чат-товары с расширенной информацией
-    "chat_extra10": {"name": "+10 запросов (чат)", "price": 8, "icon": "👥", "category": "chat", "desc": "10 дополнительных запросов в групповых чатах. Для всех участников чата!", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+10 запросов в чатах", "Для всех участников", "Мгновенное зачисление"]},
-    "chat_extra50": {"name": "+50 запросов (чат)", "price": 30, "icon": "👥", "category": "chat", "desc": "50 дополнительных запросов в чатах. Экономия 25%! Идеально для активных сообществ.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+50 запросов в чатах", "Экономия 25%", "Для активных чатов"]},
-    "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 20, "icon": "♾️", "category": "chat", "desc": "Безлимитные запросы в чатах на 1 час. Отлично для мероприятий и активных обсуждений!", "warning": "⚠️ 1 час с момента покупки.", "location": "chat", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит в чатах", "Для всех участников", "Идеально для ивентов"]},
-    "chat_unlimited_24h": {"name": "Безлимит чат 24ч", "price": 75, "icon": "♾️", "category": "chat", "desc": "Безлимитные запросы в чатах на 24 часа. Экономия 17% vs 24×1ч!", "warning": "⚠️ 24 часа с момента покупки.", "location": "chat", "type": "unlimited", "duration": "24 часа", "benefits": ["Безлимит в чатах на сутки", "Экономия 17%", "Для марафонов"]},
-    "chat_image5": {"name": "5 фото (чат)", "price": 25, "icon": "🎨", "category": "chat_image", "desc": "5 генераций изображений в чатах. Размер: 1024×1024. Для всех участников!", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["5 фото в чатах", "1024×1024", "Для всех участников"]},
-    "chat_image20": {"name": "20 фото (чат)", "price": 90, "icon": "🎨", "category": "chat_image", "desc": "20 генераций изображений в чатах. Экономия 28%! Для творческих сообществ.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["20 фото в чатах", "Экономия 28%", "Для творческих чатов"]},
-    "chat_premium_day": {"name": "Premium чат 1д", "price": 150, "icon": "⭐", "category": "chat_premium", "desc": "Полный безлимит в чате на 1 день. Текст + фото без ограничений для всех участников!", "warning": "⚠️ 24 часа с момента покупки.", "location": "chat", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото в чате", "Для всех участников", "Мгновенная активация"]},
-    "chat_premium_week": {"name": "Premium чат 7д", "price": 750, "icon": "⭐", "category": "chat_premium", "desc": "Неделя безлимита в чате. Экономия 28% vs 7×1д!", "warning": "⚠️ 7 дней.", "location": "chat", "type": "premium", "duration": "7 дней", "benefits": ["Безлимит в чате на неделю", "Экономия 28%", "Для активных сообществ"]},
-    "chat_premium_30d": {"name": "Premium чат 30д", "price": 2500, "icon": "💎", "category": "chat_premium", "desc": "Месяц безлимита в чате. Экономия 25% vs 30×1д!", "warning": "⚠️ 30 дней.", "location": "chat", "type": "premium", "duration": "30 дней", "benefits": ["Безлимит в чате на месяц", "Экономия 25%", "VIP-статус чата"]},
-    "chat_premium_60d": {"name": "Premium чат 60д", "price": 4000, "icon": "💎", "category": "chat_premium", "desc": "2 месяца безлимита в чате. Экономия 37%!", "warning": "⚠️ 60 дней.", "location": "chat", "type": "premium", "duration": "60 дней", "benefits": ["Безлимит в чате на 2 месяца", "Экономия 37%"]},
-    "chat_premium_90d": {"name": "Premium чат 90д", "price": 5500, "icon": "💎", "category": "chat_premium", "desc": "3 месяца безлимита в чате. Экономия 50%!", "warning": "⚠️ 90 дней.", "location": "chat", "type": "premium", "duration": "90 дней", "benefits": ["Безлимит в чате на 3 месяца", "Экономия 50%"]},
-    "chat_premium_year": {"name": "Premium чат 1 год", "price": 15000, "icon": "👑", "category": "chat_premium", "desc": "Год безлимита в чате. Экономия 72%!", "warning": "⚠️ 365 дней.", "location": "chat", "type": "premium", "duration": "1 год", "benefits": ["Безлимит в чате на год", "Экономия 72%", "Премиум-сообщество"]},
-    "chat_premium_forever": {"name": "Premium чат НАВСЕГДА", "price": 35000, "icon": "🌟", "category": "chat_premium", "desc": "Пожизненный безлимит в чате. Один раз — навсегда!", "warning": "⚠️ Только для выбранного чата.", "location": "chat", "type": "premium", "duration": "Навсегда", "benefits": ["Пожизненный безлимит в чате", "Максимальная экономия", "Легендарный статус"]},
+    "chat_extra10": {"name": "+10 запросов (чат)", "price": 8, "icon": "👥", "category": "chat", "desc": "10 дополнительных запросов в групповых чатах.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+10 запросов в чатах"]},
+    "chat_extra50": {"name": "+50 запросов (чат)", "price": 30, "icon": "👥", "category": "chat", "desc": "50 дополнительных запросов в чатах.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+50 запросов в чатах", "Экономия 25%"]},
+    "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 20, "icon": "♾️", "category": "chat", "desc": "Безлимитные запросы в чатах на 1 час.", "warning": "⚠️ 1 час.", "location": "chat", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит в чатах"]},
+    "chat_unlimited_24h": {"name": "Безлимит чат 24ч", "price": 75, "icon": "♾️", "category": "chat", "desc": "Безлимитные запросы в чатах на 24 часа.", "warning": "⚠️ 24 часа.", "location": "chat", "type": "unlimited", "duration": "24 часа", "benefits": ["Безлимит в чатах на сутки"]},
+    "chat_image5": {"name": "5 фото (чат)", "price": 25, "icon": "🎨", "category": "chat_image", "desc": "5 генераций изображений в чатах.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["5 фото в чатах"]},
+    "chat_image20": {"name": "20 фото (чат)", "price": 90, "icon": "🎨", "category": "chat_image", "desc": "20 генераций изображений в чатах.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["20 фото в чатах", "Экономия 28%"]},
+    "chat_premium_day": {"name": "Premium чат 1д", "price": 150, "icon": "⭐", "category": "chat_premium", "desc": "Полный безлимит в чате на 1 день.", "warning": "⚠️ 24 часа.", "location": "chat", "type": "premium", "duration": "1 день", "benefits": ["Безлимит в чате"]},
+    "chat_premium_week": {"name": "Premium чат 7д", "price": 750, "icon": "⭐", "category": "chat_premium", "desc": "Неделя безлимита в чате.", "warning": "⚠️ 7 дней.", "location": "chat", "type": "premium", "duration": "7 дней", "benefits": ["Безлимит в чате на неделю"]},
+    "chat_premium_30d": {"name": "Premium чат 30д", "price": 2500, "icon": "💎", "category": "chat_premium", "desc": "Месяц безлимита в чате.", "warning": "⚠️ 30 дней.", "location": "chat", "type": "premium", "duration": "30 дней", "benefits": ["Безлимит в чате на месяц"]},
+    "chat_premium_60d": {"name": "Premium чат 60д", "price": 4000, "icon": "💎", "category": "chat_premium", "desc": "2 месяца безлимита в чате.", "warning": "⚠️ 60 дней.", "location": "chat", "type": "premium", "duration": "60 дней", "benefits": ["Безлимит в чате на 2 месяца"]},
+    "chat_premium_90d": {"name": "Premium чат 90д", "price": 5500, "icon": "💎", "category": "chat_premium", "desc": "3 месяца безлимита в чате.", "warning": "⚠️ 90 дней.", "location": "chat", "type": "premium", "duration": "90 дней", "benefits": ["Безлимит в чате на 3 месяца"]},
+    "chat_premium_year": {"name": "Premium чат 1 год", "price": 15000, "icon": "👑", "category": "chat_premium", "desc": "Год безлимита в чате.", "warning": "⚠️ 365 дней.", "location": "chat", "type": "premium", "duration": "1 год", "benefits": ["Безлимит в чате на год"]},
+    "chat_premium_forever": {"name": "Premium чат НАВСЕГДА", "price": 35000, "icon": "🌟", "category": "chat_premium", "desc": "Пожизненный безлимит в чате.", "warning": "⚠️ Только для чатов.", "location": "chat", "type": "premium", "duration": "Навсегда", "benefits": ["Пожизненный безлимит"]},
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -455,33 +453,99 @@ def get_user(user_id):
     return users[uid]
 
 def process_passive_income(user_id):
+    """Начисляет пассивный доход. Premium: 20 💮/30мин, Free: 2 💮/час"""
     users = load_users(); uid = str(user_id)
-    if uid not in users or not is_premium(user_id): return 0
-    now = datetime.now(); last_income = users[uid].get("last_passive_income")
-    hours_passed = min((now - datetime.fromisoformat(last_income)).total_seconds() / 3600 if last_income else 1, PASSIVE_INCOME_MAX_HOURS)
-    income = int(hours_passed * PASSIVE_INCOME_HOURLY)
-    if income > 0: users[uid]["tokens"] = users[uid].get("tokens", 0) + income; users[uid]["earned_tokens"] = users[uid].get("earned_tokens", 0) + income; users[uid]["last_passive_income"] = now.isoformat(); save_users(users)
+    if uid not in users: return 0
+    
+    premium = is_premium(user_id)
+    hourly_rate = PREMIUM_PASSIVE_INCOME_HOURLY if premium else FREE_PASSIVE_INCOME_HOURLY
+    interval_minutes = PASSIVE_INCOME_INTERVAL_MINUTES
+    max_intervals = PASSIVE_INCOME_MAX_INTERVALS
+    
+    now = datetime.now()
+    last_income = users[uid].get("last_passive_income")
+    
+    if last_income:
+        last_time = datetime.fromisoformat(last_income)
+        minutes_passed = (now - last_time).total_seconds() / 60
+        intervals_passed = min(int(minutes_passed / interval_minutes), max_intervals)
+        income = int(intervals_passed * (hourly_rate * interval_minutes / 60))
+    else:
+        income = int(hourly_rate * interval_minutes / 60)
+    
+    if income > 0:
+        users[uid]["tokens"] = users[uid].get("tokens", 0) + income
+        users[uid]["earned_tokens"] = users[uid].get("earned_tokens", 0) + income
+        users[uid]["last_passive_income"] = now.isoformat()
+        save_users(users)
+    
     return income
 
-async def send_smart_notification(user_id, context):
-    user = get_user(user_id); premium = is_premium(user_id)
-    interval = user.get("notify_interval", NOTIFY_INTERVAL_FREE) if premium else NOTIFY_INTERVAL_FREE
-    last_notify = user.get("last_notification")
-    if last_notify:
-        if (datetime.now() - datetime.fromisoformat(last_notify)).total_seconds() / 3600 < interval: return
-    users = load_users(); uid = str(user_id); users[uid]["last_notification"] = datetime.now().isoformat(); save_users(users)
-    rate_data = get_token_rate(); rate = rate_data.get("rate", 0.005)
-    tokens = user.get("tokens", 0); usd = tokens * rate
-    donated_total, _, _ = get_donation_stats()
-    passive_income = process_passive_income(user_id)
-    text = f"🔔 СВОДКА {'💎' if premium else ''}\n━━━━━━━━━━━━━━━━\n\n💰 Баланс: {tokens:,} 💮 (~${usd:.2f})\n💮 Курс: 1 = ${rate:.8f}\n🔥 Серия: {user.get('daily_bonus_streak', 0)} дн.\n"
-    if passive_income > 0: text += f"💤 Пассивный доход: +{passive_income} 💮\n"
-    text += f"🌍 Сожжено: {donated_total:,} 💮\n"
-    if premium: text += f"💎 Premium активно\n🔔 Интервал: {interval} ч.\n"
-    else: text += f"\n💡 Premium: безлимит, 5 💮/час, пресеты\n💎 /premium\n"
-    text += f"\n🕐 Следующая: через {interval} ч."
-    try: await context.bot.send_message(user_id, text)
-    except: pass
+# ═══════════════════════════════════════════
+# 🔔 АВТОМАТИЧЕСКИЕ УМНЫЕ УВЕДОМЛЕНИЯ
+# ═══════════════════════════════════════════
+
+async def auto_notification_task(context: ContextTypes.DEFAULT_TYPE):
+    """Фоновая задача: рассылает умные уведомления всем пользователям"""
+    users = load_users()
+    now = datetime.now()
+    sent_count = 0
+    
+    for uid in users:
+        try:
+            user_id = int(uid)
+            user = get_user(user_id)
+            premium = is_premium(user_id)
+            interval = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM) if premium else NOTIFY_INTERVAL_FREE
+            
+            last_notify = user.get("last_notification")
+            if last_notify:
+                last_time = datetime.fromisoformat(last_notify)
+                hours_passed = (now - last_time).total_seconds() / 3600
+                if hours_passed < interval:
+                    continue
+            
+            # Начисляем пассивный доход
+            passive = process_passive_income(user_id)
+            
+            # Отправляем уведомление
+            rate_data = get_token_rate()
+            rate = rate_data.get("rate", 0.005)
+            tokens = user.get("tokens", 0)
+            usd = tokens * rate
+            streak = user.get("daily_bonus_streak", 0)
+            donated_total, _, _ = get_donation_stats()
+            
+            premium_icon = "💎" if premium else ""
+            
+            text = (
+                f"🔔 СВОДКА {premium_icon}\n━━━━━━━━━━━━━━━━\n\n"
+                f"💰 Баланс: {tokens:,} 💮 (~${usd:.2f})\n"
+                f"💮 Курс: 1 NBT = ${rate:.8f}\n"
+                f"🔥 Серия: {streak} дн.\n"
+                f"💤 Пассивный доход: +{passive} 💮\n"
+                f"🌍 Сожжено: {donated_total:,} 💮\n"
+            )
+            
+            if premium:
+                text += f"💎 Premium активно\n🔔 Интервал: {interval} ч.\n"
+            else:
+                text += f"\n💡 Premium: 20 💮/30мин, пресеты, безлимит\n💎 /premium\n"
+            
+            text += f"\n🕐 Следующая: через {interval} ч."
+            
+            await context.bot.send_message(user_id, text)
+            
+            # Обновляем время уведомления
+            users[uid]["last_notification"] = now.isoformat()
+            sent_count += 1
+            
+        except:
+            pass
+    
+    if sent_count > 0:
+        save_users(users)
+        logger.info(f"🔔 Отправлено {sent_count} умных уведомлений")
 
 def is_premium(user_id):
     u = get_user(user_id); p = u.get("premium_until")
@@ -669,7 +733,6 @@ def shop_keyboard(location="private", user_id=None):
                     items_in_cat = True
                 price, percent, disc = get_discounted_price(item_id, user_id)
                 
-                # Показываем Premium-скидку в названии кнопки
                 premium_mark = ""
                 if user_id and is_premium(user_id):
                     if item.get("location") == "chat":
@@ -725,7 +788,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     if username: users = load_users(); users[str(user_id)]["username"] = username; save_users(users)
     passive_income = process_passive_income(user_id)
-    await send_smart_notification(user_id, context)
     if context.args and context.args[0].startswith("ref_"):
         ref_code = context.args[0].replace("ref_", ""); users = load_users(); uid = str(user_id)
         for u_id, u_data in users.items():
@@ -782,10 +844,10 @@ async def notify_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             interval = int(context.args[0])
             if interval in PREMIUM_NOTIFY_OPTIONS:
                 users = load_users(); uid = str(user_id); users[uid]["notify_interval"] = interval; save_users(users)
-                await update.message.reply_text(f"✅ Интервал: каждые {interval} ч.\n\nСледующая сводка придёт через {interval} ч. после последней."); return
+                await update.message.reply_text(f"✅ Интервал: каждые {interval} ч.\n\nУведомления приходят автоматически!"); return
         except: pass
     user = get_user(user_id); current = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
-    await update.message.reply_text(f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\nТекущий интервал: каждые {current} ч.\nДоступные: {', '.join(map(str, PREMIUM_NOTIFY_OPTIONS))} ч.\n\nВыберите новый интервал:", reply_markup=notify_keyboard())
+    await update.message.reply_text(f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\nТекущий интервал: каждые {current} ч.\nДоступные: {', '.join(map(str, PREMIUM_NOTIFY_OPTIONS))} ч.\n\nУведомления приходят автоматически!\nВыберите новый интервал:", reply_markup=notify_keyboard())
 
 async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id; premium = is_premium(user_id); shop_items = get_shop_items(user_id)
@@ -803,7 +865,7 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"• Кэшбек {CASHBACK_PERCENT}% на чат-покупки\n"
             f"• Скидка {PREMIUM_RENEWAL_DISCOUNT}% на продление\n"
             f"• Скидка {PREMIUM_CHAT_DISCOUNT}% на чат-товары\n"
-            f"• Пассивный доход {PASSIVE_INCOME_HOURLY} 💮/час\n"
+            f"• Пассивный доход {PREMIUM_PASSIVE_INCOME_HOURLY} 💮/час (каждые 30 мин)\n"
             f"• Рефералы ×3 ({PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮)\n"
             f"• Лимит перевода {PREMIUM_MAX_TRANSFER:,} 💮 (налог 0-10%)\n"
             f"• Умные уведомления с настройкой интервала\n"
@@ -814,24 +876,24 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             f"💎 NeBlock Premium\n━━━━━━━━━━━━━━━━\n\n"
             f"📊 СРАВНЕНИЕ FREE vs PREMIUM:\n\n"
-            f"┌──────────────────────────┬────────────┬────────────┐\n"
-            f"│ Возможность              │    FREE    │  PREMIUM   │\n"
-            f"├──────────────────────────┼────────────┼────────────┤\n"
-            f"│ Текстовые запросы (ЛС)   │  {DAILY_LIMIT}/день     │ Безлимит   │\n"
-            f"│ Генерация фото (ЛС)      │  {IMAGE_DAILY_LIMIT}/день     │ Безлимит   │\n"
-            f"│ Профессиональные пресеты │     ❌     │  10 ролей  │\n"
-            f"│ Кэшбек с чат-покупок     │     0%     │    {CASHBACK_PERCENT}%     │\n"
-            f"│ Скидка на продление      │     -      │    {PREMIUM_RENEWAL_DISCOUNT}%     │\n"
-            f"│ Скидка на чат-товары     │     -      │    {PREMIUM_CHAT_DISCOUNT}%     │\n"
-            f"│ Пассивный доход          │     ❌     │ {PASSIVE_INCOME_HOURLY} 💮/час     │\n"
-            f"│ Реферальный бонус        │ {REFERRAL_BONUS}/{INVITED_BONUS} 💮      │ {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮      │\n"
-            f"│ Макс. перевод            │ {MAX_TRANSFER:,} 💮  │ {PREMIUM_MAX_TRANSFER:,} 💮  │\n"
-            f"│ Налог на перевод         │   0-15%    │   0-10%    │\n"
-            f"│ Макс. донат              │ {MAX_DONATION:,} 💮 │ {PREMIUM_MAX_DONATION:,} 💮│\n"
-            f"│ Умные уведомления        │ каждые 24ч │ 1-24ч     │\n"
-            f"│ Настройка уведомлений    │     ❌     │     ✅     │\n"
-            f"│ Значок 💎                │     ❌     │     ✅     │\n"
-            f"└──────────────────────────┴────────────┴────────────┘\n\n"
+            f"┌────────────────────────────┬──────────────┬──────────────┐\n"
+            f"│ Возможность                │     FREE     │   PREMIUM    │\n"
+            f"├────────────────────────────┼──────────────┼──────────────┤\n"
+            f"│ Текстовые запросы (ЛС)     │   {DAILY_LIMIT}/день      │  Безлимит    │\n"
+            f"│ Генерация фото (ЛС)        │   {IMAGE_DAILY_LIMIT}/день      │  Безлимит    │\n"
+            f"│ Профессиональные пресеты   │      ❌      │   10 ролей   │\n"
+            f"│ Пассивный доход            │  2 💮/час    │ 20 💮/30мин  │\n"
+            f"│ Кэшбек с чат-покупок       │      0%      │     {CASHBACK_PERCENT}%      │\n"
+            f"│ Скидка на продление        │      -       │     {PREMIUM_RENEWAL_DISCOUNT}%      │\n"
+            f"│ Скидка на чат-товары       │      -       │     {PREMIUM_CHAT_DISCOUNT}%      │\n"
+            f"│ Реферальный бонус          │  {REFERRAL_BONUS}/{INVITED_BONUS} 💮      │  {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮       │\n"
+            f"│ Максимальный перевод       │  {MAX_TRANSFER:,} 💮   │ {PREMIUM_MAX_TRANSFER:,} 💮  │\n"
+            f"│ Налог на перевод           │    0-15%     │    0-10%     │\n"
+            f"│ Максимальный донат         │  {MAX_DONATION:,} 💮  │ {PREMIUM_MAX_DONATION:,} 💮 │\n"
+            f"│ Умные уведомления          │  каждые 24ч  │   1-24ч      │\n"
+            f"│ Настройка уведомлений      │      ❌      │      ✅      │\n"
+            f"│ Значок 💎                  │      ❌      │      ✅      │\n"
+            f"└────────────────────────────┴──────────────┴──────────────┘\n\n"
             f"🛒 ТАРИФЫ (цены с учётом скидок):\n"
             f"⭐ 1 день — {shop_items.get('premium_day', {}).get('price', '?')} 💮\n"
             f"⭐ 7 дней — {shop_items.get('premium_week', {}).get('price', '?')} 💮 (-28%)\n"
@@ -1004,6 +1066,11 @@ async def presets_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "❌ ПРЕСЕТЫ — ТОЛЬКО PREMIUM 💎\n━━━━━━━━━━━━━━━━\n\n"
             "10 профессиональных ролей для ИИ доступны только Premium пользователям.\n\n"
+            "📝 КАК РАБОТАЮТ ПРЕСЕТЫ:\n"
+            "• Выберите роль через /presets\n"
+            "• Инструкция роли будет СКОПИРОВАНА в ваш запрос\n"
+            "• Пресет не активируется как режим, а добавляется к тексту\n"
+            "• Работает только в личных сообщениях\n\n"
             "📝 ДОСТУПНЫЕ РОЛИ:\n"
             "• 💻 Программист — код, архитектура, дебаггинг\n"
             "• 📝 Копирайтер — реклама, лендинги, SMM\n"
@@ -1020,9 +1087,11 @@ async def presets_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ); return
     user = get_user(update.effective_user.id); active = user.get("active_preset")
     text = "📝 ПРЕСЕТЫ (Premium 💎)\n━━━━━━━━━━━━━━━━\n\n"
+    text += "📋 ВАЖНО: Пресеты КОПИРУЮТСЯ в запрос, а не активируются как режим.\n"
+    text += "Инструкция роли будет добавлена перед вашим сообщением.\n\n"
     if active:
         p = PREMIUM_PRESETS.get(active)
-        if p: text += f"🎯 Выбран: {p['icon']} {p['name']}\n📋 Инструкция роли добавляется к вашему запросу.\n\n"
+        if p: text += f"🎯 Выбран: {p['icon']} {p['name']}\n\n"
     text += "Выберите роль для ИИ:"
     await update.message.reply_text(text, reply_markup=presets_keyboard())
 
@@ -1056,7 +1125,6 @@ async def chatshop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=shop_keyboard("chat", user_id)
     )
 
-# Обработчик /shop с блокировкой в чатах
 async def shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.effective_chat.type
     if chat_type in ["group", "supergroup"]:
@@ -1078,10 +1146,7 @@ async def shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await update.message.reply_text("🛒 МАГАЗИН (ЛС)\n\nВыберите категорию:", reply_markup=shop_keyboard("private", update.effective_user.id))
 
-# ═══════════════════════════════════════════
-# АДМИН-КОМАНДЫ (ВСЕ 33)
-# ═══════════════════════════════════════════
-
+# Админ-команды
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args or len(context.args) < 2: await update.message.reply_text("❌ /give ID СУММА"); return
@@ -1459,7 +1524,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     if data == "transfer_cancel": await query.edit_message_text("❌ Перевод отменён."); return
     if data == "donate_cancel": await query.edit_message_text("❌ Донат отменён."); return
     
-    # Донат
     if data.startswith("donate_confirm_"):
         amount = int(data.replace("donate_confirm_", ""))
         if get_user(user_id).get("tokens", 0) < amount: await query.edit_message_text("❌ Недостаточно!"); return
@@ -1468,7 +1532,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text(f"🌍 ДОНАТ ВЫПОЛНЕН!\n━━━━━━━━━━━━━━━━\n\n🔥 Сожжено: {amount:,} 💮\n💎 Баланс: {get_tokens(user_id):,} 💮\n🌍 Всего сожжено: {donated_total:,} 💮")
         return
     
-    # Перевод
     if data.startswith("transfer_confirm_"):
         parts = data.split("_")
         if len(parts) >= 4:
@@ -1487,7 +1550,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text(f"✅ ПЕРЕВОД ВЫПОЛНЕН!\n━━━━━━━━━━━━━━━━\n\n👤 ID {to_id}\n💸 {amount:,} 💮\n💰 Зачислено: {final_amount:,} 💮{tax_info}\n💎 Баланс: {get_tokens(user_id):,} 💮")
         return
     
-    # Скидки
     if data == "show_discounts":
         discounts = get_discounts(); active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
         text = "🎫 АКТИВНЫЕ СКИДКИ\n━━━━━━━━━━━━━━━━\n\n"
@@ -1506,7 +1568,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await query.edit_message_text(text, reply_markup=back_button())
         return
     
-    # Информация о магазине чата
     if data == "chat_shop_info":
         premium_info = ""
         if premium:
@@ -1528,17 +1589,15 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await query.edit_message_text(text, reply_markup=back_button())
         return
     
-    # Профиль из чата
     if data == "profile_chat":
         await profile_cmd(update, context)
         await query.edit_message_text("👤 Профиль отправлен в чат.")
         return
     
-    # Уведомления
     if data == "notify_menu":
         if not premium: await query.edit_message_text("❌ Только для Premium 💎", reply_markup=back_button()); return
         user = get_user(user_id); current = user.get("notify_interval", DEFAULT_NOTIFY_INTERVAL_PREMIUM)
-        await query.edit_message_text(f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\nТекущий интервал: каждые {current} ч.\nДоступные: {', '.join(map(str, PREMIUM_NOTIFY_OPTIONS))} ч.\n\nВыберите новый интервал:", reply_markup=notify_keyboard())
+        await query.edit_message_text(f"🔔 НАСТРОЙКА УВЕДОМЛЕНИЙ\n━━━━━━━━━━━━━━━━\n\nТекущий интервал: каждые {current} ч.\nДоступные: {', '.join(map(str, PREMIUM_NOTIFY_OPTIONS))} ч.\n\nУведомления приходят автоматически!\nВыберите новый интервал:", reply_markup=notify_keyboard())
         return
     
     if data.startswith("notify_"):
@@ -1547,17 +1606,15 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             interval = int(data.replace("notify_", ""))
             if interval in PREMIUM_NOTIFY_OPTIONS:
                 users = load_users(); uid = str(user_id); users[uid]["notify_interval"] = interval; save_users(users)
-                await query.edit_message_text(f"✅ Установлен интервал: каждые {interval} ч.\n\nСледующая сводка придёт по новому расписанию.", reply_markup=back_button())
+                await query.edit_message_text(f"✅ Установлен интервал: каждые {interval} ч.\n\nУведомления приходят автоматически!", reply_markup=back_button())
         except: pass
         return
     
-    # Premium
     if data == "premium_shop": await query.edit_message_text(f"🛒 ПОКУПКА PREMIUM\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id):,} 💮\n\nВыберите тариф:", reply_markup=shop_keyboard("private", user_id)); return
     if data == "premium_menu": await premium_cmd(update, context); return
     
-    # Пресеты
     if data == "presets_menu":
-        if not premium: await query.edit_message_text("❌ Пресеты только для Premium 💎\n\n10 профессиональных ролей ждут вас!\n💎 /premium — купить Premium", reply_markup=back_button()); return
+        if not premium: await query.edit_message_text("❌ Пресеты только для Premium 💎\n\n📋 Пресеты КОПИРУЮТСЯ в запрос, а не активируются.\n💎 /premium — купить Premium", reply_markup=back_button()); return
         await presets_cmd(update, context); return
     
     if data.startswith("preset_"):
@@ -1565,14 +1622,18 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         preset_id = data.replace("preset_", "")
         if preset_id == "off":
             users = load_users(); users[str(user_id)]["active_preset"] = None; save_users(users)
-            await query.edit_message_text("✅ Пресет отключён. ИИ будет отвечать в стандартном режиме.", reply_markup=back_button()); return
+            await query.edit_message_text("✅ Пресет отключён.", reply_markup=back_button()); return
         preset = PREMIUM_PRESETS.get(preset_id)
         if preset:
             users = load_users(); users[str(user_id)]["active_preset"] = preset_id; save_users(users)
-            await query.edit_message_text(f"✅ ВЫБРАН ПРЕСЕТ\n\n{preset['icon']} {preset['name']}\n📝 {preset['description']}\n\nИнструкция роли будет добавлена к вашему запросу.", reply_markup=back_button())
+            await query.edit_message_text(
+                f"✅ ВЫБРАН ПРЕСЕТ\n\n{preset['icon']} {preset['name']}\n📝 {preset['description']}\n\n"
+                f"📋 Инструкция роли будет СКОПИРОВАНА в ваш запрос.\n"
+                f"Работает только в личных сообщениях.",
+                reply_markup=back_button()
+            )
         return
     
-    # Навигация
     if data == "menu":
         if chat_type in ["group", "supergroup"]:
             await query.edit_message_text(f"🧠 NeBlock AI V{BOT_VERSION} в чате\n\n💰 Баланс: {get_tokens(user_id):,} 💮\n\nВыберите раздел:", reply_markup=chat_menu())
@@ -1590,7 +1651,8 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             f"🌍 Благотворительность — сжигание токенов\n"
             f"🔥 Ежедневные награды — серия до 30 дней\n"
             f"💮 Внутренняя валюта NBT с рыночным курсом\n"
-            f"💎 Premium — безлимит и привилегии\n\n"
+            f"💎 Premium — безлимит и привилегии\n"
+            f"💤 Пассивный доход для всех пользователей\n\n"
             f"📊 Лимиты ЛС: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день\n"
             f"📊 Лимиты чатов: {CHAT_DAILY_LIMIT} текст + {CHAT_IMAGE_LIMIT} фото/день\n\n"
             f"💡 /faq — ответы на частые вопросы",
@@ -1705,7 +1767,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
     if data == "promo": context.user_data["waiting_promo"] = True; await query.edit_message_text("🎟 АКТИВАЦИЯ ПРОМОКОДА\n\nОтправьте промокод для получения бонуса.", reply_markup=back_button()); return
     if data == "faq": await query.edit_message_text(FAQ_TEXT[:4000], reply_markup=back_button()); return
     
-    # Покупка товара
     if data.startswith("confirm_"):
         item_id = data.replace("confirm_", ""); item = shop_items.get(item_id)
         if not item: return
@@ -1752,7 +1813,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         price, percent, disc = get_discounted_price(item_id, user_id)
         tokens = get_tokens(user_id); can = "✅ Хватает" if tokens >= price else "❌ Не хватает"
         
-        # Premium скидки
         premium_discount_info = ""
         if premium:
             if item.get("category") == "premium" and item.get("location") == "private":
@@ -1778,21 +1838,19 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
         if item_id.startswith("premium_"):
             premium_comparison = (
                 f"\n\n📊 ЧТО ВЫ ПОЛУЧАЕТЕ С PREMIUM:\n"
-                f"┌──────────────────────────┬────────────┬────────────┐\n"
-                f"│ Возможность              │    FREE    │  PREMIUM   │\n"
-                f"├──────────────────────────┼────────────┼────────────┤\n"
-                f"│ Текстовые запросы (ЛС)   │  {DAILY_LIMIT}/день     │ Безлимит   │\n"
-                f"│ Генерация фото (ЛС)      │  {IMAGE_DAILY_LIMIT}/день     │ Безлимит   │\n"
-                f"│ Профессиональные пресеты │     ❌     │  10 ролей  │\n"
-                f"│ Кэшбек с чат-покупок     │     0%     │    {CASHBACK_PERCENT}%     │\n"
-                f"│ Скидка на продление      │     -      │    {PREMIUM_RENEWAL_DISCOUNT}%     │\n"
-                f"│ Скидка на чат-товары     │     -      │    {PREMIUM_CHAT_DISCOUNT}%     │\n"
-                f"│ Пассивный доход          │     ❌     │ {PASSIVE_INCOME_HOURLY} 💮/час     │\n"
-                f"│ Рефералы                 │ {REFERRAL_BONUS}/{INVITED_BONUS} 💮      │ {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮      │\n"
-                f"│ Лимит перевода           │ {MAX_TRANSFER:,} 💮  │ {PREMIUM_MAX_TRANSFER:,} 💮  │\n"
-                f"│ Умные уведомления        │ каждые 24ч │ 1-24ч     │\n"
-                f"│ Значок 💎                │     ❌     │     ✅     │\n"
-                f"└──────────────────────────┴────────────┴────────────┘"
+                f"┌────────────────────────────┬──────────────┬──────────────┐\n"
+                f"│ Возможность                │     FREE     │   PREMIUM    │\n"
+                f"├────────────────────────────┼──────────────┼──────────────┤\n"
+                f"│ Текстовые запросы (ЛС)     │   {DAILY_LIMIT}/день      │  Безлимит    │\n"
+                f"│ Генерация фото (ЛС)        │   {IMAGE_DAILY_LIMIT}/день      │  Безлимит    │\n"
+                f"│ Профессиональные пресеты   │      ❌      │   10 ролей   │\n"
+                f"│ Пассивный доход            │  2 💮/час    │ 20 💮/30мин  │\n"
+                f"│ Кэшбек с чат-покупок       │      0%      │     {CASHBACK_PERCENT}%      │\n"
+                f"│ Рефералы                   │  {REFERRAL_BONUS}/{INVITED_BONUS} 💮      │  {PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮       │\n"
+                f"│ Лимит перевода             │  {MAX_TRANSFER:,} 💮   │ {PREMIUM_MAX_TRANSFER:,} 💮  │\n"
+                f"│ Умные уведомления          │  каждые 24ч  │   1-24ч      │\n"
+                f"│ Значок 💎                  │      ❌      │      ✅      │\n"
+                f"└────────────────────────────┴──────────────┴──────────────┘"
             )
         
         text = (
@@ -1883,7 +1941,10 @@ def main():
     print(f"🧠 NeBlock AI V{BOT_VERSION}")
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    # Основные команды
+    # Автоматические уведомления (каждые 5 минут)
+    job_queue = app.job_queue
+    job_queue.run_repeating(auto_notification_task, interval=300, first=10)
+    
     for cmd, handler in [
         ("start", start), ("id", id_cmd), ("profile", profile_cmd),
         ("faq", lambda u, c: u.message.reply_text(FAQ_TEXT[:4000])),
@@ -1891,12 +1952,10 @@ def main():
         ("commands", lambda u, c: u.message.reply_text(COMMANDS_LIST)),
     ]: app.add_handler(CommandHandler(cmd, handler))
     
-    # Premium
     for cmd, handler in [
         ("premium", premium_cmd), ("buy_premium", buy_premium_cmd), ("notify", notify_cmd),
     ]: app.add_handler(CommandHandler(cmd, handler))
     
-    # Награды и финансы
     for cmd, handler in [
         ("streak", streak_cmd), ("streak_info", lambda u, c: u.message.reply_text(STREAK_INFO[:4000])),
         ("tokenrate", tokenrate_cmd), ("transfer", transfer_cmd),
@@ -1905,18 +1964,14 @@ def main():
         ("promo", lambda u, c: setattr(c, 'user_data', {**c.user_data, 'waiting_promo': True}) or u.message.reply_text("🎟 Отправьте промокод.")),
     ]: app.add_handler(CommandHandler(cmd, handler))
     
-    # Генерация и пресеты
     app.add_handler(CommandHandler("genimage", genimage_cmd))
     app.add_handler(CommandHandler("presets", presets_cmd))
-    
-    # Магазин и чаты
     app.add_handler(CommandHandler("shop", shop_cmd))
     app.add_handler(CommandHandler("shopdesc", lambda u, c: u.message.reply_text("📋 МАГАЗИН\n\n/shop — магазин для личных сообщений\n/chatshop — магазин для групповых чатов")))
     app.add_handler(CommandHandler("discounts", lambda u, c: inline_button_handler(u, c)))
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
     
-    # Админ-команды (ВСЕ 33)
     admin_handlers = [
         ("give", admin_give), ("take", admin_take), ("addtokensall", admin_addtokensall),
         ("resetuser", admin_resetuser), ("setpremium", admin_setpremium), ("removepremium", admin_removepremium),
@@ -1940,6 +1995,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
     
     print("✅ Бот запущен!")
+    print("🔔 Авто-уведомления: каждые 5 минут")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
