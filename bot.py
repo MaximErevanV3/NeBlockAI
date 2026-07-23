@@ -155,6 +155,7 @@ CHANGELOG = """
 • 🛡 Улучшена обработка ошибок
 • 📊 Исправлен магазин Premium
 • 🔄 Оптимизированы скидки
+• 💎 Добавлена команда /premium_shop
 
 Версия 6.1 🔥
 • 💎 Кэшбек с чат-покупок увеличен до 20%
@@ -255,6 +256,8 @@ FAQ_TEXT = f"""
 • Безлимит текста и фото в ЛС
 • 10 проф. пресетов (копируются в запрос)
 • Кэшбек 20% на чат-покупки
+• Скидка 15% на продление Premium
+• Скидка 10% на чат-товары
 • Пассивный доход 40 💮/час круглосуточно 24/7!
 • Ежедневные награды ×2.5 (в 2.5 раза больше!)
 • Рефералы ×3 (30/10 💮)
@@ -315,11 +318,12 @@ COMMANDS_LIST = """
 🆔 /id | 👤 /profile
 
 💎 PREMIUM:
-/premium | /buy_premium | /notify
+/premium | /premium_shop | /buy_premium | /notify
 📝 /presets
 
 🛒 МАГАЗИН:
 /shop — магазин ЛС
+/premium_shop — магазин Premium
 /chatshop — магазин чата
 /tokenrate | /discounts | /promo
 
@@ -358,7 +362,7 @@ SHOP_ITEMS_BASE = {
     "image5": {"name": "5 фото", "price": 30, "icon": "🎨", "category": "image", "desc": "5 генераций изображений.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["5 изображений", "Экономия 25%"]},
     "image20": {"name": "20 фото", "price": 100, "icon": "🎨", "category": "image", "desc": "20 генераций изображений.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["20 изображений", "Экономия 37%"]},
     "image_unlimited_1h": {"name": "Безлимит фото 1ч", "price": 25, "icon": "♾️", "category": "image", "desc": "Безлимит фото на 1 час.", "warning": "⚠️ 1 час.", "location": "private", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит фото"]},
-    "premium_day": {"name": "Premium 1 день", "price": 135, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 20% на чат", "Пассивный доход 40 💮/час 24/7", "Ежедн. награды ×2.5", "Рефералы ×3", "Лимиты ×10", "Уведомления", "Значок 💎"]},
+    "premium_day": {"name": "Premium 1 день", "price": 135, "icon": "⭐", "category": "premium", "desc": "Все Premium-привилегии на 24 часа.", "warning": "⚠️ 24 часа. Только ЛС.", "location": "private", "type": "premium", "duration": "1 день", "benefits": ["Безлимит текста и фото", "10 проф. пресетов", "Кэшбек 20% на чат", "Скидка 15% на продление", "Скидка 10% на чат-товары", "Пассивный доход 40 💮/час 24/7", "Ежедн. награды ×2.5", "Рефералы ×3", "Лимиты ×10", "Уведомления", "Значок 💎"]},
     "premium_week": {"name": "Premium 7 дней", "price": 675, "icon": "⭐", "category": "premium", "desc": "Неделя Premium.", "warning": "⚠️ 7 дней. Только ЛС.", "location": "private", "type": "premium", "duration": "7 дней", "benefits": ["Всё из Premium 1 день", "Экономия 28%"]},
     "premium_30d": {"name": "Premium 30 дней 🔥", "price": 2025, "icon": "💎", "category": "premium", "desc": "Месяц Premium.", "warning": "⚠️ 30 дней.", "location": "private", "type": "premium", "duration": "30 дней", "benefits": ["Всё из Premium 1 день", "Экономия 25%"]},
     "premium_60d": {"name": "Premium 60 дней 🚀", "price": 3375, "icon": "💎", "category": "premium", "desc": "2 месяца Premium.", "warning": "⚠️ 60 дней.", "location": "private", "type": "premium", "duration": "60 дней", "benefits": ["Всё из Premium 1 день", "Экономия 37%"]},
@@ -393,7 +397,6 @@ def load_json(filename):
         return {}
     except (json.JSONDecodeError, IOError) as e:
         logger.error(f"Ошибка загрузки {filename}: {e}")
-        # Создаём резервную копию повреждённого файла
         if os.path.exists(filename):
             backup_name = f"{filename}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             try:
@@ -405,7 +408,6 @@ def load_json(filename):
 
 def save_json(filename, data):
     try:
-        # Атомарное сохранение через временный файл
         temp_file = f"{filename}.tmp"
         with open(temp_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -562,7 +564,6 @@ def get_discounts():
         last_update = discounts.get("last_update", "")
         now = datetime.now()
         
-        # Удаляем истекшие скидки
         if discounts:
             to_delete = [i for i, d in discounts.items() if i not in ["last_update", "generated_at"] and d.get("expires") and now > datetime.fromisoformat(d["expires"])]
             for i in to_delete:
@@ -570,7 +571,6 @@ def get_discounts():
             if to_delete:
                 save_discounts(discounts)
         
-        # Проверяем обновление: каждые 2 дня в 8:00 МСК
         if last_update:
             try:
                 last_date = datetime.fromisoformat(last_update)
@@ -578,7 +578,6 @@ def get_discounts():
                 if last_date.hour >= 8:
                     next_update += timedelta(days=1)
                 
-                # Проверяем, прошло ли 2 дня с последнего обновления
                 days_passed = (now - next_update).days
                 if days_passed >= 2:
                     new_d = generate_discounts()
@@ -671,7 +670,6 @@ def process_passive_income(user_id):
             except (ValueError, TypeError):
                 income = 0
         else:
-            # При первом запуске не начисляем доход
             income = 0
         
         if income > 0:
@@ -680,7 +678,6 @@ def process_passive_income(user_id):
             users[uid]["last_passive_income"] = now.isoformat()
             save_users(users)
         elif not last_income:
-            # Устанавливаем начальную точку отсчёта
             users[uid]["last_passive_income"] = now.isoformat()
             save_users(users)
         
@@ -695,7 +692,7 @@ async def auto_notification_task(app):
         now = datetime.now()
         sent_count = 0
         
-        for uid in list(users.keys())[:100]:  # Ограничиваем количество за раз для производительности
+        for uid in list(users.keys())[:100]:
             try:
                 user_id = int(uid)
                 user = get_user(user_id)
@@ -1013,7 +1010,6 @@ def add_chat_owner(chat_id, user_id):
 
 async def generate_image(prompt):
     try:
-        # Ограничиваем длину промпта
         if len(prompt) > MAX_IMAGE_PROMPT_LENGTH:
             prompt = prompt[:MAX_IMAGE_PROMPT_LENGTH]
         
@@ -1044,12 +1040,11 @@ async def generate_image(prompt):
     except asyncio.TimeoutError:
         logger.error("Таймаут генерации")
         return None, "Генерация заняла слишком много времени"
-    except (base64.binascii.Error, Exception) as e:
+    except Exception as e:
         logger.error(f"Ошибка генерации: {e}")
         return None, "Ошибка обработки изображения"
 
 def format_price_text(price, percent, disc):
-    """Форматирует текст цены с учётом скидки"""
     if percent > 0 and disc:
         if disc.get("type") == "legendary":
             return "🌟 БЕСПЛАТНО!"
@@ -1065,7 +1060,7 @@ def private_menu():
         [InlineKeyboardButton("💸 Перевод", callback_data="transfer"), InlineKeyboardButton("🌍 Донат", callback_data="donate_info")],
         [InlineKeyboardButton("📝 Пресеты", callback_data="presets_menu"), InlineKeyboardButton("🎫 Скидки", callback_data="show_discounts")],
         [InlineKeyboardButton("👤 Профиль", callback_data="profile"), InlineKeyboardButton("🛒 Магазин ЛС", callback_data="shop")],
-        [InlineKeyboardButton("👥 Магазин чата", callback_data="chat_shop_info")],
+        [InlineKeyboardButton("💎 Premium магазин", callback_data="premium_shop"), InlineKeyboardButton("👥 Магазин чата", callback_data="chat_shop_info")],
     ])
 
 def chat_menu():
@@ -1305,9 +1300,10 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"• Ежедневные награды ×{PREMIUM_STREAK_MULTIPLIER} (в 2.5 раза больше!)\n"
                 f"• Рефералы ×3 ({PREMIUM_REFERRAL_BONUS}/{PREMIUM_INVITED_BONUS} 💮)\n"
                 f"• Лимит перевода {PREMIUM_MAX_TRANSFER:,} 💮 (налог 0-10%)\n"
+                f"• Лимит доната {PREMIUM_MAX_DONATION:,} 💮\n"
                 f"• Умные уведомления с настройкой интервала\n"
                 f"• Значок 💎 в профиле и топах\n\n"
-                f"🛒 /buy_premium — продлить | 📝 /presets | 🔔 /notify"
+                f"🛒 /premium_shop — продлить | 📝 /presets | 🔔 /notify"
             )
             parse_mode = None
         else:
@@ -1344,7 +1340,7 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"👑 90 дней — {shop_items.get('premium_90d', {}).get('price', '?')} 💮 (-50%)\n"
                 f"💫 1 год — {shop_items.get('premium_year', {}).get('price', '?')} 💮 (-72%)\n"
                 f"🌟 Навсегда — {shop_items.get('premium_forever', {}).get('price', '?')} 💮\n\n"
-                f"🛒 /buy_premium — купить Premium\n"
+                f"🛒 /premium_shop — купить Premium\n"
                 f"💡 30-й день серии даёт Premium 1 день!"
             )
             parse_mode = "HTML"
@@ -1356,6 +1352,70 @@ async def premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=parse_mode)
     except Exception as e:
         logger.error(f"Ошибка в premium_cmd: {e}")
+        await update.message.reply_text("❌ Произошла ошибка. Попробуйте позже.")
+
+async def premium_shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Отдельная команда для магазина Premium"""
+    try:
+        user_id = update.effective_user.id
+        chat_type = update.effective_chat.type
+        
+        if chat_type in ["group", "supergroup"]:
+            await update.message.reply_text(
+                "❌ Магазин Premium доступен только в личных сообщениях.\n\n"
+                "Для чата используйте:\n"
+                "🛒 /chatshop — магазин для чата\n"
+                "💎 /premium — информация о Premium"
+            )
+            return
+        
+        discounts = get_discounts()
+        active = {k: v for k, v in discounts.items() if k not in ["last_update", "generated_at"]}
+        
+        has_legendary = False
+        if active:
+            for item_id, disc in active.items():
+                if disc.get("type") == "legendary":
+                    item = SHOP_ITEMS_BASE.get(item_id, {})
+                    if item.get("category") == "premium":
+                        has_legendary = True
+                        break
+        
+        premium = is_premium(user_id)
+        premium_info = ""
+        if premium:
+            premium_info = (
+                f"\n\n💎 У ВАС АКТИВЕН PREMIUM!\n"
+                f"• Скидка на продление: {PREMIUM_RENEWAL_DISCOUNT}%\n"
+                f"• Цены ниже уже с учётом вашей скидки!"
+            )
+        
+        discounts_info = ""
+        if active:
+            premium_discounts = {k: v for k, v in active.items() 
+                               if SHOP_ITEMS_BASE.get(k, {}).get("category") == "premium"}
+            if premium_discounts:
+                discounts_info = "\n\n🎫 АКТИВНЫЕ СКИДКИ НА PREMIUM:\n"
+                for item_id, disc in sorted(premium_discounts.items(), key=lambda x: x[1]["percent"], reverse=True):
+                    item = SHOP_ITEMS_BASE.get(item_id, {})
+                    if item:
+                        price, percent, _ = get_discounted_price(item_id, user_id)
+                        discounts_info += f"{disc.get('icon', '🏷️')} {item['icon']} {item['name']}: -{disc['percent']}%\n"
+                discounts_info += "\n🔄 Обновление: каждые 2 дня в 8:00 МСК"
+        
+        await update.message.reply_text(
+            f"🛒 МАГАЗИН PREMIUM\n"
+            f"━━━━━━━━━━━━━━━━\n\n"
+            f"💰 Ваш баланс: {get_tokens(user_id):,} 💮\n"
+            f"📊 Курс: 1 NBT = ${get_token_rate().get('rate', 0.005):.8f}\n"
+            f"{premium_info}"
+            f"{discounts_info}\n\n"
+            f"⭐ ВЫБЕРИТЕ ТАРИФ PREMIUM:\n"
+            f"━━━━━━━━━━━━━━━━",
+            reply_markup=shop_keyboard("premium", user_id)
+        )
+    except Exception as e:
+        logger.error(f"Ошибка в premium_shop_cmd: {e}")
         await update.message.reply_text("❌ Произошла ошибка. Попробуйте позже.")
 
 async def buy_premium_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1572,7 +1632,7 @@ async def presets_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "• ⚖️ Юрист — право, договоры\n"
                 "• 🏥 Врач-терапевт — здоровье, симптомы\n\n"
                 "💎 /premium — купить Premium\n"
-                "🛒 /buy_premium — быстрая покупка"
+                "🛒 /premium_shop — быстрая покупка"
             ); return
         user = get_user(update.effective_user.id); active = user.get("active_preset")
         text = "📝 ПРЕСЕТЫ (Premium 💎)\n━━━━━━━━━━━━━━━━\n\n"
@@ -1645,7 +1705,7 @@ async def shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         await update.message.reply_text(
             f"🛒 МАГАЗИН (ЛС)\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id):,} 💮\n\n"
-            f"💎 Premium покупается отдельно: /buy_premium\n\n"
+            f"💎 Premium покупается отдельно: /premium_shop\n\n"
             f"Выберите категорию:",
             reply_markup=shop_keyboard("private", user_id)
         )
@@ -1983,15 +2043,32 @@ async def reply_button_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         if text == "🛒 Магазин":
             if update.effective_chat.type in ["group", "supergroup"]:
                 await update.message.reply_text(
-                    "❌ Команда /shop доступна только в личных сообщениях.\n\n"
-                    "Для чата используйте:\n🛒 /chatshop — магазин для чата\n\n"
+                    "❌ Магазины доступны только в личных сообщениях.\n\n"
+                    "Для чата используйте:\n"
+                    "🛒 /chatshop — магазин для чата\n\n"
                     "📋 Другие команды для чата:\n"
                     "💬 @bot вопрос | 🎨 /genimage | 💸 /transfer\n"
                     "💎 /premium | 👤 /profile | 🆔 /id\n"
                     "📊 /tokenrate | 🌍 /donate | 👑 /chatowner"
                 )
                 return True
-            await update.message.reply_text(f"🛒 МАГАЗИН (ЛС)\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id)} 💮\n\n💎 Premium отдельно: /buy_premium\n\nВыберите категорию:", reply_markup=shop_keyboard("private", user_id)); return True
+            await update.message.reply_text(
+                f"🛒 МАГАЗИНЫ NeBlock AI\n"
+                f"━━━━━━━━━━━━━━━━\n\n"
+                f"💰 Ваш баланс: {get_tokens(user_id):,} 💮\n\n"
+                f"📋 ДОСТУПНЫЕ МАГАЗИНЫ:\n\n"
+                f"🛒 /shop — магазин ЛС\n"
+                f"   • Текстовые запросы\n"
+                f"   • Генерация фото\n\n"
+                f"💎 /premium_shop — магазин Premium\n"
+                f"   • Premium 1 день / 7 дней\n"
+                f"   • Premium 30 / 60 / 90 дней\n"
+                f"   • Premium 1 год / Навсегда\n\n"
+                f"👥 /chatshop — магазин чата\n"
+                f"   • Запросы и фото в чатах\n"
+                f"   • Premium для чата\n\n"
+                f"💡 /discounts — активные скидки"
+            ); return True
         if text == "💎 Premium": await premium_cmd(update, context); return True
         if text == "🔥 Награды": 
             streak = get_user(user_id).get("daily_bonus_streak", 0)
@@ -2202,7 +2279,7 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                     reply_markup=back_button()
                 )
                 return
-            await query.edit_message_text(f"🛒 МАГАЗИН (ЛС)\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id):,} 💮\n\n💎 Premium отдельно: /buy_premium\n\nВыберите категорию:", reply_markup=shop_keyboard("private", user_id)); return
+            await query.edit_message_text(f"🛒 МАГАЗИН (ЛС)\n━━━━━━━━━━━━━━━━\n💰 Баланс: {get_tokens(user_id):,} 💮\n\n💎 Premium отдельно: /premium_shop\n\nВыберите категорию:", reply_markup=shop_keyboard("private", user_id)); return
         
         if data == "earn":
             if chat_type in ["group", "supergroup"]:
@@ -2294,7 +2371,6 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
             item_id = data.replace("confirm_", ""); item = shop_items.get(item_id)
             if not item: return
             
-            # Проверка на покупку товаров не из своего раздела
             if item.get("location") == "private" and chat_type in ["group", "supergroup"]:
                 await query.answer("❌ Покупка товаров ЛС доступна только в личных сообщениях!", show_alert=True)
                 return
@@ -2383,9 +2459,13 @@ async def inline_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                     f"│ Пассивный доход          │ 2 💮/ч 12ч │ 40 💮/ч 24/7 │\n"
                     f"│ Ежедневные награды       │    ×1.0    │    ×2.5      │\n"
                     f"│ Кэшбек с чат-покупок     │     0%     │    20%       │\n"
+                    f"│ Скидка на продление      │     -      │    15%       │\n"
+                    f"│ Скидка на чат-товары     │     -      │    10%       │\n"
                     f"│ Рефералы                 │  10/5 💮   │  30/10 💮    │\n"
                     f"│ Лимит перевода           │  5 000 💮  │ 50 000 💮    │\n"
+                    f"│ Лимит доната             │ 50 000 💮  │500 000 💮    │\n"
                     f"│ Умные уведомления        │ каждые 24ч │   1-24ч      │\n"
+                    f"│ Настройка уведомлений    │     ❌     │     ✅       │\n"
                     f"│ Значок 💎                │     ❌     │     ✅       │\n"
                     f"└──────────────────────────┴────────────┴──────────────┘\n"
                     f"</pre>"
@@ -2470,7 +2550,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             success, result = use_promo(user_id, text)
             await update.message.reply_text(f"🎟 Промокод активирован! +{result} 💮" if success else f"❌ {result}"); return
         
-        # Ограничение длины текста
         if len(text) > MAX_MESSAGE_LENGTH:
             text = text[:MAX_MESSAGE_LENGTH]
         
@@ -2560,7 +2639,7 @@ def main():
     ]: app.add_handler(CommandHandler(cmd, handler))
     
     for cmd, handler in [
-        ("premium", premium_cmd), ("buy_premium", buy_premium_cmd), ("notify", notify_cmd),
+        ("premium", premium_cmd), ("premium_shop", premium_shop_cmd), ("buy_premium", buy_premium_cmd), ("notify", notify_cmd),
     ]: app.add_handler(CommandHandler(cmd, handler))
     
     for cmd, handler in [
@@ -2574,7 +2653,14 @@ def main():
     app.add_handler(CommandHandler("genimage", genimage_cmd))
     app.add_handler(CommandHandler("presets", presets_cmd))
     app.add_handler(CommandHandler("shop", shop_cmd))
-    app.add_handler(CommandHandler("shopdesc", lambda u, c: u.message.reply_text("📋 МАГАЗИН\n\n/shop — магазин для личных сообщений\n/chatshop — магазин для групповых чатов\n/buy_premium — магазин Premium")))
+    app.add_handler(CommandHandler("shopdesc", lambda u, c: u.message.reply_text(
+        "📋 МАГАЗИНЫ\n\n"
+        "/shop — магазин для личных сообщений (текст, фото)\n"
+        "/premium_shop — магазин Premium (только Premium-тарифы)\n"
+        "/chatshop — магазин для групповых чатов\n"
+        "/buy_premium — быстрая покупка Premium\n\n"
+        "💡 /discounts — посмотреть активные скидки"
+    )))
     app.add_handler(CommandHandler("discounts", lambda u, c: inline_button_handler(u, c)))
     app.add_handler(CommandHandler("chatowner", chatowner_cmd))
     app.add_handler(CommandHandler("chatshop", chatshop_cmd))
