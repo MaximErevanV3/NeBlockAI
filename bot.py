@@ -21,10 +21,6 @@ YANDEX_FOLDER = "b1guk4h3j9t48lsjl6sq"
 PROMPT_ID = "fvt621uiq1fftiu5qomu"
 IMAGE_MODEL = "art://b1guk4h3j9t48lsjl6sq/aliceai-image-art-3.0/latest"
 
-# ═══════════════════════════════════════════
-# 📊 БАЛАНСИРОВКА ЭКОНОМИКИ V6.1
-# ═══════════════════════════════════════════
-
 DAILY_LIMIT = 3
 IMAGE_DAILY_LIMIT = 2
 CHAT_DAILY_LIMIT = 10
@@ -69,37 +65,29 @@ PREMIUM_MAX_TRANSFER = 50000
 PREMIUM_DAILY_TRANSFER_LIMIT = 250000
 PREMIUM_MAX_DONATION = 500000
 
-# ═══════════════════════════════════════════
-# 🔥 СИСТЕМА ЕЖЕДНЕВНЫХ НАГРАД
-# ═══════════════════════════════════════════
-
 STREAK_BASE_REWARDS = {
-    1: {"name": "День 1", "base_min": 1, "base_max": 3, "icon": "🌱", "desc": "Начало пути!"},
-    2: {"name": "День 2", "base_min": 2, "base_max": 4, "icon": "🌿", "desc": "Второй день."},
-    3: {"name": "День 3", "base_min": 2, "base_max": 5, "icon": "🌳", "desc": "Третий день!"},
-    4: {"name": "День 4", "base_min": 3, "base_max": 6, "icon": "🍀", "desc": "Четвёртый день."},
-    5: {"name": "День 5", "base_min": 3, "base_max": 7, "icon": "⭐", "desc": "Пятый день."},
-    6: {"name": "День 6", "base_min": 4, "base_max": 8, "icon": "🌟", "desc": "Шестой день."},
-    7: {"name": "НЕДЕЛЯ! 🎉", "base_min": 5, "base_max": 10, "icon": "🔥", "desc": "Целая неделя!"},
-    10: {"name": "День 10 🎊", "base_min": 6, "base_max": 13, "icon": "🎯", "desc": "Юбилейный!"},
-    14: {"name": "2 НЕДЕЛИ! 🏆", "base_min": 8, "base_max": 18, "icon": "👑", "desc": "Две недели!"},
-    21: {"name": "3 НЕДЕЛИ! 🌟", "base_min": 12, "base_max": 27, "icon": "💫", "desc": "Три недели!"},
-    28: {"name": "4 НЕДЕЛИ! 🌍", "base_min": 16, "base_max": 36, "icon": "🌍", "desc": "Месяц!"},
-    30: {"name": "ДЕНЬ 30! 👑✨", "base_min": 18, "base_max": 40, "icon": "👑", "desc": "МЕГА-ДЕНЬ! +Premium 1д", "premium_bonus": True},
+    1: {"name": "День 1", "base_min": 1, "base_max": 3, "icon": "🌱"},
+    2: {"name": "День 2", "base_min": 2, "base_max": 4, "icon": "🌿"},
+    3: {"name": "День 3", "base_min": 2, "base_max": 5, "icon": "🌳"},
+    4: {"name": "День 4", "base_min": 3, "base_max": 6, "icon": "🍀"},
+    5: {"name": "День 5", "base_min": 3, "base_max": 7, "icon": "⭐"},
+    6: {"name": "День 6", "base_min": 4, "base_max": 8, "icon": "🌟"},
+    7: {"name": "НЕДЕЛЯ! 🎉", "base_min": 5, "base_max": 10, "icon": "🔥"},
+    10: {"name": "День 10 🎊", "base_min": 6, "base_max": 13, "icon": "🎯"},
+    14: {"name": "2 НЕДЕЛИ! 🏆", "base_min": 8, "base_max": 18, "icon": "👑"},
+    21: {"name": "3 НЕДЕЛИ! 🌟", "base_min": 12, "base_max": 27, "icon": "💫"},
+    28: {"name": "4 НЕДЕЛИ! 🌍", "base_min": 16, "base_max": 36, "icon": "🌍"},
+    30: {"name": "ДЕНЬ 30! 👑✨", "base_min": 18, "base_max": 40, "icon": "👑", "premium_bonus": True},
 }
 MAX_STREAK_DAY = 30
 
 for day in range(1, 31):
     if day not in STREAK_BASE_REWARDS:
         prev = STREAK_BASE_REWARDS.get(day - 1, STREAK_BASE_REWARDS[1])
-        STREAK_BASE_REWARDS[day] = {"name": f"День {day}", "base_min": prev["base_min"] + 1, "base_max": prev["base_max"] + 2, "icon": "📅", "desc": f"День {day} подряд!"}
-
-# ═══════════════════════════════════════════
-# 📝 СИСТЕМА ПРЕСЕТОВ (КОПИРУЮТСЯ В ЗАПРОС)
-# ═══════════════════════════════════════════
+        STREAK_BASE_REWARDS[day] = {"name": f"День {day}", "base_min": prev["base_min"] + 1, "base_max": prev["base_max"] + 2, "icon": "📅"}
 
 PREMIUM_PRESETS = {
-    "programmer": {"id": "programmer", "name": "💻 Программист", "icon": "💻", "system_prompt": "Ты — опытный senior-разработчик. Отвечай технически точно, с примерами кода на Python/JavaScript. Объясняй сложное простым языком.", "category": "professional", "description": "Код, архитектура, дебаггинг"},
+    "programmer": {"id": "programmer", "name": "💻 Программист", "icon": "💻", "system_prompt": "Ты — опытный senior-разработчик. Отвечай технически точно, с примерами кода на Python/JavaScript.", "category": "professional", "description": "Код, архитектура, дебаггинг"},
     "copywriter": {"id": "copywriter", "name": "📝 Копирайтер", "icon": "📝", "system_prompt": "Ты — профессиональный копирайтер. Пиши убедительные тексты по формуле AIDA.", "category": "professional", "description": "Реклама, лендинги, SMM"},
     "business": {"id": "business", "name": "💼 Бизнес-консультант", "icon": "💼", "system_prompt": "Ты — бизнес-консультант. Анализируй рынок, предлагай стратегии с цифрами.", "category": "professional", "description": "Стратегия, стартапы, финансы"},
     "teacher": {"id": "teacher", "name": "📚 Учитель", "icon": "📚", "system_prompt": "Ты — опытный педагог. Объясняй от простого к сложному.", "category": "education", "description": "Обучение, объяснение"},
@@ -143,7 +131,6 @@ DAY_FACTORS = {0: ("Понедельник", 1.05, "📈"), 1: ("Вторник"
 BASE_PRICES_USD = {
     "extra5": 5, "extra10": 8, "extra50": 35, "unlimited_1h": 15, "unlimited_24h": 50, "unlimited_7d": 250,
     "image1": 8, "image5": 30, "image20": 100, "image_unlimited_1h": 25,
-    # Premium +35% от изначальных цен
     "premium_day": 135, "premium_week": 675, "premium_30d": 2025, "premium_60d": 3375,
     "premium_90d": 4725, "premium_year": 13500, "premium_forever": 33750,
     "chat_extra10": 8, "chat_extra50": 30, "chat_unlimited_1h": 20, "chat_unlimited_24h": 75,
@@ -273,24 +260,21 @@ FAQ_TEXT = f"""
 • Free: 2 💮 каждый час (максимум 12 часов накопления)
 • Premium: 20 💮 каждые 30 минут (40 💮/час) круглосуточно 24/7!
 • Начисляется автоматически при активностях и по расписанию
-• Не требует действий от пользователя
 
 ❓ Как работают ежедневные награды? 🔥
 • Free: базовая награда (1-40 💮)
 • Premium: базовая награда ×2.5 (2.5-100 💮)!
 • Заходи каждый день и забирай через /daily
-• Premium получает значительно больше!
 
 ❓ Как работают скидки Premium? 🛒
 • Скидка 15% на продление Premium (автоматически в цене)
 • Скидка 10% на ВСЕ чат-товары (автоматически в цене)
 • Кэшбек 20% с чат-покупок (возвращается на баланс)
-• Скидки отображаются в карточках товаров!
 
 ❓ Лимиты?
 Free ЛС: {DAILY_LIMIT} текст + {IMAGE_DAILY_LIMIT} фото/день
 Free чаты: {CHAT_DAILY_LIMIT} текст + {CHAT_IMAGE_LIMIT} фото/день
-Premium ЛС: безлимит всего
+Premium ЛС: ∞ безлимит
 Premium чаты: покупаются отдельно
 Переводы Free: до {MAX_TRANSFER:,} 💮 | Premium: до {PREMIUM_MAX_TRANSFER:,} 💮
 """
@@ -353,7 +337,7 @@ COMMANDS_LIST = """
 DISCOUNT_TYPES = {"regular": {"name": "Обычная", "min": 5, "max": 25, "color": "🟢", "chance": 40, "icon": "🏷️"}, "super": {"name": "Супер", "min": 30, "max": 50, "color": "🔴", "chance": 20, "icon": "🔥"}, "flash": {"name": "Флеш", "min": 40, "max": 70, "color": "⚡", "chance": 8, "icon": "⏰"}, "bundle": {"name": "Набор", "min": 15, "max": 35, "color": "📦", "chance": 12, "icon": "🎁"}, "premium_discount": {"name": "Premium", "min": 10, "max": 30, "color": "👑", "chance": 5, "icon": "💎"}, "legendary": {"name": "ЛЕГЕНДАРНАЯ", "min": 100, "max": 100, "color": "🌟", "chance": 0.5, "icon": "💫"}}
 
 SHOP_ITEMS_BASE = {
-    "extra5": {"name": "+5 запросов", "price": 5, "icon": "📝", "category": "text", "desc": "5 дополнительных текстовых запросов к NeBlock AI V2.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+5 текстовых запросов"]},
+    "extra5": {"name": "+5 запросов", "price": 5, "icon": "📝", "category": "text", "desc": "5 дополнительных текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+5 текстовых запросов"]},
     "extra10": {"name": "+10 запросов", "price": 8, "icon": "📝", "category": "text", "desc": "10 дополнительных текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+10 запросов"]},
     "extra50": {"name": "+50 запросов", "price": 35, "icon": "📝", "category": "text", "desc": "50 дополнительных текстовых запросов.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "private", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+50 запросов", "Экономия 30%"]},
     "unlimited_1h": {"name": "Безлимит текста 1ч", "price": 15, "icon": "♾️", "category": "text", "desc": "Безлимит текста на 1 час.", "warning": "⚠️ 1 час.", "location": "private", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит текста"]},
@@ -370,7 +354,7 @@ SHOP_ITEMS_BASE = {
     "premium_90d": {"name": "Premium 90 дней 👑", "price": 4725, "icon": "💎", "category": "premium", "desc": "3 месяца Premium.", "warning": "⚠️ 90 дней.", "location": "private", "type": "premium", "duration": "90 дней", "benefits": ["Всё из Premium 1 день", "Экономия 50%"]},
     "premium_year": {"name": "Premium 1 год 💫", "price": 13500, "icon": "👑", "category": "premium", "desc": "Год Premium.", "warning": "⚠️ 365 дней.", "location": "private", "type": "premium", "duration": "1 год", "benefits": ["Всё из Premium 1 день", "Экономия 72%"]},
     "premium_forever": {"name": "Premium НАВСЕГДА ✨", "price": 33750, "icon": "🌟", "category": "premium", "desc": "Пожизненный Premium.", "warning": "⚠️ Только ЛС.", "location": "private", "type": "premium", "duration": "Навсегда", "benefits": ["Всё из Premium 1 день", "Пожизненно"]},
-    "chat_extra10": {"name": "+10 запросов (чат)", "price": 8, "icon": "👥", "category": "chat", "desc": "10 дополнительных запросов в групповых чатах.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+10 запросов в чатах"]},
+    "chat_extra10": {"name": "+10 запросов (чат)", "price": 8, "icon": "👥", "category": "chat", "desc": "10 дополнительных запросов в чатах.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+10 запросов в чатах"]},
     "chat_extra50": {"name": "+50 запросов (чат)", "price": 30, "icon": "👥", "category": "chat", "desc": "50 дополнительных запросов в чатах.", "warning": "⚠️ Сгорают в 00:00 МСК.", "location": "chat", "type": "consumable", "duration": "до 00:00 МСК", "benefits": ["+50 запросов в чатах", "Экономия 25%"]},
     "chat_unlimited_1h": {"name": "Безлимит чат 1ч", "price": 20, "icon": "♾️", "category": "chat", "desc": "Безлимитные запросы в чатах на 1 час.", "warning": "⚠️ 1 час.", "location": "chat", "type": "unlimited", "duration": "1 час", "benefits": ["Безлимит в чатах"]},
     "chat_unlimited_24h": {"name": "Безлимит чат 24ч", "price": 75, "icon": "♾️", "category": "chat", "desc": "Безлимитные запросы в чатах на 24 часа.", "warning": "⚠️ 24 часа.", "location": "chat", "type": "unlimited", "duration": "24 часа", "benefits": ["Безлимит в чатах на сутки"]},
@@ -562,11 +546,11 @@ def process_passive_income(user_id):
     if premium:
         hourly_rate = PREMIUM_PASSIVE_INCOME_HOURLY
         interval_minutes = PASSIVE_INCOME_INTERVAL_MINUTES
-        max_intervals = 48  # 24 часа круглосуточно
+        max_intervals = 48
     else:
         hourly_rate = FREE_PASSIVE_INCOME_HOURLY
         interval_minutes = 60
-        max_intervals = PASSIVE_INCOME_MAX_INTERVALS  # 12 часов
+        max_intervals = PASSIVE_INCOME_MAX_INTERVALS
     
     now = datetime.now()
     last_income = users[uid].get("last_passive_income")
@@ -587,7 +571,7 @@ def process_passive_income(user_id):
     
     return income
 
-async def auto_notification_task(context: ContextTypes.DEFAULT_TYPE):
+async def auto_notification_task(app):
     users = load_users()
     now = datetime.now()
     sent_count = 0
@@ -633,7 +617,7 @@ async def auto_notification_task(context: ContextTypes.DEFAULT_TYPE):
             
             text += f"\n🕐 Следующая: через {interval} ч."
             
-            await context.bot.send_message(user_id, text)
+            await app.bot.send_message(user_id, text)
             
             users[uid]["last_notification"] = now.isoformat()
             sent_count += 1
@@ -688,20 +672,20 @@ def can_image_request(user_id, chat_type="private", chat_id=None):
     return u.get("image_requests_today", 0) < (IMAGE_DAILY_LIMIT + u.get("extra_image_requests", 0))
 
 def remaining(user_id, chat_type="private", chat_id=None):
-    if chat_type == "private" and is_premium(user_id): return "премиум"
-    if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return "премиум"
+    if chat_type == "private" and is_premium(user_id): return "∞"
+    if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return "∞"
     u = get_user(user_id)
-    if chat_type == "private" and u.get("unlimited_until") and datetime.now() < datetime.fromisoformat(u["unlimited_until"]): return "безлимит"
-    if chat_type in ["group", "supergroup"] and u.get("chat_unlimited_until") and datetime.now() < datetime.fromisoformat(u["chat_unlimited_until"]): return "безлимит"
+    if chat_type == "private" and u.get("unlimited_until") and datetime.now() < datetime.fromisoformat(u["unlimited_until"]): return "∞"
+    if chat_type in ["group", "supergroup"] and u.get("chat_unlimited_until") and datetime.now() < datetime.fromisoformat(u["chat_unlimited_until"]): return "∞"
     if chat_type in ["group", "supergroup"]: return max(0, CHAT_DAILY_LIMIT + u.get("extra_chat_requests", 0) - u.get("chat_requests_today", 0))
     return max(0, DAILY_LIMIT + u.get("extra_requests", 0) - u.get("requests_today", 0))
 
 def image_remaining(user_id, chat_type="private", chat_id=None):
-    if chat_type == "private" and is_premium(user_id): return "премиум"
-    if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return "премиум"
+    if chat_type == "private" and is_premium(user_id): return "∞"
+    if chat_type in ["group", "supergroup"] and chat_id and is_chat_premium(chat_id): return "∞"
     u = get_user(user_id)
-    if chat_type == "private" and u.get("image_unlimited_until") and datetime.now() < datetime.fromisoformat(u["image_unlimited_until"]): return "безлимит"
-    if chat_type in ["group", "supergroup"] and u.get("chat_image_unlimited_until") and datetime.now() < datetime.fromisoformat(u["chat_image_unlimited_until"]): return "безлимит"
+    if chat_type == "private" and u.get("image_unlimited_until") and datetime.now() < datetime.fromisoformat(u["image_unlimited_until"]): return "∞"
+    if chat_type in ["group", "supergroup"] and u.get("chat_image_unlimited_until") and datetime.now() < datetime.fromisoformat(u["chat_image_unlimited_until"]): return "∞"
     if chat_type in ["group", "supergroup"]: return max(0, CHAT_IMAGE_LIMIT + u.get("extra_chat_image_requests", 0) - u.get("chat_image_requests_today", 0))
     return max(0, IMAGE_DAILY_LIMIT + u.get("extra_image_requests", 0) - u.get("image_requests_today", 0))
 
@@ -1271,7 +1255,7 @@ async def shop_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await update.message.reply_text("🛒 МАГАЗИН (ЛС)\n\nВыберите категорию:", reply_markup=shop_keyboard("private", update.effective_user.id))
 
-# Админ-команды (все 33)
+# Админ-команды
 async def admin_give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_IDS: return
     if not context.args or len(context.args) < 2: await update.message.reply_text("❌ /give ID СУММА"); return
@@ -2061,8 +2045,17 @@ def main():
     print(f"🧠 NeBlock AI V{BOT_VERSION}")
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    job_queue = app.job_queue
-    job_queue.run_repeating(auto_notification_task, interval=300, first=10)
+    async def start_auto_notifications():
+        await asyncio.sleep(10)
+        while True:
+            try:
+                await auto_notification_task(app)
+            except Exception as e:
+                logger.error(f"Ошибка авто-уведомлений: {e}")
+            await asyncio.sleep(300)
+    
+    loop = asyncio.get_event_loop()
+    loop.create_task(start_auto_notifications())
     
     for cmd, handler in [
         ("start", start), ("id", id_cmd), ("profile", profile_cmd),
